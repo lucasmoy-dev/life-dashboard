@@ -20,7 +20,7 @@ export function renderCalendarPage() {
       <div class="card calendar-view-card">
           <div class="calendar-mini-header">
               <button class="icon-btn-navigation">${getIcon('chevronLeft')}</button>
-              <span class="current-month">Enero 2026</span>
+              <span class="current-month">${getCurrentMonthName()}</span>
               <button class="icon-btn-navigation">${getIcon('chevronRight')}</button>
           </div>
           <div class="calendar-grid">
@@ -64,28 +64,33 @@ export function renderCalendarPage() {
 }
 
 function renderCalendarGrid(events) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const currentDay = now.getDate();
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
     const days = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-    const currentDay = new Date().getDate();
 
     // Create a map of days that have events
     const eventDays = new Set();
     events.forEach(e => {
         const d = new Date(e.date);
-        if (d.getMonth() === 0 && d.getFullYear() === 2026) { // Simplified for Jan 2026
+        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
             eventDays.add(d.getDate());
         }
     });
 
     let html = days.map(d => `<div class="calendar-day-label">${d}</div>`).join('');
 
-    // Fill 31 days for January (simplified mapping)
-    // Jan 1st 2026 is a Thursday (index 4)
-    const firstDayPadding = 4;
-    for (let p = 0; p < firstDayPadding; p++) {
+    // Fill padding for previous month
+    for (let p = 0; p < firstDayIndex; p++) {
         html += `<div class="calendar-day empty"></div>`;
     }
 
-    for (let i = 1; i <= 31; i++) {
+    // Fill days of current month
+    for (let i = 1; i <= daysInMonth; i++) {
         const isToday = i === currentDay;
         const hasEvent = eventDays.has(i);
         html += `
@@ -97,6 +102,12 @@ function renderCalendarGrid(events) {
     }
 
     return html;
+}
+
+function getCurrentMonthName() {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const now = new Date();
+    return `${months[now.getMonth()]} ${now.getFullYear()}`;
 }
 
 function formatDate(dateStr) {

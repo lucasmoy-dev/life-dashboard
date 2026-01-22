@@ -179,30 +179,35 @@ class NotificationService {
 
         buttons.forEach((btn, i) => {
             const el = document.getElementById(btn.id || `modal-btn-${i}`);
-            el.addEventListener('click', () => {
+            el.addEventListener('click', async () => {
                 btn.onClick();
-                this._closeModal(overlay);
+                await this._closeModal(overlay);
             });
         });
 
         // Close on overlay click if not a "hard" modal or dangerous
-        overlay.addEventListener('click', (e) => {
+        overlay.addEventListener('click', async (e) => {
             if (e.target === overlay) {
                 const isDangerous = buttons.some(b => b.type === 'danger');
                 if (!isDangerous) {
                     const cancelBtn = buttons.find(b => b.type === 'secondary');
                     if (cancelBtn) cancelBtn.onClick();
-                    this._closeModal(overlay);
+                    await this._closeModal(overlay);
                 }
             }
         });
     }
 
-    _closeModal(overlay) {
+    async _closeModal(overlay) {
         overlay.classList.remove('active');
         const modal = overlay.querySelector('.modal');
-        modal.classList.add('animate-out');
-        setTimeout(() => overlay.remove(), 300);
+        if (modal) modal.classList.add('animate-out');
+        return new Promise(resolve => {
+            setTimeout(() => {
+                overlay.remove();
+                resolve();
+            }, 300);
+        });
     }
 }
 

@@ -199,10 +199,19 @@ export function setupHealthPageListeners() {
             if (file) {
                 ns.toast('Analizando imagen con IA...', 'info');
                 setTimeout(async () => {
-                    const mockCals = Math.floor(Math.random() * 500) + 200;
-                    const confirmed = await ns.confirm('IA Detectada', `La visión artificial detectó una "Ensalada César" con aproximadamente ${mockCals} kcal. ¿Registrar?`);
+                    const foods = [
+                        { name: 'Ensalada César', cals: 350 },
+                        { name: 'Poke Bowl de Atún', cals: 520 },
+                        { name: 'Hamburguesa con Queso', cals: 780 },
+                        { name: 'Pasta Carbonara', cals: 650 },
+                        { name: 'Tostada de Aguacate', cals: 280 },
+                        { name: 'Salmón a la Plancha', cals: 410 },
+                        { name: 'Pizza Margherita', cals: 850 }
+                    ];
+                    const detected = foods[Math.floor(Math.random() * foods.length)];
+                    const confirmed = await ns.confirm('IA Detectada', `La visión artificial detectó "${detected.name}" con aproximadamente ${detected.cals} kcal. ¿Registrar?`);
                     if (confirmed) {
-                        store.addCalorieLog(mockCals, 'Ensalada César (IA)');
+                        store.addCalorieLog(detected.cals, `${detected.name} (IA)`);
                         ns.toast('Calorías registradas');
                     }
                 }, 1500);

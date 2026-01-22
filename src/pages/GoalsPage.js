@@ -4,6 +4,7 @@
 
 import { store } from '../store.js';
 import { getIcon } from '../utils/icons.js';
+import { ns } from '../utils/notifications.js';
 
 export function renderGoalsPage() {
     const state = store.getState();
@@ -95,22 +96,28 @@ export function setupGoalsPageListeners() {
 
     // Delete
     document.querySelectorAll('.goal-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (confirm('¿Eliminar esta meta?')) {
+            const confirmed = await ns.confirm('¿Eliminar meta?', 'Esta acción no se puede deshacer.');
+            if (confirmed) {
                 store.deleteGoal(btn.dataset.id);
+                ns.toast('Meta eliminada');
             }
         });
     });
 
     // Add buttons
     document.querySelectorAll('.add-goal-mini, #add-goal-primary').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const timeframe = btn.dataset.timeframe || 'day';
-            const title = prompt('¿Cuál es tu nueva meta?');
+            const title = await ns.prompt('Nueva Meta', '¿Cuál es tu objetivo?');
             if (title) {
-                const category = prompt('Categoría (ej: Salud, Finanzas, Trabajo):', 'General');
-                store.addGoal({ title, timeframe, category });
+                // Small delay to let the previous modal finish closing
+                setTimeout(async () => {
+                    const category = await ns.prompt('Categoría', 'Ej: Salud, Finanzas, Trabajo', 'General');
+                    store.addGoal({ title, timeframe, category: category || 'General' });
+                    ns.toast('Meta añadida');
+                }, 400);
             }
         });
     });
