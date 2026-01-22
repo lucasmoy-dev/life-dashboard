@@ -1,0 +1,165 @@
+/**
+ * World Markets Page
+ */
+
+import { fetchMarketData, ASSET_CATEGORIES } from '../services/MarketService.js';
+import { store } from '../store.js';
+import { formatCurrency, formatPercentage } from '../utils/format.js';
+import { getIcon } from '../utils/icons.js';
+
+let marketData = [];
+let isLoading = true;
+let sortConfig = { key: 'price', direction: 'desc' };
+
+export function renderMarketPage() {
+    const state = store.getState();
+    const currency = state.currency || 'EUR';
+    const symbol = state.currencySymbol || '€';
+
+    if (isLoading && marketData.length === 0) {
+        loadData();
+        return `
+            <div class="market-page">
+                <header class="page-header">
+                    <h1 class="page-title">Mercados del Mundo</h1>
+                    <p class="page-subtitle">Precios y tendencias globales</p>
+                </header>
+                <div class="empty-state">
+                    <div class="loading-spinner"></div>
+                    <p class="empty-description">Cargando datos reales de mercado...</p>
+                </div>
+            </div>
+        `;
+    }
+
+    const categories = Object.values(ASSET_CATEGORIES);
+
+    return `
+        <div class="market-page stagger-children" style="padding-bottom: 80px;">
+            <header class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                        <button class="back-btn" id="market-back">
+                            ${getIcon('chevronLeft')}
+                        </button>
+                        <div>
+                            <h1 class="page-title">Mercados del Mundo</h1>
+                            <p class="page-subtitle">Activos globales en ${currency}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="market-currency-toggle" style="background: rgba(255,255,255,0.05); padding: 4px; border-radius: var(--radius-md); display: flex; gap: 4px;">
+                        <button class="btn-toggle ${currency === 'EUR' ? 'active' : ''}" data-curr="EUR" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${currency === 'EUR' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'EUR' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 600;">EUR</button>
+                        <button class="btn-toggle ${currency === 'USD' ? 'active' : ''}" data-curr="USD" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${currency === 'USD' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'USD' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 600;">USD</button>
+                    </div>
+                </div>
+            </header>
+
+            ${categories.map(cat => {
+        const catData = marketData.filter(a => a.category === cat);
+        if (catData.length === 0) return '';
+        return renderCategoryTable(cat, catData, symbol);
+    }).join('')}
+        </div>
+    `;
+}
+
+function renderCategoryTable(categoryName, data, symbol) {
+    // Sort category data
+    const sortedData = [...data].sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    return `
+        <div class="market-section" style="margin-bottom: var(--spacing-xl);">
+            <h2 class="section-title" style="margin-left: 0; margin-bottom: var(--spacing-md); color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                ${categoryName}
+            </h2>
+            <div class="card market-table-card" style="padding: 0 !important; overflow: hidden; background: rgba(22, 33, 62, 0.4);">
+                <div class="table-container market-table-container">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="name" class="${sortConfig.key === 'name' ? 'active ' + sortConfig.direction : ''}">Activo</th>
+                                <th data-sort="price" class="${sortConfig.key === 'price' ? 'active ' + sortConfig.direction : ''}">Precio</th>
+                                <th data-sort="change24h" class="${sortConfig.key === 'change24h' ? 'active ' + sortConfig.direction : ''}">24h</th>
+                                <th data-sort="change7d" class="${sortConfig.key === 'change7d' ? 'active ' + sortConfig.direction : ''}">7d</th>
+                                <th data-sort="change30d" class="${sortConfig.key === 'change30d' ? 'active ' + sortConfig.direction : ''}">30d</th>
+                                <th data-sort="change1y" class="${sortConfig.key === 'change1y' ? 'active ' + sortConfig.direction : ''}">1a</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedData.map(asset => `
+                                <tr>
+                                    <td style="min-width: 140px;">
+                                        <div class="asset-cell">
+                                            <span class="asset-symbol" style="color: var(--accent-primary);">${asset.symbol.toUpperCase()}</span>
+                                            <span class="asset-name" style="font-size: 10px; color: var(--text-muted);">${asset.name}</span>
+                                        </div>
+                                    </td>
+                                    <td style="font-weight: 600; font-variant-numeric: tabular-nums;">${asset.price !== null ? formatCurrency(asset.price, symbol) : '-'}</td>
+                                    <td class="${asset.change24h >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change24h !== null ? formatPercentage(asset.change24h) : '-'}</td>
+                                    <td class="${asset.change7d >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change7d !== null ? formatPercentage(asset.change7d) : '-'}</td>
+                                    <td class="${asset.change30d >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change30d !== null ? formatPercentage(asset.change30d) : '-'}</td>
+                                    <td class="${asset.change1y >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change1y !== null ? formatPercentage(asset.change1y) : '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadData() {
+    const state = store.getState();
+    const currency = state.currency || 'EUR';
+    isLoading = true;
+    marketData = await fetchMarketData(currency);
+    isLoading = false;
+    window.dispatchEvent(new CustomEvent('market-ready'));
+}
+
+export function setupMarketPageListeners(onBack) {
+    const backBtn = document.getElementById('market-back');
+    if (backBtn) {
+        backBtn.addEventListener('click', onBack);
+    }
+
+    const headers = document.querySelectorAll('.market-table th[data-sort]');
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const key = header.dataset.sort;
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'desc';
+                if (key === 'name') sortConfig.direction = 'asc';
+            }
+            if (typeof window.reRender === 'function') window.reRender();
+        });
+    });
+
+    const toggles = document.querySelectorAll('.market-currency-toggle .btn-toggle');
+    toggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const newCurr = btn.dataset.curr;
+            store.setCurrency(newCurr);
+            loadData(); // This will trigger re-render on market-ready
+        });
+    });
+
+    window.addEventListener('market-ready', () => {
+        if (typeof window.reRender === 'function') window.reRender();
+    });
+}

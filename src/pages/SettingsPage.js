@@ -1,0 +1,266 @@
+/**
+ * Settings Page - Security, Sync and Preferences
+ */
+import { store } from '../store.js';
+import { getIcon } from '../utils/icons.js';
+import { AuthService } from '../services/AuthService.js';
+import { DriveService } from '../services/DriveService.js';
+import { ns } from '../utils/notifications.js';
+
+export function renderSettingsPage() {
+    const isBioEnabled = AuthService.isBioEnabled();
+    const hasCloudSync = DriveService.hasToken();
+
+    return `
+    <div class="settings-page stagger-children" style="padding-bottom: 80px; max-width: 600px; margin: 0 auto;">
+        <header class="page-header" style="text-align: center; margin-bottom: var(--spacing-2xl);">
+            <h1 class="page-title">Configuración</h1>
+            <p class="page-subtitle">Privacidad, Seguridad y Sincronización</p>
+        </header>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${getIcon('shield', 'section-icon')} Seguridad
+            </h2>
+            
+            <div class="card premium-settings-card">
+                <div class="settings-item-row">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Huella Dactilar / Biometría</div>
+                        <div class="settings-item-desc">Desbloqueo rápido y seguro sin contraseña.</div>
+                    </div>
+                    <label class="switch-premium">
+                        <input type="checkbox" id="toggle-bio" ${isBioEnabled ? 'checked' : ''}>
+                        <span class="slider-premium round"></span>
+                    </label>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="change-password-link">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Contraseña Maestra</div>
+                        <div class="settings-item-desc">Cambiar la clave de acceso de tu bóveda local.</div>
+                    </div>
+                    <div class="settings-action-icon">${getIcon('chevronRight')}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${getIcon('cloud', 'section-icon')} Nube & Sincronización
+            </h2>
+            
+            <div class="card premium-settings-card">
+                <div class="settings-item-row">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Google Drive</div>
+                        <div class="settings-item-desc">${hasCloudSync ? '<span class="status-badge connected">Conectado</span>' : '<span class="status-badge disconnected">No conectado</span>'} Sincroniza tu bóveda encriptada.</div>
+                    </div>
+                    <button class="btn-settings-action ${hasCloudSync ? 'active' : ''}" id="sync-drive-btn">
+                        ${hasCloudSync ? getIcon('refreshCw') : getIcon('link')}
+                        <span>${hasCloudSync ? 'Sincronizar' : 'Conectar'}</span>
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="pull-drive-btn">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Recuperar de la Nube</div>
+                        <div class="settings-item-desc">Cargar datos guardados en Drive (sobreescribe local).</div>
+                    </div>
+                    <div class="settings-action-icon">${getIcon('downloadCloud')}</div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="export-data-btn">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Exportar Backup Manual</div>
+                        <div class="settings-item-desc">Descargar archivo encriptado (.bin) para seguridad externa.</div>
+                    </div>
+                    <div class="settings-action-icon">${getIcon('download')}</div>
+                </div>
+            </div>
+
+            <div class="settings-note">
+                ${getIcon('lock', 'note-icon')} Todos tus datos se encriptan localmente con AES-256-GCM antes de ser enviados a tu Google Drive personal. Nadie más tiene acceso.
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${getIcon('settings', 'section-icon')} Aplicación
+            </h2>
+            <div class="card premium-settings-card">
+                <div class="settings-item-row clickable" id="btn-logout">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label" style="color: var(--accent-danger);">Cerrar Sesión</div>
+                        <div class="settings-item-desc">Bloquear acceso y limpiar llaves de sesión.</div>
+                    </div>
+                    <div class="settings-action-icon" style="color: var(--accent-danger);">${getIcon('logOut')}</div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="btn-factory-reset">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label" style="color: var(--accent-danger);">Borrar todos los datos</div>
+                        <div class="settings-item-desc">Elimina permanentemente el almacenamiento local y reinicia la App.</div>
+                    </div>
+                    <div class="settings-action-icon" style="color: var(--accent-danger);">${getIcon('trash')}</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="settings-footer">
+            <p>Life Dashboard Pro v1.3.0</p>
+            <p>© 2026 Privacy First Zero-Knowledge System</p>
+        </footer>
+    </div>
+    `;
+}
+
+export function setupSettingsListeners() {
+    // Biometrics toggle
+    document.getElementById('toggle-bio')?.addEventListener('change', async (e) => {
+        const enabled = e.target.checked;
+        if (enabled) {
+            const pass = await ns.prompt('Activar Biometría', 'Introduce tu contraseña maestra para confirmar:', 'Tu contraseña', 'password');
+            if (pass) {
+                try {
+                    await AuthService.registerBiometrics(pass);
+                    ns.toast('Biometría activada correctamente');
+                } catch (err) {
+                    ns.alert('Error', err.message);
+                    e.target.checked = false;
+                }
+            } else {
+                e.target.checked = false;
+            }
+        } else {
+            localStorage.setItem('db_bio_enabled', 'false');
+            ns.toast('Biometría desactivada', 'info');
+        }
+    });
+
+    // Cloud Sync (Push/Connect)
+    document.getElementById('sync-drive-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('sync-drive-btn');
+        const hasToken = DriveService.hasToken();
+        const originalContent = btn.innerHTML;
+
+        try {
+            btn.innerHTML = `<div class="loading-spinner-sm"></div>`;
+            btn.style.pointerEvents = 'none';
+
+            if (!hasToken) {
+                // Initial connection logic
+                await DriveService.authenticate();
+
+                // Check if file exists before pushing
+                const vaultKey = AuthService.getVaultKey();
+                const remoteState = await DriveService.pullData(vaultKey).catch(() => null);
+
+                if (remoteState) {
+                    const choice = await ns.confirm(
+                        'Respaldo Encontrado',
+                        'Hemos detectado una bóveda existente en Google Drive. ¿Qué deseas hacer con tus datos?',
+                        'Recuperar de la Nube',
+                        'Sobreescribir Nube'
+                    );
+
+                    if (choice) {
+                        // User chose "Recuperar de la Nube" (Primary)
+                        store.setState(remoteState);
+                        // Force save before reload
+                        await store.saveState();
+                        ns.toast('Datos recuperados correctamente');
+                        setTimeout(() => window.location.reload(), 800);
+                        return;
+                    }
+                }
+
+                // If they chose to overwrite (choice === false) or no remote found
+                await DriveService.pushData(store.getState(), vaultKey);
+                ns.toast('Google Drive conectado y sincronizado');
+            } else {
+                // Simple manually triggered Sync (Push)
+                const vaultKey = AuthService.getVaultKey();
+                await DriveService.pushData(store.getState(), vaultKey);
+                ns.toast('Bóveda actualizada en Drive');
+            }
+
+            if (typeof window.reRender === 'function') window.reRender();
+        } catch (e) {
+            console.error(e);
+            ns.alert('Error', e.message || 'Error al conectar con Google');
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.style.pointerEvents = 'auto';
+        }
+    });
+
+    // Cloud Pull (Restore)
+    document.getElementById('pull-drive-btn')?.addEventListener('click', async () => {
+        const confirmPull = await ns.confirm('¿Recuperar de la nube?', 'Esto sobreescribirá tus datos locales actuales con los de Google Drive. ¿Deseas continuar?');
+        if (!confirmPull) return;
+
+        try {
+            const vaultKey = AuthService.getVaultKey();
+            const remoteState = await DriveService.pullData(vaultKey);
+
+            if (remoteState) {
+                store.setState(remoteState);
+                ns.toast('Datos recuperados con éxito');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                ns.alert('Sin datos', 'No se encontró ninguna bóveda en tu Google Drive.');
+            }
+        } catch (e) {
+            console.error(e);
+            ns.alert('Error de recuperación', 'Asegúrate de que la contraseña sea la misma que usaste para el backup.');
+        }
+    });
+
+    // Logout
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+        const confirmLogout = await ns.confirm('¿Cerrar sesión?', 'El acceso quedará bloqueado hasta que introduzcas tu clave.');
+        if (confirmLogout) {
+            AuthService.logout();
+            window.location.reload();
+        }
+    });
+
+    // Factory Reset
+    document.getElementById('btn-factory-reset')?.addEventListener('click', async () => {
+        const confirmed = await ns.hardConfirm('Borrar todos los datos', 'Esta acción eliminará permanentemente todos tus activos, ingresos, agenda y configuraciones de este dispositivo.', 'BORRAR');
+
+        if (confirmed) {
+            // Clear everything
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear IndexedDB
+            if (window.indexedDB.databases) {
+                const dbs = await window.indexedDB.databases();
+                dbs.forEach(db => window.indexedDB.deleteDatabase(db.name));
+            }
+
+            // Clear Service Workers
+            if (navigator.serviceWorker) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            }
+
+            ns.toast('Aplicación reseteada', 'info');
+            setTimeout(() => {
+                window.location.href = window.location.origin + '?reset=' + Date.now();
+            }, 1000);
+        }
+    });
+}
