@@ -126,7 +126,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.10</p>
+            <p>Life Dashboard Pro v1.0.11</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -158,17 +158,27 @@ export function setupSettingsListeners() {
 
     // Install App Button
     const installBtn = document.getElementById('btn-install-pwa');
-    if (installBtn && window.deferredPrompt) {
-        installBtn.style.display = 'flex'; // Show if prompt is available
-        installBtn.addEventListener('click', async () => {
-            window.deferredPrompt.prompt();
-            const { outcome } = await window.deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                ns.toast('Instalando aplicación...');
-                installBtn.style.display = 'none';
+    // Only show if the install prompt event has fired (handled in main.js)
+    // On some mobiles, this might fire later or not at all if already installed.
+    if (installBtn) {
+        // We set a small timeout to check if deferredPrompt is available
+        setTimeout(() => {
+            if (window.deferredPrompt) {
+                const card = document.getElementById('install-pwa-card');
+                if (card) card.style.display = 'block';
+                installBtn.addEventListener('click', async () => {
+                    if (!window.deferredPrompt) return;
+                    window.deferredPrompt.prompt();
+                    const { outcome } = await window.deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        ns.toast('Instalando aplicación...');
+                        const card = document.getElementById('install-pwa-card');
+                        if (card) card.style.display = 'none';
+                    }
+                    window.deferredPrompt = null;
+                });
             }
-            window.deferredPrompt = null;
-        });
+        }, 1000);
     }
 
     // Cloud Sync (Push/Connect)
@@ -256,6 +266,24 @@ export function setupSettingsListeners() {
         if (confirmLogout) {
             AuthService.logout();
             window.location.reload();
+        }
+    });
+
+    // Force Update
+    document.getElementById('btn-force-update')?.addEventListener('click', async () => {
+        const confirmed = await ns.confirm('¿Forzar Actualización?', 'Esto recargará la página y limpiará la caché para obtener la última versión.');
+        if (confirmed) {
+            if (window.caches) {
+                // Try to clear caches
+                try {
+                    const names = await caches.keys();
+                    for (let name of names) await caches.delete(name);
+                } catch (e) {
+                    console.error('Error clearing cache', e);
+                }
+            }
+            // Force reload from server
+            window.location.reload(true);
         }
     });
 

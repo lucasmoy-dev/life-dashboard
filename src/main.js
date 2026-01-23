@@ -151,6 +151,7 @@ function renderPage() {
         case 'settings':
             main.innerHTML = renderSettingsPage();
             setupSettingsListeners();
+            hideFAB();
             break;
         default:
             main.innerHTML = renderFinancePage();
