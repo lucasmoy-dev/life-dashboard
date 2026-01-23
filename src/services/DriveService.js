@@ -8,13 +8,13 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 export class DriveService {
     static tokenClient = null;
-    static accessToken = localStorage.getItem('drive_access_token') || null;
+    static accessToken = localStorage.getItem('life-dashboard/drive_access_token') || null;
 
     /**
      * Returns true if we have a connection intent saved
      */
     static hasToken() {
-        return !!this.accessToken && localStorage.getItem('drive_connected') === 'true';
+        return !!this.accessToken && localStorage.getItem('life-dashboard/drive_connected') === 'true';
     }
 
     /**
@@ -43,7 +43,7 @@ export class DriveService {
                             });
 
                             // Silent restoration: If we were connected, try to get a fresh token silently
-                            if (localStorage.getItem('drive_connected') === 'true') {
+                            if (localStorage.getItem('life-dashboard/drive_connected') === 'true') {
                                 console.log('[Drive] Attempting silent token restoration...');
                                 this.tokenClient.requestAccessToken({ prompt: 'none' });
                             }
@@ -68,11 +68,11 @@ export class DriveService {
     static saveSession(resp) {
         this.accessToken = resp.access_token;
         gapi.client.setToken({ access_token: resp.access_token });
-        localStorage.setItem('drive_access_token', resp.access_token);
-        localStorage.setItem('drive_connected', 'true');
+        localStorage.setItem('life-dashboard/drive_access_token', resp.access_token);
+        localStorage.setItem('life-dashboard/drive_connected', 'true');
         // Set expiry (default 1h = 3600s)
         const expiry = Date.now() + (resp.expires_in ? resp.expires_in * 1000 : 3600000);
-        localStorage.setItem('drive_token_expiry', expiry.toString());
+        localStorage.setItem('life-dashboard/drive_token_expiry', expiry.toString());
     }
 
     /**
@@ -85,7 +85,7 @@ export class DriveService {
             this.tokenClient.callback = (resp) => {
                 if (resp.error) {
                     if (silent) {
-                        localStorage.setItem('drive_connected', 'false');
+                        localStorage.setItem('life-dashboard/drive_connected', 'false');
                         reject(new Error('Silent auth failed'));
                     } else {
                         reject(new Error(resp.error_description || 'Fallo en la autenticación'));
@@ -108,8 +108,8 @@ export class DriveService {
      * Ensures the current token is fresh, refreshes silently if needed
      */
     static async ensureValidToken() {
-        const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
-        const isConnected = localStorage.getItem('drive_connected') === 'true';
+        const expiry = parseInt(localStorage.getItem('life-dashboard/drive_token_expiry') || '0');
+        const isConnected = localStorage.getItem('life-dashboard/drive_connected') === 'true';
 
         // If we are within 5 minutes of expiry, refresh silently
         if (isConnected && Date.now() > (expiry - 300000)) {

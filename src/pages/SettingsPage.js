@@ -138,7 +138,7 @@ export function renderSettingsPage() {
                         <div style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-sm);">
                             <input type="password" id="gemini-api-key" class="form-input" 
                                 placeholder="Tu API Key de Google AI" 
-                                value="${localStorage.getItem('db_gemini_api_key') || ''}"
+                                value="${localStorage.getItem('life-dashboard/db_gemini_api_key') || ''}"
                                 style="border-radius: var(--radius-sm); font-size: 13px;">
                             <button class="btn btn-primary" id="btn-save-gemini" style="padding: 0 16px; min-width: auto; height: 38px;">
                                 Guardar
@@ -153,7 +153,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.49</p>
+            <p>Life Dashboard Pro v1.0.50</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -178,7 +178,7 @@ export function setupSettingsListeners() {
                 e.target.checked = false;
             }
         } else {
-            localStorage.setItem('db_bio_enabled', 'false');
+            localStorage.setItem('life-dashboard/db_bio_enabled', 'false');
             ns.toast('Biometría desactivada', 'info');
         }
     });
@@ -395,7 +395,7 @@ export function setupSettingsListeners() {
     document.getElementById('btn-save-gemini')?.addEventListener('click', () => {
         const key = document.getElementById('gemini-api-key')?.value;
         if (key !== undefined) {
-            localStorage.setItem('db_gemini_api_key', key.trim());
+            localStorage.setItem('life-dashboard/db_gemini_api_key', key.trim());
             ns.toast('API Key de Gemini guardada');
         }
     });
@@ -405,9 +405,18 @@ export function setupSettingsListeners() {
         const confirmed = await ns.hardConfirm('Borrar todos los datos', 'Esta acción eliminará permanentemente todos tus activos, ingresos, agenda y configuraciones de este dispositivo.', 'BORRAR');
 
         if (confirmed) {
-            // Clear everything
-            localStorage.clear();
-            sessionStorage.clear();
+            // Clear only app specific keys
+            const prefix = 'life-dashboard/';
+
+            // LocalStorage
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith(prefix)) localStorage.removeItem(key);
+            });
+
+            // SessionStorage
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith(prefix)) sessionStorage.removeItem(key);
+            });
 
             // Clear IndexedDB
             if (window.indexedDB.databases) {

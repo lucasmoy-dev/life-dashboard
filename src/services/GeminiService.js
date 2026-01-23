@@ -3,11 +3,11 @@
  */
 export class GeminiService {
     static getApiKey() {
-        return localStorage.getItem('db_gemini_api_key');
+        return localStorage.getItem('life-dashboard/db_gemini_api_key');
     }
 
     static setApiKey(key) {
-        localStorage.setItem('db_gemini_api_key', key);
+        localStorage.setItem('life-dashboard/db_gemini_api_key', key);
     }
 
     static hasKey() {

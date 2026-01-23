@@ -5,9 +5,9 @@
 import { SecurityService } from './SecurityService.js';
 
 const KEYS = {
-    MASTER_HASH: 'db_master_hash',
-    VAULT_KEY: 'db_vault_key',
-    BIO_ENABLED: 'db_bio_enabled'
+    MASTER_HASH: 'life-dashboard/db_master_hash',
+    VAULT_KEY: 'life-dashboard/db_vault_key',
+    BIO_ENABLED: 'life-dashboard/db_bio_enabled'
 };
 
 export class AuthService {

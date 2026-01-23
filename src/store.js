@@ -4,10 +4,8 @@ import { AuthService } from './services/AuthService.js';
 import { DriveService } from './services/DriveService.js';
 import { ns } from './utils/notifications.js';
 
-const STORAGE_KEY = 'life-dashboard-data';
-
-const ENCRYPTED_KEY = 'life-dashboard-secured';
-
+const STORAGE_KEY = 'life-dashboard/data'; // Legacy/Migration
+const ENCRYPTED_KEY = 'life-dashboard/secured';
 
 const defaultState = {
     // Assets that generate passive income

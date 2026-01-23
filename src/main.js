@@ -18,8 +18,8 @@ import { renderAuthShield, setupAuthListeners } from './components/AuthShield.js
 import { AuthService } from './services/AuthService.js';
 
 // Current page state
-let currentPage = localStorage.getItem('app_current_page') || 'finance';
-let currentSubPage = localStorage.getItem('app_current_sub_page') || null; // For sub-navigation like compound calculator or markets
+let currentPage = localStorage.getItem('life-dashboard/app_current_page') || 'finance';
+let currentSubPage = localStorage.getItem('life-dashboard/app_current_sub_page') || null; // For sub-navigation like compound calculator or markets
 if (currentSubPage === 'null') currentSubPage = null;
 
 // Initialize app
@@ -70,7 +70,7 @@ function startDashboard() {
 // Create and manage PWA install banner
 function setupPWAInstallBanner() {
     // Check if banner was dismissed recently (don't show for 7 days after dismiss)
-    const dismissedAt = localStorage.getItem('pwa_install_dismissed');
+    const dismissedAt = localStorage.getItem('life-dashboard/pwa_install_dismissed');
     if (dismissedAt) {
         const daysSinceDismiss = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
         if (daysSinceDismiss < 7) return;
@@ -133,7 +133,7 @@ function setupPWAInstallBanner() {
     // Handle close button
     document.getElementById('pwa-banner-close')?.addEventListener('click', () => {
         banner.classList.remove('visible');
-        localStorage.setItem('pwa_install_dismissed', Date.now().toString());
+        localStorage.setItem('life-dashboard/pwa_install_dismissed', Date.now().toString());
         setTimeout(() => banner.remove(), 500);
     });
 }
@@ -146,8 +146,8 @@ function renderApp() {
     setupNavListeners((pageId) => {
         currentPage = pageId;
         currentSubPage = null;
-        localStorage.setItem('app_current_page', currentPage);
-        localStorage.setItem('app_current_sub_page', currentSubPage);
+        localStorage.setItem('life-dashboard/app_current_page', currentPage);
+        localStorage.setItem('life-dashboard/app_current_sub_page', currentSubPage);
         showFAB();
         renderPage();
 
@@ -156,8 +156,8 @@ function renderApp() {
         setupNavListeners((p) => {
             currentPage = p;
             currentSubPage = null;
-            localStorage.setItem('app_current_page', currentPage);
-            localStorage.setItem('app_current_sub_page', currentSubPage);
+            localStorage.setItem('life-dashboard/app_current_page', currentPage);
+            localStorage.setItem('life-dashboard/app_current_sub_page', currentSubPage);
             showFAB();
             renderPage();
             renderApp(); // Refresh nav
@@ -245,7 +245,7 @@ function setupSubPageButtons() {
     if (compoundBtn) {
         compoundBtn.addEventListener('click', () => {
             currentSubPage = 'compound';
-            localStorage.setItem('app_current_sub_page', currentSubPage);
+            localStorage.setItem('life-dashboard/app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });
@@ -255,7 +255,7 @@ function setupSubPageButtons() {
     if (marketsBtn) {
         marketsBtn.addEventListener('click', () => {
             currentSubPage = 'market';
-            localStorage.setItem('app_current_sub_page', currentSubPage);
+            localStorage.setItem('life-dashboard/app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });
@@ -265,7 +265,7 @@ function setupSubPageButtons() {
     if (expensesBtn) {
         expensesBtn.addEventListener('click', () => {
             currentSubPage = 'expenses';
-            localStorage.setItem('app_current_sub_page', currentSubPage);
+            localStorage.setItem('life-dashboard/app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });
