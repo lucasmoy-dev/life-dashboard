@@ -5,6 +5,7 @@
 import { store } from '../store.js';
 import { getIcon } from '../utils/icons.js';
 import { ns } from '../utils/notifications.js';
+import { GeminiService } from '../services/GeminiService.js';
 
 export function renderHealthPage() {
     const state = store.getState();
@@ -189,34 +190,76 @@ export function setupHealthPageListeners() {
         }
     });
 
-    // AI Scan simulation
+    // AI Scan Tool (Real IA)
     document.getElementById('ai-scan-photo')?.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.onchange = (e) => {
+        input.onchange = async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                ns.toast('Analizando imagen con IA...', 'info');
-                setTimeout(async () => {
-                    const foods = [
-                        { name: 'Ensalada César', cals: 350 },
-                        { name: 'Poke Bowl de Atún', cals: 520 },
-                        { name: 'Hamburguesa con Queso', cals: 780 },
-                        { name: 'Pasta Carbonara', cals: 650 },
-                        { name: 'Tostada de Aguacate', cals: 280 },
-                        { name: 'Salmón a la Plancha', cals: 410 },
-                        { name: 'Pizza Margherita', cals: 850 }
-                    ];
-                    const detected = foods[Math.floor(Math.random() * foods.length)];
-                    const confirmed = await ns.confirm('IA Detectada', `La visión artificial detectó "${detected.name}" con aproximadamente ${detected.cals} kcal. ¿Registrar?`);
-                    if (confirmed) {
-                        store.addCalorieLog(detected.cals, `${detected.name} (IA)`);
-                        ns.toast('Calorías registradas');
-                    }
-                }, 1500);
+            if (!file) return;
+
+            if (!GeminiService.hasKey()) {
+                const setup = await ns.confirm(
+                    'IA no configurada',
+                    'Para usar IA real debes añadir tu Gemini API Key en Ajustes. ¿Quieres ir a Ajustes?',
+                    'Configurar IA',
+                    'Usar Simulación'
+                );
+
+                if (setup) {
+                    // Navigate to settings (simulate click on nav)
+                    document.querySelector('[data-nav="settings"]')?.click();
+                    return;
+                }
+
+                // Fallback to simulation
+                ns.toast('Ejecutando Simulación...', 'info');
+                runSimulation();
+                return;
+            }
+
+            try {
+                ns.toast('Analizando con Gemini AI...', 'info');
+                const result = await GeminiService.analyzeFood(file);
+
+                const confirmed = await ns.confirm(
+                    'IA Detectada',
+                    `La IA identificó: "${result.name}" con unas ${result.calories} kcal. ¿Deseas registrarlo?`,
+                    'Registrar',
+                    'Cancelar'
+                );
+
+                if (confirmed) {
+                    store.addCalorieLog(result.calories, `${result.name} (Gemini AI)`);
+                    ns.toast('Calorías registradas con IA real');
+                }
+            } catch (err) {
+                console.error(err);
+                ns.alert('Error IA', err.message || 'No se pudo analizar la imagen.');
             }
         };
+
+        function runSimulation() {
+            setTimeout(async () => {
+                const foods = [
+                    { name: 'Ensalada César', cals: 350 },
+                    { name: 'Poke Bowl de Atún', cals: 520 },
+                    { name: 'Hamburguesa con Queso', cals: 780 },
+                    { name: 'Pasta Carbonara', cals: 650 },
+                    { name: 'Tostada de Aguacate', cals: 280 },
+                    { name: 'Salmón a la Plancha', cals: 410 },
+                    { name: 'Pizza Margherita', cals: 850 }
+                ];
+                const detected = foods[Math.floor(Math.random() * foods.length)];
+                const confirmed = await ns.confirm('IA Simulada', `La visión (simulada) detectó "${detected.name}" con ${detected.cals} kcal. ¿Registrar?`);
+                if (confirmed) {
+                    store.addCalorieLog(detected.cals, `${detected.name} (Simulación)`);
+                    ns.toast('Calorías registradas');
+                }
+            }, 1500);
+        }
+
         input.click();
     });
 

@@ -125,19 +125,38 @@ export function renderSettingsPage() {
                 </div>
             </div>
 
-            <div class="card premium-settings-card" id="install-pwa-card" style="margin-top: var(--spacing-md); display: none;">
-                <div class="settings-item-row clickable" id="btn-install-pwa">
+                </div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${getIcon('zap', 'section-icon')} Inteligencia Artificial
+            </h2>
+            <div class="card premium-settings-card">
+                <div class="settings-item-row" style="cursor: default;">
                     <div class="settings-item-info">
-                        <div class="settings-item-label" style="color: var(--accent-primary);">Instalar App Móvil</div>
-                        <div class="settings-item-desc">Añadir a la pantalla de inicio para acceso rápido.</div>
+                        <div class="settings-item-label">Gemini API Key</div>
+                        <div class="settings-item-desc">Necesaria para el análisis de comida con IA real.</div>
+                        <div style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-sm);">
+                            <input type="password" id="gemini-api-key" class="form-input" 
+                                placeholder="Tu API Key de Google AI" 
+                                value="${localStorage.getItem('db_gemini_api_key') || ''}"
+                                style="border-radius: var(--radius-sm); font-size: 13px;">
+                            <button class="btn btn-primary" id="btn-save-gemini" style="padding: 0 16px; min-width: auto; height: 38px;">
+                                Guardar
+                            </button>
+                        </div>
+                        <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
+                            Consigue tu llave gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-primary);">Google AI Studio</a>.
+                        </p>
                     </div>
-                    <div class="settings-action-icon" style="color: var(--accent-primary);">${getIcon('download')}</div>
                 </div>
             </div>
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.28</p>
+            <p>Life Dashboard Pro v1.0.29</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -343,6 +362,15 @@ export function setupSettingsListeners() {
             }
             // Force reload from server
             window.location.reload(true);
+        }
+    });
+
+    // Gemini API Key Save
+    document.getElementById('btn-save-gemini')?.addEventListener('click', () => {
+        const key = document.getElementById('gemini-api-key')?.value;
+        if (key !== undefined) {
+            localStorage.setItem('db_gemini_api_key', key.trim());
+            ns.toast('API Key de Gemini guardada');
         }
     });
 
