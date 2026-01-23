@@ -5,6 +5,7 @@ export default defineConfig({
     base: '/life-dashboard/',
     plugins: [
         VitePWA({
+            injectRegister: null,
             registerType: 'autoUpdate',
             includeAssets: ['favicon.svg', 'icons/*.png'],
             manifest: {
