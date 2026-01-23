@@ -2927,6 +2927,28 @@ input:checked+.slider-premium:before {
         margin-right: auto;
     }
 
+    .finance-page {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        max-width: 900px;
+        /* More focused dashboard */
+    }
+
+    .finance-top-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .finance-top-grid .card {
+        margin: 0;
+        height: 100%;
+        min-width: 0;
+    }
+
     .page-header {
         margin-bottom: var(--spacing-xl);
         margin-top: var(--spacing-md);
@@ -2940,24 +2962,20 @@ input:checked+.slider-premium:before {
         font-size: 16px;
     }
 
-    /* Cards & Layout distribution */
-    .finance-page {
+    /* Balance Sheet Side-by-Side */
+    .finance-balance-grid {
         display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: var(--spacing-xl);
-        align-items: start;
-    }
-
-    .finance-page>* {
-        grid-column: span 12;
-    }
-
-    /* Finance Grid Balance */
-    .finance-page {
-        display: grid;
-        grid-template-columns: repeat(12, 1fr);
+        grid-template-columns: 1.5fr 1fr;
         gap: var(--spacing-lg);
-        align-items: start;
+        align-items: end;
+    }
+
+    .finance-balance-grid .summary-grid {
+        margin-top: 0;
+    }
+
+    .finance-balance-grid .card {
+        margin-top: 0 !important;
     }
 
     /* Premium Glass Cards on Desktop */
@@ -2981,11 +2999,14 @@ input:checked+.slider-premium:before {
         background: linear-gradient(145deg, rgba(22, 33, 62, 0.8), rgba(26, 26, 46, 0.9));
         border: 1px solid rgba(0, 212, 170, 0.2);
         box-shadow: 0 0 30px rgba(0, 212, 170, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
-    .highlight-card.highlight-card-negative {
-        border-color: rgba(239, 68, 68, 0.2);
-        box-shadow: 0 0 30px rgba(239, 68, 68, 0.05);
+    .highlight-value {
+        font-size: 42px;
+        /* Smaller more elegant on desktop */
     }
 
     /* Summary Metrics - 4 Columns */

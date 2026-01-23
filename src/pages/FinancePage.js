@@ -31,39 +31,41 @@ export function renderFinancePage() {
         <p class="page-subtitle">Tu panorama financiero</p>
       </header>
       
-      <!-- PRIMARY METRICS -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Flujo Pasivo Mensual</span>
-          ${getIcon('zap', 'card-icon')}
+      <div class="finance-top-grid">
+        <!-- PRIMARY METRICS -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Flujo Pasivo Mensual</span>
+            ${getIcon('zap', 'card-icon')}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">
+              <span class="stat-dot income"></span>
+              Ingresos Pasivos
+            </span>
+            <span class="stat-value positive">${formatCurrency(passiveIncome, symbol)}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">
+              <span class="stat-dot expense"></span>
+              Gastos de Vida
+            </span>
+            <span class="stat-value negative">${formatCurrency(livingExpenses, symbol)}</span>
+          </div>
         </div>
-        <div class="stat-row">
-          <span class="stat-label">
-            <span class="stat-dot income"></span>
-            Ingresos Pasivos
-          </span>
-          <span class="stat-value positive">${formatCurrency(passiveIncome, symbol)}</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">
-            <span class="stat-dot expense"></span>
-            Gastos de Vida
-          </span>
-          <span class="stat-value negative">${formatCurrency(livingExpenses, symbol)}</span>
-        </div>
-      </div>
-      
-      <!-- HIGHLIGHT: NET PASSIVE INCOME -->
-      <div class="card highlight-card ${netPassiveIncome < 0 ? 'highlight-card-negative' : ''}">
-        <div class="card-header">
-          <span class="card-title">Ingreso Pasivo Neto</span>
-          ${getIcon('piggyBank', 'card-icon')}
-        </div>
-        <div class="highlight-value ${netPassiveIncome < 0 ? 'highlight-value-negative' : ''}">${formatCurrency(netPassiveIncome, symbol)}</div>
-        <div class="highlight-label ${netPassiveIncome < 0 ? 'highlight-label-negative' : ''}">
-          ${netPassiveIncome >= 0
+        
+        <!-- HIGHLIGHT: NET PASSIVE INCOME -->
+        <div class="card highlight-card ${netPassiveIncome < 0 ? 'highlight-card-negative' : ''}">
+          <div class="card-header">
+            <span class="card-title">Ingreso Pasivo Neto</span>
+            ${getIcon('piggyBank', 'card-icon')}
+          </div>
+          <div class="highlight-value ${netPassiveIncome < 0 ? 'highlight-value-negative' : ''}">${formatCurrency(netPassiveIncome, symbol)}</div>
+          <div class="highlight-label ${netPassiveIncome < 0 ? 'highlight-label-negative' : ''}">
+            ${netPassiveIncome >= 0
       ? '🎉 ¡Libertad financiera alcanzada!'
       : `Faltan ${formatCurrency(Math.abs(netPassiveIncome), symbol)}/mes`}
+          </div>
         </div>
       </div>
       
@@ -72,24 +74,26 @@ export function renderFinancePage() {
         <span class="section-title">Balance Patrimonial</span>
       </div>
       
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-value text-primary-accent">${formatCurrency(investmentAssets, symbol)}</div>
-          <div class="summary-label">Activos</div>
+      <div class="finance-balance-grid">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-value text-primary-accent">${formatCurrency(investmentAssets, symbol)}</div>
+            <div class="summary-label">Activos</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-value text-warning">${formatCurrency(liabilities, symbol)}</div>
+            <div class="summary-label">Pasivos</div>
+          </div>
         </div>
-        <div class="summary-item">
-          <div class="summary-value text-warning">${formatCurrency(liabilities, symbol)}</div>
-          <div class="summary-label">Pasivos</div>
-        </div>
-      </div>
-      
-      <div class="card" style="margin-top: var(--spacing-md);">
-        <div class="card-header">
-          <span class="card-title">Patrimonio Neto</span>
-          ${getIcon('scale', 'card-icon')}
-        </div>
-        <div class="stat-value ${netWorth >= 0 ? 'positive' : 'negative'}" style="font-size: 28px; font-weight: 700;">
-          ${formatCurrency(netWorth, symbol)}
+        
+        <div class="card" style="margin-top: var(--spacing-md);">
+          <div class="card-header">
+            <span class="card-title">Patrimonio Neto</span>
+            ${getIcon('scale', 'card-icon')}
+          </div>
+          <div class="stat-value ${netWorth >= 0 ? 'positive' : 'negative'}" style="font-size: 28px; font-weight: 700;">
+            ${formatCurrency(netWorth, symbol)}
+          </div>
         </div>
       </div>
       
