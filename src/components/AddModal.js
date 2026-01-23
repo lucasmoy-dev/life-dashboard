@@ -9,7 +9,7 @@ import { ns } from '../utils/notifications.js';
 
 const ITEM_TYPES = {
   passiveAsset: {
-    label: 'Activo Pasivo',
+    label: 'Ingresos Pasivos',
     icon: 'building',
     types: [
       { value: 'rental', label: 'Inmueble en Renta' },

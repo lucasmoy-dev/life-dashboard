@@ -6,7 +6,7 @@ import { MARKET_ASSETS } from '../services/MarketService.js';
 
 const CATEGORY_CONFIG = {
   passive: {
-    label: 'Activo Pasivo',
+    label: 'Ingresos Pasivos',
     storeKey: 'passiveAssets',
     updateMethod: 'updatePassiveAsset',
     deleteMethod: 'deletePassiveAsset',
