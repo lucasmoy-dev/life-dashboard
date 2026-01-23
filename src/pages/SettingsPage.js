@@ -66,13 +66,14 @@ export function renderSettingsPage() {
 
                 <div class="settings-divider"></div>
 
-                <div class="settings-item-row clickable" id="pull-drive-btn">
+                <div class="settings-item-row clickable" id="import-backup-btn">
                     <div class="settings-item-info">
-                        <div class="settings-item-label">Recuperar de la Nube</div>
-                        <div class="settings-item-desc">Cargar datos guardados en Drive (sobreescribe local).</div>
+                        <div class="settings-item-label">Importar Backup Manual</div>
+                        <div class="settings-item-desc">Restaurar desde archivo .bin exportado.</div>
                     </div>
-                    <div class="settings-action-icon">${getIcon('downloadCloud')}</div>
+                    <div class="settings-action-icon">${getIcon('upload')}</div>
                 </div>
+                <input type="file" id="import-backup-input" accept=".bin" style="display: none;">
 
                 <div class="settings-divider"></div>
 
@@ -136,7 +137,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.21</p>
+            <p>Life Dashboard Pro v1.0.22</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -248,25 +249,49 @@ export function setupSettingsListeners() {
         }
     });
 
-    // Cloud Pull (Restore)
-    document.getElementById('pull-drive-btn')?.addEventListener('click', async () => {
-        const confirmPull = await ns.confirm('¿Recuperar de la nube?', 'Esto sobreescribirá tus datos locales actuales con los de Google Drive. ¿Deseas continuar?');
-        if (!confirmPull) return;
+    // Import Backup Manual
+    const importBtn = document.getElementById('import-backup-btn');
+    const importInput = document.getElementById('import-backup-input');
+
+    importBtn?.addEventListener('click', () => {
+        importInput?.click();
+    });
+
+    importInput?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const confirmImport = await ns.confirm(
+            '¿Importar Backup?',
+            'Esto sobreescribirá todos tus datos locales con los del archivo. ¿Deseas continuar?'
+        );
+        if (!confirmImport) {
+            importInput.value = '';
+            return;
+        }
 
         try {
+            const text = await file.text();
+            const encryptedData = JSON.parse(text);
             const vaultKey = AuthService.getVaultKey();
-            const remoteState = await DriveService.pullData(vaultKey);
 
-            if (remoteState) {
-                store.setState(remoteState);
-                ns.toast('Datos recuperados con éxito');
+            // Decrypt using SecurityService
+            const { SecurityService } = await import('../services/SecurityService.js');
+            const decryptedState = await SecurityService.decrypt(encryptedData, vaultKey);
+
+            if (decryptedState) {
+                store.setState(decryptedState);
+                await store.saveState();
+                ns.toast('Backup importado correctamente');
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                ns.alert('Sin datos', 'No se encontró ninguna bóveda en tu Google Drive.');
+                throw new Error('No se pudo descifrar el archivo');
             }
-        } catch (e) {
-            console.error(e);
-            ns.alert('Error de recuperación', 'Asegúrate de que la contraseña sea la misma que usaste para el backup.');
+        } catch (err) {
+            console.error('Import error:', err);
+            ns.alert('Error de Importación', 'El archivo no es válido o la contraseña no coincide con la usada para el backup.');
+        } finally {
+            importInput.value = '';
         }
     });
 

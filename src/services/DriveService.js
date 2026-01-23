@@ -69,6 +69,11 @@ export class DriveService {
      * Gets or creates a nested folder structure
      */
     static async getOrCreateFolderPath(path) {
+        // Ensure client is initialized before using Drive API
+        if (!gapi.client?.drive) {
+            await this.init();
+        }
+
         const parts = path.split('/').filter(p => p);
         let parentId = 'root';
 
