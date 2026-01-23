@@ -153,6 +153,8 @@ class NotificationService {
         overlay.className = `modal-overlay ${centered ? 'overlay-centered' : ''}`;
         overlay.style.zIndex = '9999';
 
+        const timestamp = Date.now();
+
         const modalHtml = `
             <div class="modal premium-alert-modal animate-pop">
                 <div class="modal-header">
@@ -164,7 +166,7 @@ class NotificationService {
                 </div>
                 <div class="modal-footer" style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg);">
                     ${buttons.map((btn, i) => `
-                        <button id="${btn.id || `modal-btn-${Date.now()}-${i}`}" class="btn btn-${btn.type} w-full" ${btn.disabled ? 'disabled style="opacity: 0.3; pointer-events: none;"' : ''}>${btn.text}</button>
+                        <button id="${btn.id || `modal-btn-${timestamp}-${i}`}" class="btn btn-${btn.type} w-full" ${btn.disabled ? 'disabled style="opacity: 0.3; pointer-events: none;"' : ''}>${btn.text}</button>
                     `).join('')}
                 </div>
             </div>
@@ -178,11 +180,13 @@ class NotificationService {
         overlay.classList.add('active');
 
         buttons.forEach((btn, i) => {
-            const el = document.getElementById(btn.id || `modal-btn-${Date.now()}-${i}`);
-            el.addEventListener('click', async () => {
-                btn.onClick();
-                await this._closeModal(overlay);
-            });
+            const el = document.getElementById(btn.id || `modal-btn-${timestamp}-${i}`);
+            if (el) {
+                el.addEventListener('click', async () => {
+                    btn.onClick();
+                    await this._closeModal(overlay);
+                });
+            }
         });
 
         // Close on overlay click if not a "hard" modal or dangerous
