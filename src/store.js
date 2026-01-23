@@ -374,8 +374,7 @@ class Store {
     getAllExpenses() {
         const living = this.getLivingExpenses();
         const other = this.sumItems(this.state.otherExpenses, 'amount');
-        const liabilityPayments = this.sumItems(this.state.liabilities, 'monthlyPayment');
-        return living + other + liabilityPayments;
+        return living + other;
     }
     getNetIncome() { return this.getAllIncomes() - this.getAllExpenses(); }
 

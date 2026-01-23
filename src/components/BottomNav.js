@@ -6,9 +6,9 @@ import { getIcon } from '../utils/icons.js';
 
 const NAV_ITEMS = [
     { id: 'finance', icon: 'wallet', label: 'Finanzas' },
+    { id: 'health', icon: 'heart', label: 'Salud' },
     { id: 'goals', icon: 'target', label: 'Metas' },
     { id: 'calendar', icon: 'calendar', label: 'Agenda' },
-    { id: 'health', icon: 'heart', label: 'Salud' },
     { id: 'settings', icon: 'settings', label: 'Ajustes' }
 ];
 

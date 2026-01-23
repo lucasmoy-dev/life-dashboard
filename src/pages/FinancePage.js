@@ -86,12 +86,12 @@ export function renderFinancePage() {
           </div>
         </div>
         
-        <div class="card">
+        <div class="card net-worth-card">
           <div class="card-header">
             <span class="card-title">Patrimonio Neto</span>
             ${getIcon('scale', 'card-icon')}
           </div>
-          <div class="stat-value ${netWorth >= 0 ? 'positive' : 'negative'}" style="font-size: 28px; font-weight: 700;">
+          <div class="stat-value ${netWorth >= 0 ? 'positive' : 'negative'}" style="font-size: 32px; font-weight: 800; text-align: center; margin-top: var(--spacing-sm);">
             ${formatCurrency(netWorth, symbol)}
           </div>
         </div>
@@ -160,19 +160,19 @@ export function renderFinancePage() {
         </button>
       </div>
 
-      <!-- ASSETS LIST -->
-      <div class="section-divider">
-        <span class="section-title">Ingreso Pasivo & Cartera</span>
-      </div>
-      
-      ${renderAssetsList(state)}
-
       <!-- ALLOCATION CHART -->
       <div class="section-divider">
         <span class="section-title">Distribución de Activos</span>
       </div>
       
       ${renderAllocationChart(state)}
+
+      <!-- ASSETS LIST -->
+      <div class="section-divider">
+        <span class="section-title">Ingreso Pasivo & Cartera</span>
+      </div>
+      
+      ${renderAssetsList(state)}
 
       <!-- FOOTER BUTTONS & SETTINGS -->
       <div class="section-divider">

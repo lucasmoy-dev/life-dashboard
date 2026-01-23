@@ -3245,10 +3245,30 @@ input:checked+.slider-premium:before {
 /* Extra large screens */
 @media (min-width: 1400px) {
     #main-content {
-        max-width: 1400px;
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
     .asset-list {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+}
+
+/* Specific desktop fixes for alignment */
+@media (min-width: 1024px) {
+    .net-worth-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 140px;
+    }
+
+    .asset-item {
+        padding: var(--spacing-lg);
+    }
+
+    .expense-item .asset-value {
+        font-size: 18px;
     }
 }

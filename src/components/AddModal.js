@@ -163,31 +163,37 @@ function renderForm() {
 
   let additionalFields = '';
 
-  if (currentCategory === 'passiveAsset') {
+  if (currentCategory === 'passiveAsset' || currentCategory === 'investmentAsset') {
+    const isPassive = currentCategory === 'passiveAsset';
     additionalFields = `
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Valor Total</label>
-          <input type="number" class="form-input" id="input-value" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Ingreso Mensual</label>
-          <input type="number" class="form-input" id="input-monthly" placeholder="0" inputmode="numeric">
+      <div class="form-group" style="margin-bottom: var(--spacing-sm);">
+        <div style="display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: var(--radius-md);">
+          <button type="button" class="btn mode-toggle-btn active" id="mode-qty" style="flex: 1; padding: 6px; font-size: 11px; border-radius: 6px; background: var(--accent-primary); color: var(--bg-primary); border: none; font-weight: 600;">CANTIDAD</button>
+          <button type="button" class="btn mode-toggle-btn" id="mode-total" style="flex: 1; padding: 6px; font-size: 11px; border-radius: 6px; background: transparent; color: var(--text-secondary); border: none; font-weight: 600;">VALOR TOTAL (EUR)</button>
         </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="label-qty">Cantidad</label>
+          <input type="number" class="form-input" id="input-qty" placeholder="0.00" step="any" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor en EUR</label>
+          <input type="number" class="form-input" id="input-value" placeholder="0.00" step="any" inputmode="decimal">
+        </div>
+      </div>
+      ${isPassive ? `
+      <div class="form-group">
+          <label class="form-label">Ingreso Mensual (en EUR)</label>
+          <input type="number" class="form-input" id="input-monthly" placeholder="0" inputmode="numeric">
+      </div>` : ''}
     `;
   } else if (currentCategory === 'activeIncome' || currentCategory === 'livingExpense') {
     additionalFields = `
       <div class="form-group">
         <label class="form-label">Monto Mensual</label>
         <input type="number" class="form-input" id="input-amount" placeholder="0" inputmode="numeric">
-      </div>
-    `;
-  } else if (currentCategory === 'investmentAsset') {
-    additionalFields = `
-      <div class="form-group">
-        <label class="form-label">Cantidad / Valor</label>
-        <input type="number" class="form-input" id="input-value" placeholder="0" step="any" inputmode="decimal">
       </div>
     `;
   } else if (currentCategory === 'liability') {
@@ -300,15 +306,62 @@ function setupFormListeners() {
     saveBtn.addEventListener('click', handleSave);
   }
 
-  // Auto-fill name when currency/asset changes
+  // Mode toggles
+  const modeQty = document.getElementById('mode-qty');
+  const modeTotal = document.getElementById('mode-total');
+  const inputQty = document.getElementById('input-qty');
+  const inputValue = document.getElementById('input-value');
   const assetSelect = document.getElementById('input-currency');
   const nameInput = document.getElementById('input-name');
-  if (assetSelect && nameInput) {
+
+  if (modeQty && modeTotal) {
+    const setMode = (mode) => {
+      if (mode === 'qty') {
+        modeQty.style.background = 'var(--accent-primary)';
+        modeQty.style.color = 'var(--bg-primary)';
+        modeTotal.style.background = 'transparent';
+        modeTotal.style.color = 'var(--text-secondary)';
+        inputQty.focus();
+      } else {
+        modeTotal.style.background = 'var(--accent-primary)';
+        modeTotal.style.color = 'var(--bg-primary)';
+        modeQty.style.background = 'transparent';
+        modeQty.style.color = 'var(--text-secondary)';
+        inputValue.focus();
+      }
+    };
+
+    modeQty.addEventListener('click', () => setMode('qty'));
+    modeTotal.addEventListener('click', () => setMode('total'));
+  }
+
+  // Auto-calculation
+  const updateCalc = (source) => {
+    const rates = store.getState().rates;
+    const currency = assetSelect?.value;
+    const rate = rates[currency] || 1;
+
+    if (source === 'qty') {
+      const qty = parseFloat(inputQty.value) || 0;
+      inputValue.value = (qty * rate).toFixed(2);
+    } else {
+      const val = parseFloat(inputValue.value) || 0;
+      inputQty.value = (val / rate).toFixed(6);
+    }
+  };
+
+  inputQty?.addEventListener('input', () => updateCalc('qty'));
+  inputValue?.addEventListener('input', () => updateCalc('total'));
+
+  if (assetSelect) {
     assetSelect.addEventListener('change', () => {
-      if (!nameInput.value) {
+      // Auto-fill name
+      if (nameInput && !nameInput.value) {
         const selectedText = assetSelect.options[assetSelect.selectedIndex].text;
         nameInput.value = selectedText.split(' (')[0];
       }
+      // Re-calc with new rate
+      updateCalc('qty');
     });
   }
 }
@@ -319,6 +372,8 @@ function handleSave() {
   const currency = document.getElementById('input-currency')?.value;
   const details = document.getElementById('input-details')?.value?.trim();
   const value = parseFloat(document.getElementById('input-value')?.value) || 0;
+  const qtyInput = document.getElementById('input-qty');
+  const qty = qtyInput ? (parseFloat(qtyInput.value) || 0) : value;
   const amount = parseFloat(document.getElementById('input-amount')?.value) || 0;
   const monthly = parseFloat(document.getElementById('input-monthly')?.value) || 0;
   const date = document.getElementById('input-date')?.value;
@@ -334,7 +389,7 @@ function handleSave() {
 
   switch (currentCategory) {
     case 'passiveAsset':
-      store.addPassiveAsset({ ...baseData, value, monthlyIncome: monthly });
+      store.addPassiveAsset({ ...baseData, value: qty, monthlyIncome: monthly });
       break;
     case 'activeIncome':
       store.addActiveIncome({ ...baseData, amount });
@@ -343,7 +398,7 @@ function handleSave() {
       store.addLivingExpense({ ...baseData, amount });
       break;
     case 'investmentAsset':
-      store.addInvestmentAsset({ ...baseData, value });
+      store.addInvestmentAsset({ ...baseData, value: qty });
       break;
     case 'liability':
       store.addLiability({ ...baseData, amount, monthlyPayment: monthly });
