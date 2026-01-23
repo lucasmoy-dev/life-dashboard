@@ -107,6 +107,43 @@ class NotificationService {
     }
 
     /**
+     * Custom Selection Modal
+     */
+    select(title, message, options = [], columns = 4) {
+        return new Promise((resolve) => {
+            const gridStyle = `display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: 8px; margin-top: 16px;`;
+            this._showModal({
+                title,
+                message,
+                centered: true,
+                content: `
+                    <div style="${gridStyle}">
+                        ${options.map((opt, i) => `
+                            <button class="btn btn-secondary select-option-btn" style="padding: 10px 4px; font-size: 13px; font-weight: 600;" data-value="${opt.value || opt}">
+                                ${opt.label || opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                `,
+                buttons: [
+                    { text: 'Cancelar', type: 'secondary', onClick: () => resolve(null) }
+                ]
+            });
+
+            // Attach listeners to options
+            const modal = document.querySelector('.modal-overlay.active');
+            if (modal) {
+                modal.querySelectorAll('.select-option-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        resolve(btn.dataset.value);
+                        this._closeModal(modal);
+                    });
+                });
+            }
+        });
+    }
+
+    /**
      * Dangerous Action Confirmation (e.g. Factory Reset)
      * Requires typing a specific word to confirm.
      */

@@ -198,25 +198,41 @@ function renderProjectionBars(yearlyBreakdown, symbol) {
   if (yearlyBreakdown.length === 0) return '';
 
   const maxValue = Math.max(...yearlyBreakdown.map(y => Math.abs(y.endBalance)));
-
-  // Show max 10 bars for better visualization
-  const step = Math.ceil(yearlyBreakdown.length / 10);
-  const filteredYears = yearlyBreakdown.filter((_, i) => (i + 1) % step === 0 || i === yearlyBreakdown.length - 1);
+  const points = yearlyBreakdown.map((year, i) => {
+    const x = (i / (yearlyBreakdown.length - 1)) * 100;
+    const y = 100 - (year.endBalance / maxValue) * 100;
+    return `${x},${y}`;
+  });
 
   return `
-    <div class="chart-bars">
-      ${filteredYears.map(year => {
-    const height = maxValue > 0 ? Math.abs(year.endBalance) / maxValue * 100 : 0;
-    const isNegative = year.endBalance < 0;
-    return `
-          <div class="chart-bar-container">
-            <div class="chart-bar ${isNegative ? 'negative' : ''}" style="height: ${Math.max(height, 5)}%;">
-              <span class="chart-bar-value">${formatCurrencyCompact(year.endBalance, symbol)}</span>
-            </div>
-            <span class="chart-bar-label">Año ${year.year}</span>
-          </div>
-        `;
-  }).join('')}
+    <div class="line-chart-container" style="height: 200px; width: 100%; position: relative; margin-top: 20px;">
+      <svg viewBox="0 0 100 100" class="projection-line-chart" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
+        <!-- Grid horizontal lines -->
+        <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        
+        <!-- Area under curve -->
+        <path d="M0,100 L${points.join(' L')} L100,100 Z" fill="url(#chart-gradient)" opacity="0.2" />
+        
+        <!-- Main line -->
+        <path d="M${points.join(' L')}" fill="none" stroke="var(--accent-primary)" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+        
+        <!-- Gradient definition -->
+        <defs>
+          <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent-primary)" />
+            <stop offset="100%" stop-color="transparent" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      <!-- Labels -->
+      <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; color: var(--text-muted);">
+        <span>Año 0</span>
+        <span>Año ${Math.floor(yearlyBreakdown.length / 2)}</span>
+        <span>Año ${yearlyBreakdown.length}</span>
+      </div>
     </div>
   `;
 }

@@ -160,7 +160,9 @@ class Store {
             // Background Auto-sync
             const vaultKey = AuthService.getVaultKey();
             if (vaultKey && DriveService.hasToken()) {
-                DriveService.pushData(this.state, vaultKey).then(() => {
+                // Filter out non-syncable UI state
+                const { hideRealEstate, ...syncData } = this.state;
+                DriveService.pushData(syncData, vaultKey).then(() => {
                     console.log('[Auto-Sync] Success');
                     ns.toast('Sincronizado con Drive', 'success', 2000);
                 }).catch(e => {
@@ -421,6 +423,36 @@ class Store {
                     if (r.id === routineId) {
                         const newExs = [...r.exercises];
                         newExs[exerciseIndex] = { ...newExs[exerciseIndex], ...updates };
+                        return { ...r, exercises: newExs };
+                    }
+                    return r;
+                })
+            }
+        });
+    }
+
+    addExerciseToRoutine(routineId, exercise) {
+        this.setState({
+            health: {
+                ...this.state.health,
+                routines: this.state.health.routines.map(r => {
+                    if (r.id === routineId) {
+                        return { ...r, exercises: [...r.exercises, { weight: 0, reps: 14, sets: 4, ...exercise }] };
+                    }
+                    return r;
+                })
+            }
+        });
+    }
+
+    deleteExerciseFromRoutine(routineId, exerciseIndex) {
+        this.setState({
+            health: {
+                ...this.state.health,
+                routines: this.state.health.routines.map(r => {
+                    if (r.id === routineId) {
+                        const newExs = [...r.exercises];
+                        newExs.splice(exerciseIndex, 1);
                         return { ...r, exercises: newExs };
                     }
                     return r;

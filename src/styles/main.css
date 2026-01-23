@@ -1037,6 +1037,27 @@ body {
     color: var(--accent-primary);
 }
 
+.icon-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* ============================================
    ANIMATIONS
    ============================================ */

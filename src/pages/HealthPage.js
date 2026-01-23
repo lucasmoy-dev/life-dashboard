@@ -31,9 +31,14 @@ export function renderHealthPage() {
                     <div class="routine-name clickable rename-routine" data-id="${routine.id}">${routine.name}</div>
                     <div class="routine-meta">${routine.exercises.length} ejercicios</div>
                 </div>
-                <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);">
-                    ${getIcon('trash')}
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="icon-btn add-exercise-btn" data-id="${routine.id}" style="color: var(--accent-primary);">
+                        ${getIcon('plus')}
+                    </button>
+                    <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);">
+                        ${getIcon('trash')}
+                    </button>
+                </div>
             </div>
             <div class="exercise-list">
                 ${routine.exercises.map((ex, index) => {
@@ -54,7 +59,7 @@ export function renderHealthPage() {
                         <div class="ex-health-main">
                             <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
                             <div class="ex-health-info" style="${status.color === 'red' ? 'opacity: 0.6;' : ''}">
-                                <div class="ex-health-name">${ex.name}</div>
+                                <div class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${index}">${ex.name}</div>
                                 <div class="ex-health-stats">
                                     <span class="ex-clickable-val update-weight" data-routine="${routine.id}" data-index="${index}">${ex.weight || 0}kg</span>
                                     <span style="opacity: 0.3;">•</span>
@@ -65,9 +70,14 @@ export function renderHealthPage() {
                                 </div>
                             </div>
                         </div>
-                        <button class="log-exercise-large-btn trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
-                            🏋️
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${index}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
+                                ${getIcon('x', '', 'style="width: 14px; height: 14px;"')}
+                            </button>
+                            <button class="log-exercise-large-btn trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
+                                🏋️
+                            </button>
+                        </div>
                     </div>
                     `;
     }).join('')}
@@ -230,6 +240,18 @@ export function setupHealthPageListeners() {
         });
     });
 
+    // Add Exercise to Routine
+    document.querySelectorAll('.add-exercise-btn').forEach(el => {
+        el.addEventListener('click', async () => {
+            const id = el.dataset.id;
+            const name = await ns.prompt('Agregar Ejercicio', 'Nombre del ejercicio:', 'Ej: Press Militar');
+            if (name) {
+                store.addExerciseToRoutine(id, { name });
+                ns.toast('Ejercicio añadido');
+            }
+        });
+    });
+
     // Delete Routine
     document.querySelectorAll('.delete-routine').forEach(el => {
         el.addEventListener('click', async () => {
@@ -242,33 +264,72 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Update Weight
+    // Rename Exercise
+    document.querySelectorAll('.rename-exercise').forEach(el => {
+        el.addEventListener('click', async () => {
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const currentName = el.textContent;
+            const newName = await ns.prompt('Renombrar Ejercicio', 'Nuevo nombre:', currentName);
+            if (newName && newName !== currentName) {
+                store.updateExercise(routineId, index, { name: newName });
+                ns.toast('Ejercicio renombrado');
+            }
+        });
+    });
+
+    // Delete Exercise
+    document.querySelectorAll('.delete-exercise-btn').forEach(el => {
+        el.addEventListener('click', async () => {
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const confirmed = await ns.confirm('Eliminar Ejercicio', '¿Quitar este ejercicio de la rutina?', 'Eliminar', 'Cancelar');
+            if (confirmed) {
+                store.deleteExerciseFromRoutine(routineId, index);
+                ns.toast('Ejercicio eliminado');
+            }
+        });
+    });
+
+    // Update Weight (Select Picker)
     document.querySelectorAll('.update-weight').forEach(el => {
         el.addEventListener('click', async (e) => {
             e.stopPropagation();
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
-            const current = el.textContent.replace('kg', '');
 
-            const newVal = await ns.prompt('Cambiar Peso', 'Ingresa el nuevo peso (kg):', current, 'number');
-            if (newVal !== null && !isNaN(newVal)) {
-                store.updateExercise(routineId, index, { weight: parseFloat(newVal) });
+            // Generate kg options: 10 to 150 in 2.5kg steps
+            const options = [];
+            for (let kg = 10; kg <= 150; kg += 2.5) {
+                options.push(`${kg}kg`);
+            }
+
+            const selected = await ns.select('Seleccionar Peso', 'Elige el peso para este ejercicio:', options, 4);
+            if (selected) {
+                const weight = parseFloat(selected.replace('kg', ''));
+                store.updateExercise(routineId, index, { weight });
                 ns.toast('Peso actualizado');
             }
         });
     });
 
-    // Update Reps
+    // Update Reps (Select Picker)
     document.querySelectorAll('.update-reps').forEach(el => {
         el.addEventListener('click', async (e) => {
             e.stopPropagation();
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
-            const current = el.textContent.replace(' reps', '');
 
-            const newVal = await ns.prompt('Cambiar Repeticiones', 'Ingresa las reps objetivo:', current, 'number');
-            if (newVal !== null && !isNaN(newVal)) {
-                store.updateExercise(routineId, index, { reps: parseInt(newVal) });
+            // Generate reps options: 7 to 20
+            const options = [];
+            for (let r = 7; r <= 20; r++) {
+                options.push(`${r} reps`);
+            }
+
+            const selected = await ns.select('Seleccionar Reps', 'Elige las repeticiones objetivo:', options, 4);
+            if (selected) {
+                const reps = parseInt(selected.replace(' reps', ''));
+                store.updateExercise(routineId, index, { reps });
                 ns.toast('Reps actualizadas');
             }
         });
