@@ -153,7 +153,9 @@ class NotificationService {
         overlay.className = `modal-overlay ${centered ? 'overlay-centered' : ''}`;
         overlay.style.zIndex = '9999';
 
-        const timestamp = Date.now();
+        // Create unique ID for this modal instance
+        const modalId = `modal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        overlay.id = modalId;
 
         const modalHtml = `
             <div class="modal premium-alert-modal animate-pop">
@@ -166,7 +168,9 @@ class NotificationService {
                 </div>
                 <div class="modal-footer" style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg);">
                     ${buttons.map((btn, i) => `
-                        <button id="${btn.id || `modal-btn-${timestamp}-${i}`}" class="btn btn-${btn.type} w-full" ${btn.disabled ? 'disabled style="opacity: 0.3; pointer-events: none;"' : ''}>${btn.text}</button>
+                        <button class="btn btn-${btn.type} w-full" data-index="${i}" ${btn.disabled ? 'disabled style="opacity: 0.3; pointer-events: none;"' : ''} ${btn.id ? `id="${btn.id}"` : ''}>
+                            ${btn.text}
+                        </button>
                     `).join('')}
                 </div>
             </div>
@@ -179,12 +183,29 @@ class NotificationService {
         overlay.offsetHeight;
         overlay.classList.add('active');
 
-        buttons.forEach((btn, i) => {
-            const el = document.getElementById(btn.id || `modal-btn-${timestamp}-${i}`);
-            if (el) {
-                el.addEventListener('click', async () => {
-                    btn.onClick();
-                    await this._closeModal(overlay);
+        // Attach listeners using the overlay scope, finding buttons by data-index
+        // This avoids ID collision issues completely for generated buttons
+        const modalBtnElements = overlay.querySelectorAll('.modal-footer button');
+        modalBtnElements.forEach(el => {
+            const index = el.dataset.index;
+            if (index !== undefined) {
+                const btn = buttons[index];
+                // Attach custom logic for specific IDs if needed (like hardConfirm input)
+                if (btn.id) {
+                    // If the button has an explicit ID, we might have external code referencing it (like hardConfirm)
+                    // But for the click handler, we can just bind it here.
+                }
+
+                el.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent overlay click
+                    try {
+                        if (btn.onClick) await btn.onClick();
+                        await this._closeModal(overlay);
+                    } catch (err) {
+                        console.error('Modal button action failed', err);
+                        // Force close even if action failed?
+                        // await this._closeModal(overlay);
+                    }
                 });
             }
         });
