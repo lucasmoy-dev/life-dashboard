@@ -135,6 +135,18 @@ body {
     overflow-y: auto;
 }
 
+#main-content.no-padding-mobile {
+    padding: 0 !important;
+    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + var(--spacing-md)) !important;
+}
+
+@media (min-width: 768px) {
+    #main-content.no-padding-mobile {
+        padding: var(--spacing-xl) !important;
+        padding-bottom: calc(var(--nav-height) + var(--spacing-xl)) !important;
+    }
+}
+
 /* ============================================
    BOTTOM NAVIGATION
    ============================================ */
@@ -2300,18 +2312,38 @@ body {
 
 .routines-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: 1fr;
+    /* Default to 100% width */
     gap: var(--spacing-lg);
+    width: 100%;
 }
 
-@media (max-width: 600px) {
+@media (min-width: 900px) {
     .routines-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1300px) {
+    .routines-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 .health-routine-card {
     width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}
+
+@media (min-width: 600px) {
+    .health-routine-card {
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
 }
 
 .icon-btn.mobile-only {
@@ -2354,6 +2386,13 @@ body {
     gap: 12px;
     align-items: center;
     flex: 1;
+}
+
+.exercise-status-dot-wear {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .ex-health-name-row {
@@ -2442,6 +2481,10 @@ body {
 .btn-perf.easy:hover {
     color: #60a5fa;
     background: rgba(59, 130, 246, 0.1);
+}
+
+.last-effort-badge-emoji {
+    font-size: 14px;
 }
 
 .ex-delete-mini {

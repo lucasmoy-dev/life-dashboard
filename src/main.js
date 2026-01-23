@@ -32,9 +32,15 @@ async function init() {
     const vaultKey = AuthService.getVaultKey();
 
     if (vaultKey) {
-        // Load and decrypt stored state if it exists
-        await store.loadEncrypted(vaultKey);
-        startDashboard();
+        // Load and decrypt stored state
+        const success = await store.loadEncrypted(vaultKey);
+        if (success) {
+            startDashboard();
+        } else {
+            console.error('[Boot] Decryption failed, invalid vault key in session?');
+            AuthService.logout();
+            renderAuth();
+        }
     } else {
         renderAuth();
     }
@@ -219,6 +225,8 @@ function renderPage() {
         main.scrollTop = scrollTop;
         return;
     }
+
+    main.classList.toggle('no-padding-mobile', currentPage === 'health');
 
     switch (currentPage) {
         case 'finance':

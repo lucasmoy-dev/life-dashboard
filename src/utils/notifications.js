@@ -194,39 +194,41 @@ class NotificationService {
     }
 
     /**
-     * Star Rating Modal
+     * Rating with Emojis
      */
-    stars(title, message) {
+    performance(title, message) {
+        const options = [
+            { rating: 1, emoji: '😰', label: 'Duro' },
+            { rating: 3, emoji: '😐', label: 'Bien' },
+            { rating: 5, emoji: '😄', label: 'Fácil' }
+        ];
+
         return new Promise((resolve) => {
-            let selectedRating = 5;
             this._showModal({
                 title,
                 message,
                 centered: true,
                 content: `
-                    <div class="star-rating-container" style="display: flex; justify-content: center; gap: 12px; margin-top: 20px; font-size: 32px;">
-                        ${[1, 2, 3, 4, 5].map(num => `
-                            <span class="star-btn" data-value="${num}" style="cursor: pointer; color: ${num <= 5 ? 'var(--accent-tertiary)' : 'var(--text-muted)'}; transition: transform 0.2s ease;">★</span>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px;">
+                        ${options.map(opt => `
+                            <button class="btn btn-secondary perf-emoji-btn" data-value="${opt.rating}" style="display: flex; flex-direction: column; align-items: center; padding: 15px 5px; gap: 8px;">
+                                <span style="font-size: 32px;">${opt.emoji}</span>
+                                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase;">${opt.label}</span>
+                            </button>
                         `).join('')}
                     </div>
                 `,
                 buttons: [
-                    { text: 'Cancelar', type: 'secondary', onClick: () => resolve(null) },
-                    { text: 'Guardar Calificación', type: 'primary', onClick: () => resolve(selectedRating) }
+                    { text: 'Cancelar', type: 'secondary', onClick: () => resolve(null) }
                 ]
             });
 
-            // Attach listeners to stars
             const modal = document.querySelector('.modal-overlay.active');
             if (modal) {
-                const stars = modal.querySelectorAll('.star-btn');
-                stars.forEach(star => {
-                    star.addEventListener('click', () => {
-                        selectedRating = parseInt(star.dataset.value);
-                        stars.forEach((s, i) => {
-                            s.style.color = (i < selectedRating) ? 'var(--accent-tertiary)' : 'var(--text-muted)';
-                            s.style.transform = (i < selectedRating) ? 'scale(1.2)' : 'scale(1)';
-                        });
+                modal.querySelectorAll('.perf-emoji-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        resolve(parseInt(btn.dataset.value));
+                        this._closeModal(modal);
                     });
                 });
             }
@@ -238,7 +240,6 @@ class NotificationService {
         overlay.className = `modal-overlay ${centered ? 'overlay-centered' : ''}`;
         overlay.style.zIndex = '9999';
 
-        // Create unique ID for this modal instance
         const modalId = `modal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         overlay.id = modalId;
 
@@ -264,38 +265,26 @@ class NotificationService {
         overlay.innerHTML = modalHtml;
         document.body.appendChild(overlay);
 
-        // Trigger reflow for animation
         overlay.offsetHeight;
         overlay.classList.add('active');
 
-        // Attach listeners using the overlay scope, finding buttons by data-index
-        // This avoids ID collision issues completely for generated buttons
         const modalBtnElements = overlay.querySelectorAll('.modal-footer button');
         modalBtnElements.forEach(el => {
             const index = el.dataset.index;
             if (index !== undefined) {
                 const btn = buttons[index];
-                // Attach custom logic for specific IDs if needed (like hardConfirm input)
-                if (btn.id) {
-                    // If the button has an explicit ID, we might have external code referencing it (like hardConfirm)
-                    // But for the click handler, we can just bind it here.
-                }
-
                 el.addEventListener('click', async (e) => {
-                    e.stopPropagation(); // Prevent overlay click
+                    e.stopPropagation();
                     try {
                         if (btn.onClick) await btn.onClick();
                         await this._closeModal(overlay);
                     } catch (err) {
                         console.error('Modal button action failed', err);
-                        // Force close even if action failed?
-                        // await this._closeModal(overlay);
                     }
                 });
             }
         });
 
-        // Close on overlay click if not a "hard" modal or dangerous
         overlay.addEventListener('click', async (e) => {
             if (e.target === overlay) {
                 const isDangerous = buttons.some(b => b.type === 'danger');

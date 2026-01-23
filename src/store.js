@@ -541,12 +541,12 @@ class Store {
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
         const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
 
-        const diffDays = (today - lastDay) / (1000 * 60 * 60 * 24);
+        const diffDays = Math.floor((today - lastDay) / (1000 * 60 * 60 * 24));
 
         if (diffDays === 0) return { color: 'red', status: 'done_today', lastLog }; // Done today
-        if (diffDays === 1) return { color: 'red', status: 'tired', lastLog }; // Done yesterday
-        if (diffDays === 2) return { color: 'orange', status: 'recovering', lastLog }; // Done 2 days ago
-        return { color: 'green', status: 'ready', lastLog }; // 3+ days
+        if (diffDays === 1) return { color: 'red', status: 'yesterday', lastLog }; // Trained yesterday
+        if (diffDays === 2) return { color: 'orange', status: 'day_before', lastLog }; // Trained 2 days ago
+        return { color: 'green', status: 'rested', lastLog }; // 3+ days
     }
 
     // ============================================

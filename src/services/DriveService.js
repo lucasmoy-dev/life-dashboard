@@ -90,7 +90,7 @@ export class DriveService {
             this.tokenClient.callback = (resp) => {
                 if (resp.error) {
                     if (silent) {
-                        localStorage.setItem('life-dashboard/drive_connected', 'false');
+                        console.warn('[Drive] Silent auth failed, but keeping connection intent');
                         reject(new Error('Silent auth failed'));
                     } else {
                         reject(new Error(resp.error_description || 'Fallo en la autenticación'));

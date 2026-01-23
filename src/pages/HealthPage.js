@@ -51,7 +51,7 @@ export function renderHealthPage() {
         return `
                     <div class="exercise-item-health ${isDoneToday ? 'exercise-done' : ''}">
                         <div class="ex-health-main">
-                            <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
+                            <div class="exercise-status-dot-wear" style="background-color: ${colorVar}; box-shadow: 0 0 10px ${colorVar};"></div>
                             <div class="ex-health-info">
                                 <div class="ex-health-name-row">
                                     <span class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${exIdx}" data-current="${ex.name}">${ex.name}</span>
@@ -66,7 +66,7 @@ export function renderHealthPage() {
                                     <span class="ex-clickable-val update-reps" data-routine="${routine.id}" data-index="${exIdx}">${ex.reps || 10} reps</span>
                                     ${status.lastLog ? `
                                         <span style="opacity: 0.3;">•</span>
-                                        <span class="last-effort-badge ${getRatingClass(status.lastLog.rating)}">Último: ${getRatingLabel(status.lastLog.rating)}</span>
+                                        <span class="last-effort-badge-emoji" title="Último esfuerzo">${getRatingLabel(status.lastLog.rating)}</span>
                                     ` : ''}
                                 </div>
                             </div>
@@ -77,8 +77,8 @@ export function renderHealthPage() {
                                     ${getIcon('check', 'done-icon-solid')}
                                 </div>
                             ` : `
-                                <button class="btn btn-secondary btn-sm log-stars-btn" data-rid="${routine.id}" data-idx="${exIdx}" style="padding: 8px 12px;">
-                                    ${getIcon('check')} Marcar
+                                <button class="btn btn-secondary btn-icon-only log-stars-btn" data-rid="${routine.id}" data-idx="${exIdx}" style="width: 42px; height: 42px; border-radius: 12px;">
+                                    ${getIcon('check')}
                                 </button>
                             `}
                             <button class="icon-btn mobile-only ex-more-btn" data-routine="${routine.id}" data-index="${exIdx}" data-name="${ex.name}">
@@ -142,9 +142,9 @@ export function renderHealthPage() {
 }
 
 function getRatingLabel(rating) {
-    if (rating <= 2) return 'DURO';
-    if (rating <= 4) return 'BIEN';
-    return 'FÁCIL';
+    if (rating <= 2) return '😰';
+    if (rating <= 4) return '😐';
+    return '😄';
 }
 
 function getRatingClass(rating) {
@@ -356,14 +356,14 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Exercise Logging (Stars)
+    // Exercise Logging (Performance Emojis)
     document.querySelectorAll('.log-stars-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const routineId = btn.dataset.rid;
             const index = parseInt(btn.dataset.idx);
 
-            const rating = await ns.stars('Finalizar Ejercicio', '¿Qué tan intenso te ha parecido?');
+            const rating = await ns.performance('Finalizar Ejercicio', '¿Qué tan intenso te ha parecido?');
             if (rating) {
                 store.logExercise(routineId, index, rating);
                 ns.toast('Ejercicio registrado', 'success');
