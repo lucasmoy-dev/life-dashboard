@@ -2756,3 +2756,203 @@ input:checked+.slider-premium:before {
     padding: 12px var(--spacing-md);
     font-size: 14px;
 }
+
+/* ============================================
+   EXPENSE BREAKDOWN ROW
+   ============================================ */
+.expense-breakdown-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.breakdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.breakdown-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.breakdown-lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+}
+
+.expense-icon-wrapper {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.1));
+    color: #ef4444;
+}
+
+/* Alias for existing expense wrapper */
+.asset-icon-wrapper.expense {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.1));
+    color: #ef4444;
+}
+
+/* ============================================
+   DESKTOP RESPONSIVE LAYOUT
+   ============================================ */
+@media (min-width: 768px) {
+
+    /* Wider content area */
+    #main-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: var(--spacing-xl);
+    }
+
+    /* Better nav on desktop - horizontal bar */
+    #bottom-nav {
+        position: fixed;
+        bottom: auto;
+        top: 0;
+        height: 64px;
+        padding-bottom: 0;
+        background: linear-gradient(180deg, rgba(15, 15, 35, 0.98) 0%, rgba(22, 33, 62, 0.95) 100%);
+        border-top: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Adjust content padding for top nav */
+    #main-content {
+        padding-top: calc(64px + var(--spacing-xl));
+        padding-bottom: var(--spacing-xl);
+    }
+
+    /* Move FAB to account for top nav */
+    .fab {
+        bottom: var(--spacing-xl);
+    }
+
+    /* Page titles larger */
+    .page-title {
+        font-size: 36px;
+    }
+
+    .page-subtitle {
+        font-size: 16px;
+    }
+
+    /* Cards with more padding */
+    .card {
+        padding: var(--spacing-xl);
+    }
+
+    /* Highlight value bigger */
+    .highlight-value {
+        font-size: 56px;
+    }
+
+    /* Summary grid 3 columns */
+    .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Asset list: 2 columns */
+    .asset-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    /* Modal wider on desktop */
+    .modal {
+        max-width: 560px;
+        border-radius: var(--radius-xl);
+        margin-bottom: 0;
+    }
+
+    .modal-overlay {
+        align-items: center;
+    }
+
+    .modal-overlay.active .modal {
+        transform: translateY(0);
+    }
+
+    /* Settings page max width */
+    .settings-page {
+        max-width: 700px !important;
+    }
+
+    /* Finance page grid layout for primary cards */
+    .finance-page .card:first-of-type,
+    .finance-page .highlight-card {
+        max-width: 100%;
+    }
+
+    /* Allocation chart larger */
+    .pie-chart {
+        width: 180px;
+        height: 180px;
+    }
+
+    .pie-center {
+        width: 120px;
+        height: 120px;
+    }
+
+    .pie-total {
+        font-size: 18px;
+    }
+
+    /* Nav items bigger targets */
+    .nav-item {
+        padding: var(--spacing-sm) var(--spacing-lg);
+    }
+
+    .nav-label {
+        font-size: 13px;
+    }
+
+    /* Button link cards full width */
+    .compound-link-btn {
+        max-width: 100%;
+    }
+
+    /* Expense breakdown bigger */
+    .breakdown-val {
+        font-size: 18px;
+    }
+
+    .breakdown-lbl {
+        font-size: 12px;
+    }
+}
+
+/* Extra large screens */
+@media (min-width: 1200px) {
+    #main-content {
+        max-width: 1100px;
+    }
+
+    /* 3-column asset list */
+    .asset-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Side by side layout for finance page sections */
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .settings-page {
+        max-width: 800px !important;
+    }
+}
