@@ -162,7 +162,7 @@ export function renderFinancePage() {
 
       <!-- ASSETS LIST -->
       <div class="section-divider">
-        <span class="section-title">Activos y Pasivos</span>
+        <span class="section-title">Ingreso Pasivo & Cartera</span>
       </div>
       
       ${renderAssetsList(state)}

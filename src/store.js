@@ -330,7 +330,11 @@ class Store {
     }
 
     getPassiveIncome() { return this.sumItems(this.state.passiveAssets, 'monthlyIncome'); }
-    getLivingExpenses() { return this.sumItems(this.state.livingExpenses, 'amount'); }
+    getLivingExpenses() {
+        const basic = this.sumItems(this.state.livingExpenses, 'amount');
+        const liabilityPayments = this.sumItems(this.state.liabilities, 'monthlyPayment');
+        return basic + liabilityPayments;
+    }
     getNetPassiveIncome() { return this.getPassiveIncome() - this.getLivingExpenses(); }
     getInvestmentAssetsValue() {
         const passiveValue = this.sumItems(this.state.passiveAssets, 'value');

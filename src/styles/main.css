@@ -1713,13 +1713,14 @@ body {
 .finance-links-grid {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     margin-bottom: var(--spacing-xl);
 }
 
 @media (min-width: 769px) {
     .finance-links-grid {
         flex-direction: row;
+        gap: var(--spacing-md);
     }
 
     .finance-links-grid .compound-link-btn {
@@ -1851,6 +1852,10 @@ body {
     font-size: 11px;
     color: var(--text-muted);
     margin-top: 2px;
+}
+
+.finance-balance-grid {
+    margin-bottom: var(--spacing-2xl);
 }
 
 .market-grid {
@@ -2382,9 +2387,23 @@ body {
     background: var(--gradient-card);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-xl);
-    padding: var(--spacing-2xl) var(--spacing-xl);
+    padding: var(--spacing-2xl);
     text-align: center;
     box-shadow: var(--shadow-lg), 0 0 100px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.auth-card .btn {
+    width: 100% !important;
+    margin: 0 !important;
 }
 
 .auth-header {
@@ -2771,8 +2790,15 @@ input:checked+.slider-premium:before {
 
 /* Premium Alert Modal Specifics */
 .premium-alert-modal {
-    max-width: 320px !important;
+    max-width: 400px !important;
     padding: var(--spacing-xl) !important;
+    width: 90%;
+}
+
+@media (min-width: 769px) {
+    .premium-alert-modal {
+        max-width: 500px !important;
+    }
 }
 
 .modal-footer .btn {
@@ -3049,28 +3075,56 @@ input:checked+.slider-premium:before {
     }
 
     .goals-column-logo {
-        width: 60px;
-        height: 60px;
+        width: 44px;
+        height: 44px;
         background: rgba(255, 255, 255, 0.03);
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-md);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-xs);
         border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .goals-column-header svg {
-        width: 28px;
-        height: 28px;
+        width: 20px;
+        height: 20px;
     }
 
     .goals-column-title {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--text-muted);
+    }
+
+    .quick-add-goal {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-md);
+        padding: 4px 12px;
+        transition: all var(--transition-fast);
+    }
+
+    .quick-add-goal:focus-within {
+        border-color: var(--accent-primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .quick-add-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        outline: none;
+        padding: 8px 0;
+    }
+
+    .quick-add-input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
     }
 
     /* Health Page Refinement */

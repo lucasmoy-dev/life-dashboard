@@ -36,8 +36,13 @@ export function renderGoalsPage() {
                 ${renderGoalsForTimeframe(goals, tf.id)}
             </div>
 
-            <button class="btn btn-secondary add-goal-mini" style="width: 100%; margin-top: var(--spacing-md);" data-timeframe="${tf.id}">
-                ${getIcon('plus')} Agregar meta
+            <!-- Quick Add Input -->
+            <div class="quick-add-goal">
+                <input type="text" class="quick-add-input" placeholder="Agregar a ${tf.label}..." data-timeframe="${tf.id}">
+            </div>
+
+            <button class="btn btn-secondary add-goal-mini" style="width: 100%; margin-top: var(--spacing-sm);" data-timeframe="${tf.id}">
+                ${getIcon('plus')} Meta avanzada
             </button>
           </div>
         `).join('')}
@@ -106,6 +111,18 @@ export function setupGoalsPageListeners() {
             if (confirmed) {
                 store.deleteGoal(btn.dataset.id);
                 ns.toast('Meta eliminada');
+            }
+        });
+    });
+
+    // Quick Add Listener
+    document.querySelectorAll('.quick-add-input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && input.value.trim()) {
+                const timeframe = input.dataset.timeframe;
+                store.addGoal({ title: input.value.trim(), timeframe, category: 'General' });
+                input.value = '';
+                ns.toast('Meta añadida');
             }
         });
     });
