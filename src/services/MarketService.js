@@ -94,6 +94,7 @@ export async function fetchMarketData(vsCurrency = 'EUR') {
                     return {
                         ...asset,
                         price: live.current_price,
+                        image: live.image,
                         change24h: live.price_change_percentage_24h_in_currency || live.price_change_percentage_24h || 0,
                         change7d: live.price_change_percentage_7d_in_currency || 0,
                         change30d: live.price_change_percentage_30d_in_currency || 0,

@@ -51,7 +51,12 @@ export function renderMarketPage() {
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <h1 class="page-title">Mercados del Mundo</h1>
-                                ${isLoading ? '<div class="loading-spinner-sm" style="width:12px; height:12px; border-width: 1.5px;"></div>' : ''}
+                                ${isLoading ? `
+                                    <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,212,170,0.1); padding: 4px 10px; border-radius: 20px;">
+                                        <div class="loading-spinner-sm" style="width:10px; height:10px; border-width: 1.5px; border-color: var(--accent-primary) transparent var(--accent-primary) transparent;"></div>
+                                        <span style="font-size: 10px; color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Actualizando</span>
+                                    </div>
+                                ` : ''}
                             </div>
                             <p class="page-subtitle">Activos globales en ${currency}</p>
                         </div>
@@ -100,9 +105,7 @@ function renderCategoryTable(categoryName, data, symbol) {
                                 <th data-sort="name" class="${sortConfig.key === 'name' ? 'active ' + sortConfig.direction : ''}" style="padding-left: var(--spacing-md);">Activo</th>
                                 <th data-sort="price" class="${sortConfig.key === 'price' ? 'active ' + sortConfig.direction : ''}">Precio</th>
                                 <th data-sort="change24h" class="${sortConfig.key === 'change24h' ? 'active ' + sortConfig.direction : ''}">24h</th>
-                                <th data-sort="change7d" class="${sortConfig.key === 'change7d' ? 'active ' + sortConfig.direction : ''} desktop-only" style="display: none;">7d</th>
-                                <th data-sort="change30d" class="${sortConfig.key === 'change30d' ? 'active ' + sortConfig.direction : ''}">30d</th>
-                                <th style="text-align: right; padding-right: var(--spacing-md);">Add</th>
+                                <th data-sort="change30d" class="${sortConfig.key === 'change30d' ? 'active ' + sortConfig.direction : ''}" style="padding-right: var(--spacing-md);">30d</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -110,9 +113,12 @@ function renderCategoryTable(categoryName, data, symbol) {
                                 <tr>
                                     <td style="min-width: 100px; padding-left: var(--spacing-md);">
                                         <div class="asset-cell">
-                                            <div class="asset-icon-small" style="background: rgba(0, 212, 170, 0.1); color: var(--accent-primary); width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                                ${getIcon(asset.icon || 'package')}
-                                            </div>
+                                            ${asset.image
+            ? `<img src="${asset.image}" alt="${asset.symbol}" style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;">`
+            : `<div class="asset-icon-small" style="background: rgba(0, 212, 170, 0.1); color: var(--accent-primary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                    ${getIcon(asset.icon || 'dollarSign')}
+                                                </div>`
+        }
                                             <div style="display: flex; flex-direction: column; min-width: 0;">
                                                 <span class="asset-symbol" style="color: var(--text-primary); font-weight: 700; font-size: 13px;">${asset.symbol.toUpperCase()}</span>
                                                 <span class="asset-name" style="font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">${asset.name}</span>
@@ -121,13 +127,7 @@ function renderCategoryTable(categoryName, data, symbol) {
                                     </td>
                                     <td style="font-weight: 600; font-variant-numeric: tabular-nums;">${asset.price !== null ? formatCurrency(asset.price, symbol) : '-'}</td>
                                     <td class="${asset.change24h >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change24h !== null ? formatPercentage(asset.change24h) : '-'}</td>
-                                    <td class="${asset.change7d >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums; display: none;" class="desktop-only">${asset.change7d !== null ? formatPercentage(asset.change7d) : '-'}</td>
-                                    <td class="${asset.change30d >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums;">${asset.change30d !== null ? formatPercentage(asset.change30d) : '-'}</td>
-                                    <td style="text-align: right; padding-right: var(--spacing-md);">
-                                        <button class="btn-add-market" data-id="${asset.id}" title="Agregar a mi cartera" style="background: var(--accent-primary); border: none; color: var(--bg-primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: auto;">
-                                            ${getIcon('plus')}
-                                        </button>
-                                    </td>
+                                    <td class="${asset.change30d >= 0 ? 'text-positive' : 'text-negative'}" style="font-variant-numeric: tabular-nums; padding-right: var(--spacing-md);">${asset.change30d !== null ? formatPercentage(asset.change30d) : '-'}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -175,21 +175,6 @@ export function setupMarketPageListeners(onBack) {
             const newCurr = btn.dataset.curr;
             store.setCurrency(newCurr);
             loadData(); // This will trigger re-render on market-ready
-        });
-    });
-
-    // Add asset listeners
-    const addBtns = document.querySelectorAll('.btn-add-market');
-    addBtns.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            const asset = marketData.find(a => a.id === id);
-            if (asset) {
-                const type = asset.category === ASSET_CATEGORIES.CURRENCIES ? 'passive' : 'investment';
-                store.addAssetFromMarket(asset, type);
-                ns.toast(`Añadido: ${asset.name}`);
-            }
         });
     });
 
