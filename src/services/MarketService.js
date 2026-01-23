@@ -12,6 +12,13 @@ export const ASSET_CATEGORIES = {
     COMMODITIES: 'Materias Primas'
 };
 
+const CACHE_DURATION = 5 * 60 * 1000;
+let cache = {
+    data: null,
+    timestamp: 0,
+    currency: ''
+};
+
 export const MARKET_ASSETS = [
     // STOCKS & INDICES
     { id: 'sp500', name: 'S&P 500', symbol: 'SPX', category: ASSET_CATEGORIES.STOCKS, yahooId: '%5EGSPC', icon: 'trendingUp' },
@@ -76,6 +83,11 @@ export const MARKET_ASSETS = [
 ];
 
 export async function fetchMarketData(vsCurrency = 'EUR') {
+    if (cache.data && (Date.now() - cache.timestamp < CACHE_DURATION) && cache.currency === vsCurrency) {
+        console.log('[MarketService] Returning cached data');
+        return cache.data;
+    }
+
     const cgIds = MARKET_ASSETS.map(a => a.cgId).filter(Boolean).join(',');
     const cgUrl = `${COINGECKO_BASE_URL}/coins/markets?vs_currency=${vsCurrency.toLowerCase()}&ids=${cgIds}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d,30d,1y`;
 
@@ -87,7 +99,7 @@ export async function fetchMarketData(vsCurrency = 'EUR') {
         const yahooAssets = MARKET_ASSETS.filter(a => a.yahooId);
         const yahooData = await fetchYahooFinanceDataProxy(yahooAssets);
 
-        return MARKET_ASSETS.map(asset => {
+        const results = MARKET_ASSETS.map(asset => {
             if (asset.cgId) {
                 const live = cgData.find(d => d.id === asset.cgId);
                 if (live) {
@@ -119,6 +131,14 @@ export async function fetchMarketData(vsCurrency = 'EUR') {
 
             return { ...asset, price: null, change24h: null, change7d: null, change30d: null, change1y: null };
         });
+
+        cache = {
+            data: results,
+            timestamp: Date.now(),
+            currency: vsCurrency
+        };
+
+        return results;
     } catch (e) {
         console.error('Market fetch failed', e);
         return MARKET_ASSETS.map(a => ({ ...a, price: null, change24h: null, change7d: null, change30d: null, change1y: null }));

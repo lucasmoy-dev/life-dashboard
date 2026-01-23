@@ -34,7 +34,7 @@ export function renderGoalsPage() {
     <div class="goals-page stagger-children" style="padding-bottom: 80px;">
       <header class="page-header">
         <h1 class="page-title">Metas y Enfoque</h1>
-        <p class="page-subtitle">Personaliza tus objetivos con colores y orden libre</p>
+        <p class="page-subtitle">Organiza tus prioridades con colores y objetivos dinámicos</p>
       </header>
 
       <div class="goals-grid-layout">
@@ -51,7 +51,7 @@ export function renderGoalsPage() {
                     <div class="column-icon" style="background: ${tf.color}22; color: ${tf.color}">${getIcon(tf.icon)}</div>
                     <div class="column-info">
                         <span class="column-title">${tf.label}</span>
-                        <span class="column-stats">${completed}/${total} completado</span>
+                        <span class="column-stats">${completed}/${total}</span>
                     </div>
                 </div>
                 <div class="column-progress-bar">
@@ -68,7 +68,7 @@ export function renderGoalsPage() {
             <div class="column-footer">
                 <div class="quick-add-goal-premium">
                     <button class="quick-add-plus-btn">${getIcon('plus')}</button>
-                    <input type="text" class="quick-add-input-premium" placeholder="Añadir meta..." data-timeframe="${tf.id}">
+                    <input type="text" class="quick-add-input-premium" placeholder="Nueva meta..." data-timeframe="${tf.id}">
                 </div>
             </div>
           </div>
@@ -76,11 +76,11 @@ export function renderGoalsPage() {
     }).join('')}
       </div>
 
-      <div class="advanced-goals-section" style="margin-top: var(--spacing-2xl);">
-         <div class="card premium-long-term-card" id="add-goal-primary">
+      <div class="advanced-goals-section" style="margin-top: var(--spacing-2xl); display: flex; justify-content: center;">
+         <div class="card premium-long-term-card" id="add-goal-primary" style="margin: 0;">
             <div class="premium-card-content">
                 <div class="premium-icon-circle">${getIcon('trendingUp')}</div>
-                <div class="premium-text">
+                <div class="premium-text" style="flex: 1;">
                     <h3>Visión de Largo Plazo</h3>
                     <p>Crea hitos estratégicos para tu futuro</p>
                 </div>
@@ -96,13 +96,11 @@ function renderGoalsForTimeframe(filtered, timeframe) {
     if (filtered.length === 0) {
         return `
             <div class="empty-column-state">
-                <div class="empty-column-icon">${getIcon('package')}</div>
-                <p>Lista vacía</p>
+                <div class="empty-column-icon" style="opacity: 0.2">${getIcon('package')}</div>
             </div>
         `;
     }
 
-    // Sort by order
     const sorted = [...filtered].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
@@ -119,36 +117,30 @@ function renderGoalsForTimeframe(filtered, timeframe) {
         <div class="goal-card-premium ${goal.completed ? 'is-completed' : ''}" 
              data-id="${goal.id}" 
              draggable="true"
-             style="border-left: 3px solid ${goalColor};">
+             style="border-left: 4px solid ${goalColor};">
             <div class="goal-card-body">
-                <div class="goal-checkbox-premium toggle-goal" data-id="${goal.id}" style="border-color: ${goalColor}88; background: ${goal.completed ? goalColor : 'transparent'}">
+                <div class="goal-checkbox-premium toggle-goal" data-id="${goal.id}" style="border-color: ${goalColor}aa; background: ${goal.completed ? goalColor : 'transparent'}">
                     ${goal.completed ? getIcon('check', 'check-icon-white') : ''}
                 </div>
                 <div class="goal-main-content">
-                    <div class="goal-header-row">
-                        <div class="goal-color-dots">
-                            ${GOAL_COLORS.map(c => `
-                                <div class="goal-color-dot ${c === goalColor ? 'active' : ''} set-goal-color" 
-                                     data-id="${goal.id}" 
-                                     data-color="${c}"
-                                     style="background: ${c}"></div>
-                            `).join('')}
-                        </div>
-                        <div class="goal-actions-mini">
-                            <button class="action-btn-mini add-subgoal" data-id="${goal.id}" title="Añadir paso">${getIcon('plus')}</button>
-                            <button class="action-btn-mini delete-goal" data-id="${goal.id}" title="Eliminar">${getIcon('trash')}</button>
-                        </div>
-                    </div>
                     <div class="goal-title-premium clickable-edit-goal" 
                          data-id="${goal.id}" 
-                         style="color: ${goalColor}; font-weight: 600;">${goal.title}</div>
+                         style="color: ${goalColor}; font-weight: 700;">${goal.title}</div>
+                    
+                    <div class="goal-header-row" style="margin-top: 8px;">
+                        <button class="action-btn-mini open-color-picker" data-id="${goal.id}" style="background: ${goalColor}22; color: ${goalColor}; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; border: none; cursor: pointer;">COLOR</button>
+                        <div class="goal-actions-mini">
+                            <button class="action-btn-mini add-subgoal" data-id="${goal.id}" title="Hito">${getIcon('plus')}</button>
+                            <button class="action-btn-mini delete-goal" data-id="${goal.id}" title="Borrar">${getIcon('trash')}</button>
+                        </div>
+                    </div>
                     
                     ${hasSubgoals ? `
                         <div class="subgoals-list-premium">
                             ${goal.subGoals.map((sub, idx) => `
                                 <div class="subgoal-item-premium ${sub.completed ? 'sub-done' : ''} toggle-subgoal" data-id="${goal.id}" data-idx="${idx}">
                                     <div class="sub-check" style="color: ${goalColor}">${getIcon(sub.completed ? 'check' : 'plus', 'sub-check-svg')}</div>
-                                    <span class="sub-title" style="color: ${goalColor}dd">${sub.title}</span>
+                                    <span class="sub-title" style="color: ${goalColor}ee">${sub.title}</span>
                                 </div>
                             `).join('')}
                             <div class="sub-progress-mini">
@@ -156,6 +148,15 @@ function renderGoalsForTimeframe(filtered, timeframe) {
                             </div>
                         </div>
                     ` : ''}
+
+                    <div class="goal-color-dots color-selector-overlay hidden" id="colors-${goal.id}">
+                        ${GOAL_COLORS.map(c => `
+                            <div class="goal-color-dot ${c === goalColor ? 'active' : ''} set-goal-color" 
+                                 data-id="${goal.id}" 
+                                 data-color="${c}"
+                                 style="background: ${c}"></div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         </div>
@@ -173,6 +174,19 @@ export function setupGoalsPageListeners() {
         });
     });
 
+    // Open color picker
+    document.querySelectorAll('.open-color-picker').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const overlay = document.getElementById(`colors-${id}`);
+            document.querySelectorAll('.color-selector-overlay').forEach(ov => {
+                if (ov.id !== `colors-${id}`) ov.classList.add('hidden');
+            });
+            overlay?.classList.toggle('hidden');
+        });
+    });
+
     // Color selection
     document.querySelectorAll('.set-goal-color').forEach(dot => {
         dot.addEventListener('click', (e) => {
@@ -180,7 +194,7 @@ export function setupGoalsPageListeners() {
             const id = dot.dataset.id;
             const color = dot.dataset.color;
             store.updateGoalColor(id, color);
-            ns.toast('Paleta de color aplicada');
+            ns.toast('Color aplicado');
         });
     });
 
@@ -198,7 +212,7 @@ export function setupGoalsPageListeners() {
     document.querySelectorAll('.delete-goal').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const confirmed = await ns.confirm('Eliminar Meta', '¿Estás seguro de quitar este objetivo?', 'ELIMINAR');
+            const confirmed = await ns.confirm('Eliminar Meta', '¿Estás seguro?', 'BORRAR');
             if (confirmed) {
                 store.deleteGoal(btn.dataset.id);
                 ns.toast('Meta eliminada');
@@ -211,12 +225,12 @@ export function setupGoalsPageListeners() {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const id = btn.dataset.id;
-            const subTitle = await ns.prompt('Checkpoint', '¿Cuál es el siguiente paso?');
+            const subTitle = await ns.prompt('Nuevo Hito', '¿Qué paso necesitas completar?');
             if (subTitle) {
                 const goal = store.getState().goals.find(g => g.id === id);
                 const subGoals = [...(goal.subGoals || []), { title: subTitle, completed: false }];
                 store.updateGoal(id, { subGoals });
-                ns.toast('Hito añadido');
+                ns.toast('Paso añadido');
             }
         });
     });
@@ -226,7 +240,7 @@ export function setupGoalsPageListeners() {
         el.addEventListener('click', async () => {
             const id = el.dataset.id;
             const current = el.textContent;
-            const newTitle = await ns.prompt('Editar Texto', 'Nuevo título para tu meta:', current);
+            const newTitle = await ns.prompt('Editar Meta', 'Actualiza el texto:', current);
             if (newTitle && newTitle !== current) {
                 store.updateGoal(id, { title: newTitle });
             }
@@ -244,7 +258,7 @@ export function setupGoalsPageListeners() {
                     color: GOAL_COLORS[0]
                 });
                 input.value = '';
-                ns.toast('Meta creada');
+                ns.toast('Creada');
             }
         });
     });
@@ -258,7 +272,6 @@ export function setupGoalsPageListeners() {
             draggedId = card.dataset.id;
             card.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
-            // Set drag image or ghost effect
         });
 
         card.addEventListener('dragend', () => {
@@ -288,19 +301,13 @@ export function setupGoalsPageListeners() {
             if (draggedGoalIndex === -1) return;
 
             const draggedGoal = { ...allGoals[draggedGoalIndex] };
-
-            // If moved to a different timeframe
             if (draggedGoal.timeframe !== targetTimeframe) {
                 draggedGoal.timeframe = targetTimeframe;
             }
 
-            // Remove from old pos
             allGoals.splice(draggedGoalIndex, 1);
-
-            // Find new position based on Y coordinate
             const afterElement = getDragAfterElement(list, e.clientY);
             if (afterElement == null) {
-                // If dropping at the end of the list, find all goals in this timeframe and append
                 allGoals.push(draggedGoal);
             } else {
                 const targetId = afterElement.dataset.id;
@@ -308,16 +315,14 @@ export function setupGoalsPageListeners() {
                 allGoals.splice(targetIdx, 0, draggedGoal);
             }
 
-            // Update all orders
             const updatedGoals = allGoals.map((g, i) => ({ ...g, order: i }));
             store.reorderGoals(updatedGoals);
-            ns.toast('Posición actualizada');
+            ns.toast('Orden actualizado');
         });
     });
 
     function getDragAfterElement(container, y) {
         const draggableElements = [...container.querySelectorAll('.goal-card-premium:not(.dragging)')];
-
         return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
             const offset = y - box.top - box.height / 2;
@@ -331,18 +336,18 @@ export function setupGoalsPageListeners() {
 
     // Primary ADD button
     document.getElementById('add-goal-primary')?.addEventListener('click', async () => {
-        const title = await ns.prompt('Meta Estratégica', '¿En qué quieres enfocarte?');
+        const title = await ns.prompt('Meta Estratégica', '¿Qué quieres lograr?');
         if (title) {
             const options = [
-                { value: 'day', label: 'Inmediato (Hoy)' },
+                { value: 'day', label: 'Hoy' },
                 { value: 'week', label: 'Semana' },
-                { value: 'year', label: 'Estratégico (Año)' },
-                { value: 'long', label: 'Largo Plazo (Visión)' }
+                { value: 'year', label: 'Año' },
+                { value: 'long', label: 'Largo Plazo' }
             ];
-            const timeframe = await ns.select('Plazo', '¿Para cuándo?', options, 1);
+            const timeframe = await ns.select('Plazo', 'Selecciona el horizonte:', options, 1);
             if (timeframe) {
-                store.addGoal({ title, timeframe, color: GOAL_COLORS[2] });
-                ns.toast('Objetivo fijado', 'success');
+                store.addGoal({ title, timeframe, color: GOAL_COLORS[1] });
+                ns.toast('Meta estratégica guardada', 'success');
             }
         }
     });

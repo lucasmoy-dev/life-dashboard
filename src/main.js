@@ -233,9 +233,9 @@ function renderPage() {
             setupGoalsPageListeners();
             break;
         case 'calendar':
-            showFAB();
             main.innerHTML = renderCalendarPage();
             setupCalendarPageListeners();
+            hideFAB();
             break;
         case 'health':
             main.innerHTML = renderHealthPage();

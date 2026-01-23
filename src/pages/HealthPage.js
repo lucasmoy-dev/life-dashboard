@@ -1,7 +1,6 @@
 /**
- * Health Page - Fitness and Wellbeing
+ * Health Page - Fitness, Nutrition and Body Metrics
  */
-
 import { store } from '../store.js';
 import { getIcon } from '../utils/icons.js';
 import { ns } from '../utils/notifications.js';
@@ -12,51 +11,41 @@ export function renderHealthPage() {
     const { health } = state;
 
     return `
-    <div class="health-page stagger-children" style="padding-bottom: 80px;">
+    <div class="health-page stagger-children" style="padding-bottom: 100px;">
       <header class="page-header">
-        <h1 class="page-title">Salud</h1>
-        <p class="page-subtitle">Trackeo de bienestar y fitness</p>
+        <h1 class="page-title">Salud y Forma Física</h1>
+        <p class="page-subtitle">Rendimiento, métricas y nutrición</p>
       </header>
 
-      <!-- WORKOUT ROUTINES (TOP) -->
-      <div class="section-divider" style="margin-top: 0;">
-        <span class="section-title">Rutinas de Entrenamiento</span>
+      <!-- FITNESS ROUTINES -->
+      <div class="section-divider">
+        <span class="section-title">Programas de Entrenamiento</span>
       </div>
 
-      <div class="routines-list">
-        ${health.routines.map((routine, rIdx) => `
-          <div class="card routine-card">
-            <div class="routine-header">
-                <div class="routine-info">
-                    <div class="routine-name clickable rename-routine" data-id="${routine.id}" data-current="${routine.name}">${routine.name}</div>
-                    <div class="routine-meta">
-                        ${routine.exercises.length} ejercicios
-                        <div class="routine-reorder-btns">
-                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="up" title="Subir">${getIcon('chevronUp')}</button>
-                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="down" title="Bajar">${getIcon('chevronDown')}</button>
-                        </div>
+      <div class="routines-grid">
+        ${health.routines.map((routine, ridx) => `
+          <div class="card health-routine-card" style="margin-bottom: var(--spacing-lg);">
+            <header class="routine-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="routine-icon-circle" style="background: rgba(0, 212, 170, 0.1); color: var(--accent-primary); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        ${getIcon('zap')}
                     </div>
+                    <h3 class="routine-name clickable rename-routine" data-id="${routine.id}" data-current="${routine.name}">${routine.name}</h3>
                 </div>
-                <div style="display: flex; gap: 4px;">
-                    <button class="icon-btn add-exercise-btn" data-id="${routine.id}" title="Agregar ejercicio">
-                        ${getIcon('plus')}
-                    </button>
-                    <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);" title="Eliminar rutina">
-                        ${getIcon('trash')}
-                    </button>
+                <div class="routine-actions">
+                    <button class="reorder-routine-btn" data-index="${ridx}" data-dir="up">${getIcon('chevronUp')}</button>
+                    <button class="reorder-routine-btn" data-index="${ridx}" data-dir="down">${getIcon('chevronDown')}</button>
+                    <button class="delete-routine-btn" data-id="${routine.id}">${getIcon('trash')}</button>
                 </div>
-            </div>
-            <div class="exercise-list">
+            </header>
+
+            <div class="exercise-list-health">
                 ${routine.exercises.map((ex, exIdx) => {
         const status = store.getExerciseStatus(routine.id, exIdx);
-        let colorVar = 'var(--text-muted)';
-        if (status.color === 'red') colorVar = 'var(--accent-danger)';
-        if (status.color === 'orange') colorVar = 'var(--accent-warning)';
-        if (status.color === 'green') colorVar = 'var(--accent-success)';
-
+        const colorVar = `var(--accent-${status.color})`;
         const isDoneToday = status.status === 'done_today';
         let ratingDisplay = '';
-        if (isDoneToday && status.lastLog) {
+        if (status.lastLog && status.lastLog.rating) {
             ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary);">★ ${status.lastLog.rating}</span>`;
         }
 
@@ -88,21 +77,22 @@ export function renderHealthPage() {
                                     ${getIcon('check', 'done-icon-solid')}
                                 </div>
                             ` : `
-                                <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar ejercicio">
-                                    ${getIcon('x')}
-                                </button>
-                                <button class="log-exercise-large-btn trigger-exercise-log" 
-                                        data-routine="${routine.id}" 
-                                        data-index="${exIdx}" 
-                                        data-name="${ex.name}"
-                                        title="Registrar entrenamiento">
-                                    🏋️
-                                </button>
+                                <div class="exercise-log-actions">
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="1" title="Muy Pesado">😰</button>
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="3" title="Bien">💪</button>
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="5" title="Fácil">⚡</button>
+                                    <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" style="margin-left:8px; opacity:0.5;">${getIcon('x')}</button>
+                                </div>
                             `}
                         </div>
                     </div>
                     `;
     }).join('')}
+            </div>
+            <div class="add-ex-row" style="margin-top: var(--spacing-md);">
+                <button class="btn btn-secondary btn-sm add-ex-btn" data-id="${routine.id}">
+                    ${getIcon('plus')} Agregar Ejercicio
+                </button>
             </div>
           </div>
         `).join('')}
@@ -128,125 +118,46 @@ export function renderHealthPage() {
           <div class="summary-value">${health.fatLogs.length > 0 ? (health.fatLogs[health.fatLogs.length - 1].fat || '--') : '--'} %</div>
           <div class="summary-label">Grasa Corporal</div>
         </div>
-        <div class="summary-item card">
+        <div class="summary-item card clickable" id="set-weight-goal-btn">
           <div class="summary-value">${health.weightGoal} kg</div>
           <div class="summary-label">Objetivo Peso</div>
         </div>
-        <div class="summary-item card">
-          <div class="summary-value">${calculateTodayCalories(health)}</div>
-          <div class="summary-label">Kcal Hoy</div>
+        <div class="summary-item card clickable" id="set-fat-goal-btn">
+          <div class="summary-value">${health.fatGoal || '--'} %</div>
+          <div class="summary-label">Objetivo Grasa</div>
         </div>
       </div>
-
-      <div class="health-top-layout">
-        <!-- GOAL PROGRESS -->
-        <div class="card health-goal-card">
-          <div class="card-header">
-            <span class="card-title">Progreso de Peso</span>
-            ${getIcon('target', 'card-icon')}
-          </div>
-          <div class="burndown-container">
-              ${renderBurndownChart(health)}
-          </div>
-          <div class="goal-stats" style="margin-top: var(--spacing-md); border-top: 1px solid rgba(255,255,255,0.05); padding-top: var(--spacing-sm);">
-              <div class="goal-stat">
-                  <span class="goal-label">Faltan:</span>
-                  <span class="goal-value" style="color: var(--accent-primary); font-weight: 700;">${calculateRemainingWeight(health)} kg</span>
-              </div>
-          </div>
-        </div>
-
-        <!-- AI CALORIE TRACKER -->
-        <div class="card ai-calorie-card">
-          <div class="card-header">
-            <span class="card-title">Analizador de Platos IA</span>
-            ${getIcon('zap', 'card-icon', 'style="color: var(--accent-tertiary)"')}
-          </div>
-          <p class="card-desc">Análisis visual instantáneo de comida con Gemini Flash.</p>
-          <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; margin: var(--spacing-lg) 0;">
-            <button class="btn btn-primary ai-scan-btn" id="ai-scan-photo" style="width: 100%;">
-                ${getIcon('camera')}
-                Capturar Comida
-            </button>
-          </div>
-          <div class="calorie-brief" style="text-align: center; font-size: 13px; color: var(--text-muted);">
-              Consumo de hoy: <span style="color: var(--text-primary); font-weight: 600;">${calculateTodayCalories(health)} kcal</span>
-          </div>
-        </div>
+      
+      <div class="card ai-calorie-card" style="margin-bottom: var(--spacing-2xl); display: flex; flex-direction: column; align-items: center;">
+          <div class="summary-value" style="font-size: 28px;">${calculateTodayCalories(health)} kcal</div>
+          <div class="summary-label">Calorías Registradas Hoy</div>
+          <button class="btn btn-primary btn-sm" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: auto;">
+             ${getIcon('camera')} Escanear Comida (AI)
+          </button>
       </div>
+
     </div>
-  `;
-}
-
-function renderBurndownChart(health) {
-    const logs = health.weightLogs;
-    if (logs.length < 2) {
-        return `<div class="empty-chart-msg">Registra al menos 2 pesos para ver el gráfico.</div>`;
-    }
-
-    return `
-        <div class="simple-chart-placeholder">
-            <svg viewBox="0 0 100 40" class="burndown-line" preserveAspectRatio="none">
-                <line x1="0" y1="35" x2="100" y2="35" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2" stroke-width="0.5" />
-                <path d="${generateChartPath(logs, health.weightGoal)}" fill="none" stroke="var(--accent-primary)" stroke-width="2" vector-effect="non-scaling-stroke" />
-            </svg>
-        </div>
     `;
 }
 
-function generateChartPath(logs, goal) {
-    if (logs.length < 2) return '';
-    const weights = logs.map(l => l.weight);
-    const minWeight = Math.min(...weights, goal) - 1;
-    const maxWeight = Math.max(...weights, goal) + 1;
-    const range = maxWeight - minWeight;
-    const startTime = logs[0].date;
-    const endTime = logs[logs.length - 1].date;
-    const timeRange = endTime - startTime || 1;
-
-    const points = logs.map((log, index) => {
-        const x = index === 0 ? 0 : ((log.date - startTime) / timeRange) * 100;
-        const y = 40 - (((log.weight - minWeight) / range) * 40);
-        return `${x},${y}`;
-    });
-
-    return `M${points.join(' L')}`;
-}
-
-function calculateRemainingWeight(health) {
-    if (health.weightLogs.length === 0) return '--';
-    const current = health.weightLogs[health.weightLogs.length - 1].weight;
-    const diff = current - health.weightGoal;
-    return diff > 0 ? diff.toFixed(1) : '¡Logrado!';
-}
-
 function calculateTodayCalories(health) {
-    const today = new Date().setHours(0, 0, 0, 0);
-    return health.calorieLogs
-        .filter(log => new Date(log.date).setHours(0, 0, 0, 0) === today)
-        .reduce((sum, log) => sum + log.calories, 0);
+    const today = new Date().toDateString();
+    return (health.calorieLogs || [])
+        .filter(log => new Date(log.date).toDateString() === today)
+        .reduce((sum, log) => sum + (log.calories || 0), 0);
 }
 
 export function setupHealthPageListeners() {
-    // Weight tool
-    document.getElementById('log-weight-btn')?.addEventListener('click', async () => {
-        const weight = await ns.prompt('Registrar Peso', 'Ingresa tu peso actual en kg:', 'Ej: 75.5', 'number');
-        if (weight && !isNaN(weight)) {
-            store.addWeightLog(weight);
-            ns.toast('Peso registrado');
-        }
-    });
-
-    // Fat tool
-    document.getElementById('log-fat-btn')?.addEventListener('click', async () => {
-        const fatValue = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa (deja en blanco si no lo sabes):', 'Ej: 18.2', 'number');
-        if (fatValue !== null) {
-            const fat = parseFloat(fatValue);
-            if (!isNaN(fat)) {
-                store.addFatLog(fat);
-                ns.toast('Grasa registrada');
+    // Add Exercise
+    document.querySelectorAll('.add-ex-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const routineId = btn.dataset.id;
+            const name = await ns.prompt('Nuevo Ejercicio', 'Nombre del ejercicio:');
+            if (name) {
+                store.addExerciseToRoutine(routineId, { name });
+                ns.toast('Ejercicio añadido');
             }
-        }
+        });
     });
 
     // Rename Routine
@@ -254,7 +165,7 @@ export function setupHealthPageListeners() {
         el.addEventListener('click', async () => {
             const id = el.dataset.id;
             const currentName = el.dataset.current;
-            const newName = await ns.prompt('Renombrar Rutina', 'Nuevo nombre:', currentName);
+            const newName = await ns.prompt('Editar Rutina', 'Nombre de la rutina:', currentName);
             if (newName && newName !== currentName) {
                 store.renameRoutine(id, newName);
                 ns.toast('Rutina renombrada');
@@ -262,23 +173,11 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Add Exercise to Routine
-    document.querySelectorAll('.add-exercise-btn').forEach(el => {
-        el.addEventListener('click', async () => {
-            const id = el.dataset.id;
-            const name = await ns.prompt('Agregar Ejercicio', 'Nombre del ejercicio:', 'Ej: Press Militar');
-            if (name) {
-                store.addExerciseToRoutine(id, { name });
-                ns.toast('Ejercicio añadido');
-            }
-        });
-    });
-
     // Delete Routine
-    document.querySelectorAll('.delete-routine').forEach(el => {
+    document.querySelectorAll('.delete-routine-btn').forEach(el => {
         el.addEventListener('click', async () => {
             const id = el.dataset.id;
-            const confirmed = await ns.confirm('Borrar Rutina', '¿Estás seguro de eliminar esta rutina?', 'BORRAR', 'CANCELAR');
+            const confirmed = await ns.confirm('¿Borrar Rutina?', 'Esta acción no se puede deshacer.', 'Eliminar', 'Cancelar');
             if (confirmed) {
                 store.deleteRoutine(id);
                 ns.toast('Rutina eliminada');
@@ -376,25 +275,42 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Exercise Logging (STARS)
-    const exercises = document.querySelectorAll('.trigger-exercise-log');
-    exercises.forEach(el => {
-        el.addEventListener('click', async (e) => {
+    // Exercise Logging (Instant Ratings)
+    document.querySelectorAll('.log-ex-rating-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const routineId = el.dataset.routine;
-            const index = parseInt(el.dataset.index);
-            const name = el.dataset.name;
-
-            const rating = await ns.stars(
-                'Monitor de Gym',
-                `¿Cómo fue tu desempeño en "${name}"?`
-            );
-
-            if (rating) {
-                store.logExercise(routineId, index, rating);
-                ns.toast('¡Entrenamiento guardado!', 'success');
-            }
+            const routineId = btn.dataset.rid;
+            const index = parseInt(btn.dataset.idx);
+            const rating = parseInt(btn.dataset.rating);
+            store.logExercise(routineId, index, rating);
+            ns.toast('Registrado', 'success', 800);
         });
+    });
+
+    // Log weight
+    document.getElementById('log-weight-btn')?.addEventListener('click', async () => {
+        const weight = await ns.prompt('Registrar Peso', 'Peso actual (kg):');
+        if (weight) store.addWeightLog(weight);
+    });
+
+    // Log fat
+    document.getElementById('log-fat-btn')?.addEventListener('click', async () => {
+        const fat = await ns.prompt('Registrar Grasa', 'Porcentaje de grasa (%):');
+        if (fat) store.addFatLog(fat);
+    });
+
+    // Set weight goal
+    document.getElementById('set-weight-goal-btn')?.addEventListener('click', async () => {
+        const current = store.getState().health.weightGoal;
+        const goal = await ns.prompt('Objetivo de Peso', 'Introduce tu peso ideal (kg):', current);
+        if (goal) store.updateHealthGoal('weightGoal', parseFloat(goal));
+    });
+
+    // Set fat goal
+    document.getElementById('set-fat-goal-btn')?.addEventListener('click', async () => {
+        const current = store.getState().health.fatGoal;
+        const goal = await ns.prompt('Objetivo de Grasa', 'Introduce tu porcentaje ideal (%):', current);
+        if (goal) store.updateHealthGoal('fatGoal', parseFloat(goal));
     });
 
     // AI Scan Tool

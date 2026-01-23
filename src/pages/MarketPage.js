@@ -18,21 +18,19 @@ export function renderMarketPage() {
 
     // Background refresh if data is present, otherwise full screen loading
     if (marketData.length === 0) {
-        if (isLoading) {
-            loadData();
-            return `
-                <div class="market-page">
-                    <header class="page-header">
-                        <h1 class="page-title">Mercados del Mundo</h1>
-                        <p class="page-subtitle">Precios y tendencias globales</p>
-                    </header>
-                    <div class="empty-state">
-                        <div class="loading-spinner"></div>
-                        <p class="empty-description">Cargando datos reales de mercado...</p>
-                    </div>
+        loadData();
+        return `
+            <div class="market-page">
+                <header class="page-header">
+                    <h1 class="page-title">Mercados del Mundo</h1>
+                    <p class="page-subtitle">Precios y tendencias globales</p>
+                </header>
+                <div class="empty-state">
+                    <div class="loading-spinner"></div>
+                    <p class="empty-description">Cargando datos reales de mercado...</p>
                 </div>
-            `;
-        }
+            </div>
+        `;
     } else if (!isLoading) {
         // Trigger background refresh once on enter
         loadData();

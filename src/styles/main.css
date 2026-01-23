@@ -489,6 +489,17 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .asset-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
 }
 
 .asset-item {
@@ -2186,9 +2197,45 @@ body {
 
 .exercise-item {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    padding: var(--spacing-sm) 0;
+    align-items: center;
+    padding: var(--spacing-md) 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    gap: var(--spacing-sm);
+}
+
+.exercise-log-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-rating {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-rating:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.add-ex-row {
+    margin-top: var(--spacing-md);
+}
+
+.add-ex-row .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    width: auto;
 }
 
 /* Goals Page Styles */
@@ -2492,6 +2539,9 @@ body {
 .auth-card .btn {
     width: 100% !important;
     margin: 0 !important;
+    height: 52px;
+    font-size: 16px;
+    border-radius: var(--radius-md);
 }
 
 .auth-header {
@@ -3654,6 +3704,27 @@ input:checked+.slider-premium:before {
     overflow: hidden;
     position: relative;
     cursor: pointer;
+    width: fit-content;
+    margin: 0 auto;
+    min-width: 320px;
+}
+
+.calendar-mini-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+}
+
+.current-month {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .premium-card-content {
@@ -3742,10 +3813,51 @@ input:checked+.slider-premium:before {
     height: 18px !important;
 }
 
+.goal-color-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-md);
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.2s ease forwards;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.goal-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.goal-color-dot:hover {
+    transform: scale(1.2) translateY(-2px);
+}
+
 .goal-color-dot.active {
     border: 2px solid white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    transform: scale(1.3);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
 }
 
 .sub-check-svg {

@@ -71,6 +71,9 @@ class Store {
         this.refreshRates();
         // Refresh every 5 minutes
         setInterval(() => this.refreshRates(), 5 * 60 * 1000);
+
+        // Sync Debounce Timer
+        this.syncTimeout = null;
     }
 
     loadState() {
@@ -157,17 +160,21 @@ class Store {
     setState(updates) {
         this.state = { ...this.state, ...updates };
         this.saveState().then(() => {
-            // Background Auto-sync
+            // Background Auto-sync with Debounce (5 seconds)
             const vaultKey = AuthService.getVaultKey();
             if (vaultKey && DriveService.hasToken()) {
-                // Filter out non-syncable UI state
-                const { hideRealEstate, ...syncData } = this.state;
-                DriveService.pushData(syncData, vaultKey).then(() => {
-                    console.log('[Auto-Sync] Success');
-                    ns.toast('Sincronizado con Drive', 'success', 2000);
-                }).catch(e => {
-                    console.warn('[Auto-Sync] Failed:', e);
-                });
+                if (this.syncTimeout) clearTimeout(this.syncTimeout);
+
+                this.syncTimeout = setTimeout(() => {
+                    // Filter out non-syncable UI state
+                    const { hideRealEstate, ...syncData } = this.state;
+                    DriveService.pushData(syncData, vaultKey).then(() => {
+                        console.log('[Auto-Sync] Success');
+                        ns.toast('Sincronizado con Drive', 'success', 2000);
+                    }).catch(e => {
+                        console.warn('[Auto-Sync] Failed:', e);
+                    });
+                }, 5000);
             }
         });
         this.notify();
@@ -383,6 +390,17 @@ class Store {
     // ============================================
     // HEALTH METHODS
     // ============================================
+    updateHealthGoal(key, value) {
+        this.setState({
+            health: { ...this.state.health, [key]: value }
+        });
+    }
+
+    setHealthState(updates) {
+        this.setState({
+            health: { ...this.state.health, ...updates }
+        });
+    }
     addWeightLog(weight) {
         const log = { id: crypto.randomUUID(), date: Date.now(), weight: parseFloat(weight) };
         this.setState({ health: { ...this.state.health, weightLogs: [...this.state.health.weightLogs, log] } });
