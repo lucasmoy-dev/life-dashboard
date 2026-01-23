@@ -38,7 +38,7 @@ export function renderExpensesPage() {
     <div class="expenses-page stagger-children" style="padding-bottom: 80px;">
       <header class="page-header">
         <div class="header-row" style="display: flex; align-items: center; gap: var(--spacing-sm);">
-            <button class="icon-btn-back" id="back-to-finance">
+            <button class="back-btn" id="back-to-finance">
                 ${getIcon('chevronLeft')}
             </button>
             <h1 class="page-title" style="margin-bottom: 0;">Gastos Mensuales</h1>

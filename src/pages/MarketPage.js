@@ -16,20 +16,26 @@ export function renderMarketPage() {
     const currency = state.currency || 'EUR';
     const symbol = state.currencySymbol || '€';
 
-    if (isLoading && marketData.length === 0) {
-        loadData();
-        return `
-            <div class="market-page">
-                <header class="page-header">
-                    <h1 class="page-title">Mercados del Mundo</h1>
-                    <p class="page-subtitle">Precios y tendencias globales</p>
-                </header>
-                <div class="empty-state">
-                    <div class="loading-spinner"></div>
-                    <p class="empty-description">Cargando datos reales de mercado...</p>
+    // Background refresh if data is present, otherwise full screen loading
+    if (marketData.length === 0) {
+        if (isLoading) {
+            loadData();
+            return `
+                <div class="market-page">
+                    <header class="page-header">
+                        <h1 class="page-title">Mercados del Mundo</h1>
+                        <p class="page-subtitle">Precios y tendencias globales</p>
+                    </header>
+                    <div class="empty-state">
+                        <div class="loading-spinner"></div>
+                        <p class="empty-description">Cargando datos reales de mercado...</p>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
+    } else if (!isLoading) {
+        // Trigger background refresh once on enter
+        loadData();
     }
 
     const categories = Object.values(ASSET_CATEGORIES);
@@ -43,7 +49,10 @@ export function renderMarketPage() {
                             ${getIcon('chevronLeft')}
                         </button>
                         <div>
-                            <h1 class="page-title">Mercados del Mundo</h1>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h1 class="page-title">Mercados del Mundo</h1>
+                                ${isLoading ? '<div class="loading-spinner-sm" style="width:12px; height:12px; border-width: 1.5px;"></div>' : ''}
+                            </div>
                             <p class="page-subtitle">Activos globales en ${currency}</p>
                         </div>
                     </div>

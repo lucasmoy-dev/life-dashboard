@@ -71,6 +71,7 @@ export const MARKET_ASSETS = [
     { id: 'dash', name: 'Dash', symbol: 'DASH', cgId: 'dash', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' },
     { id: 'filecoin', name: 'Filecoin', symbol: 'FIL', cgId: 'filecoin', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' },
     { id: 'algorand', name: 'Algorand', symbol: 'ALGO', cgId: 'algorand', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' },
+    { id: 'render', name: 'Render', symbol: 'RNDR', cgId: 'render-token', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' },
     { id: 'fetch-ai', name: 'Fetch.ai', symbol: 'FET', cgId: 'fetch-ai', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' }
 ];
 

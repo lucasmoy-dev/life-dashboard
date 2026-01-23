@@ -37,7 +37,8 @@ const defaultState = {
         CHF: 1.05,
         GBP: 1.15,
         AUD: 0.60,
-        ARS: 0.001
+        ARS: 0.001,
+        RNDR: 4.5
     },
     hideRealEstate: false,
     // Health Data
