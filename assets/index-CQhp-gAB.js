@@ -855,7 +855,7 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
                 ${r}
                 ${m?'<span class="event-dot-indicator"></span>':""}
             </div>
-        `}return u}function mt(){const s=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],e=new Date;return`${s[e.getMonth()]} ${e.getFullYear()}`}function gt(s){const e={day:"numeric",month:"short"};return new Date(s).toLocaleDateString("es-ES",e).toUpperCase()}function ht(s){switch(s){case"reminder":return"bell";case"meeting":return"users";default:return"calendar"}}function yt(s){return{daily:"Diario",weekly:"Semanal",monthly:"Mensual",yearly:"Anual"}[s]||""}function bt(){document.querySelectorAll(".event-delete-btn").forEach(s=>{s.addEventListener("click",async()=>{await g.confirm("¿Eliminar evento?","¿Estás seguro de que quieres borrar este evento de tu agenda?")&&(p.deleteEvent(s.dataset.id),g.toast("Evento eliminado","info"))})})}function ft(){const s=p.getState(),e=s.currencySymbol,t=s.livingExpenses,a=s.otherExpenses||[],n=s.liabilities,i=p.getLivingExpenses(),o=p.sumItems(a,"amount"),l=p.sumItems(n,"monthlyPayment"),c=i+o+l,u=[...(t||[]).map(r=>({...r,category:"livingExpense",typeLabel:"Gasto de Vida"})),...(a||[]).map(r=>({...r,category:"otherExpense",typeLabel:"Otro Gasto"})),...(n||[]).filter(r=>r.monthlyPayment>0).map(r=>({...r,amount:r.monthlyPayment,category:"liability",typeLabel:"Deuda / Hipoteca"}))].sort((r,d)=>d.amount-r.amount);return`
+        `}return u}function mt(){const s=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],e=new Date;return`${s[e.getMonth()]} ${e.getFullYear()}`}function gt(s){const e={day:"numeric",month:"short"};return new Date(s).toLocaleDateString("es-ES",e).toUpperCase()}function ht(s){switch(s){case"reminder":return"bell";case"meeting":return"users";default:return"calendar"}}function yt(s){return{daily:"Diario",weekly:"Semanal",monthly:"Mensual",yearly:"Anual"}[s]||""}function bt(){document.querySelectorAll(".event-delete-btn").forEach(s=>{s.addEventListener("click",async()=>{await g.confirm("¿Eliminar evento?","¿Estás seguro de que quieres borrar este evento de tu agenda?")&&(p.deleteEvent(s.dataset.id),g.toast("Evento eliminado","info"))})})}function ft(){const s=p.getState(),e=s.currencySymbol,t=s.livingExpenses,a=s.otherExpenses||[],n=s.liabilities,i=p.sumItems(t,"amount"),o=p.sumItems(a,"amount"),l=p.sumItems(n,"monthlyPayment"),c=i+o+l,u=[...(t||[]).map(r=>({...r,category:"livingExpense",typeLabel:"Gasto de Vida"})),...(a||[]).map(r=>({...r,category:"otherExpense",typeLabel:"Otro Gasto"})),...(n||[]).filter(r=>r.monthlyPayment>0).map(r=>({...r,amount:r.monthlyPayment,category:"liability",typeLabel:"Deuda / Hipoteca"}))].sort((r,d)=>d.amount-r.amount);return`
     <div class="expenses-page stagger-children" style="padding-bottom: 80px;">
       <header class="page-header">
         <div class="header-row" style="display: flex; align-items: center; gap: var(--spacing-sm);">
@@ -1224,7 +1224,7 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.46</p>
+            <p>Life Dashboard Pro v1.0.47</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
