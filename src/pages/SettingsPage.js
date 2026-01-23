@@ -12,8 +12,8 @@ export function renderSettingsPage() {
     const hasCloudSync = DriveService.hasToken();
 
     return `
-    <div class="settings-page stagger-children" style="padding-bottom: 80px; max-width: 600px; margin: 0 auto;">
-        <header class="page-header" style="text-align: center; margin-bottom: var(--spacing-2xl);">
+    <div class="settings-page stagger-children">
+        <header class="page-header">
             <h1 class="page-title">Configuración</h1>
             <p class="page-subtitle">Privacidad, Seguridad y Sincronización</p>
         </header>
@@ -156,7 +156,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.34</p>
+            <p>Life Dashboard Pro v1.0.35</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>

@@ -78,7 +78,13 @@ export function setupAuthListeners(onAuthenticated) {
     };
 
     submitBtn?.addEventListener('click', handleAuth);
+
+    // Support Enter key on both inputs
     passInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleAuth();
+    });
+
+    document.getElementById('auth-confirm')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleAuth();
     });
 
