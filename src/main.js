@@ -267,9 +267,5 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Capture PWA install prompt
-window.deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    window.deferredPrompt = e;
-});
+// Capture PWA install prompt (handled in index.html, but keeping this for HMR safety if needed)
+// window.deferredPrompt is already set by index.html script if event fired early
