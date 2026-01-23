@@ -57,7 +57,9 @@ const defaultState = {
         { id: '1', title: 'Ejemplo de Meta Diaria', timeframe: 'day', completed: false, category: 'Personal' }
     ],
     // Agenda/Events
-    events: []
+    events: [],
+    // Last fetched market data
+    lastMarketData: []
 };
 
 class Store {
@@ -209,6 +211,27 @@ class Store {
             return valueEUR / rate;
         }
         return valueEUR;
+    }
+
+    // Persist Market Data
+    saveMarketData(data) {
+        this.setState({ lastMarketData: data });
+    }
+
+    // Add asset from market list
+    addAssetFromMarket(marketAsset, type = 'investment') {
+        const asset = {
+            name: marketAsset.name,
+            currency: marketAsset.symbol.toUpperCase(),
+            value: 1, // Default 1 unit
+            details: `Añadido desde Mercados del Mundo (${marketAsset.id})`
+        };
+
+        if (type === 'passive') {
+            return this.addPassiveAsset({ ...asset, monthlyIncome: 0 });
+        } else {
+            return this.addInvestmentAsset(asset);
+        }
     }
 
     // Convert from ANY currency to display currency
