@@ -16,7 +16,7 @@ export function renderExpensesPage() {
     const liabilities = state.liabilities;
 
     // Calculate totals
-    const totalLiving = store.getLivingExpenses();
+    const totalLiving = store.sumItems(livingExpenses, 'amount');
     const totalOther = store.sumItems(otherExpenses, 'amount');
     const totalDebt = store.sumItems(liabilities, 'monthlyPayment');
 
