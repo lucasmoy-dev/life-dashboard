@@ -2393,6 +2393,31 @@ body {
     height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.exercise-done .exercise-status-dot-wear {
+    animation: hypertrophy-pulse 2s infinite ease-in-out;
+}
+
+@keyframes hypertrophy-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+        box-shadow: 0 0 5px currentColor;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 1;
+        box-shadow: 0 0 15px currentColor;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.8;
+        box-shadow: 0 0 5px currentColor;
+    }
 }
 
 .ex-health-name-row {
@@ -4077,8 +4102,16 @@ input:checked+.slider-premium:before {
 
 
 .exercise-done {
+    background: rgba(34, 197, 94, 0.05);
+}
+
+.exercise-done .ex-health-name,
+.exercise-done .ex-health-stats {
     opacity: 0.6;
-    background: rgba(var(--accent-success-rgb, 34, 197, 94), 0.05);
+}
+
+.exercise-done .exercise-status-dot-wear {
+    opacity: 1 !important;
 }
 
 /* Health Done Badge */

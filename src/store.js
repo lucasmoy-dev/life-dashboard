@@ -543,10 +543,10 @@ class Store {
 
         const diffDays = Math.floor((today - lastDay) / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return { color: 'red', status: 'done_today', lastLog }; // Done today
-        if (diffDays === 1) return { color: 'red', status: 'yesterday', lastLog }; // Trained yesterday
-        if (diffDays === 2) return { color: 'orange', status: 'day_before', lastLog }; // Trained 2 days ago
-        return { color: 'green', status: 'rested', lastLog }; // 3+ days
+        if (diffDays === 0) return { color: 'danger', status: 'done_today', lastLog }; // Done today
+        if (diffDays === 1) return { color: 'danger', status: 'yesterday', lastLog }; // Trained yesterday
+        if (diffDays === 2) return { color: 'tertiary', status: 'day_before', lastLog }; // Trained 2 days ago
+        return { color: 'success', status: 'rested', lastLog }; // 3+ days
     }
 
     // ============================================
