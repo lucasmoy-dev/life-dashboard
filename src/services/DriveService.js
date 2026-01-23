@@ -8,15 +8,14 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 export class DriveService {
     static tokenClient = null;
-    static accessToken = sessionStorage.getItem('drive_access_token') || null;
+    static accessToken = localStorage.getItem('drive_access_token') || null;
 
     /**
-     * Returns true if we have an active access token
+     * Returns true if we have a connection intent saved
      */
     static hasToken() {
-        return !!this.accessToken;
+        return !!this.accessToken && localStorage.getItem('drive_connected') === 'true';
     }
-
 
     /**
      * Initializes Google API client and Token Client
@@ -39,15 +38,14 @@ export class DriveService {
                                         console.error('[Drive] Auth callback error:', resp);
                                         return;
                                     }
-                                    this.accessToken = resp.access_token;
-                                    gapi.client.setToken({ access_token: resp.access_token });
-                                    sessionStorage.setItem('drive_access_token', resp.access_token);
+                                    this.saveSession(resp);
                                 },
                             });
 
-                            // If we have a saved token, try to use it
-                            if (this.accessToken) {
-                                gapi.client.setToken({ access_token: this.accessToken });
+                            // Silent restoration: If we were connected, try to get a fresh token silently
+                            if (localStorage.getItem('drive_connected') === 'true') {
+                                console.log('[Drive] Attempting silent token restoration...');
+                                this.tokenClient.requestAccessToken({ prompt: 'none' });
                             }
 
                             resolve(true);
@@ -57,7 +55,7 @@ export class DriveService {
                         }
                     });
                 } else {
-                    setTimeout(checkGapi, 150);
+                    setTimeout(checkGapi, 200);
                 }
             };
             checkGapi();
@@ -65,29 +63,74 @@ export class DriveService {
     }
 
     /**
-     * Requests a fresh token from user
+     * Internal helper to save session data
      */
-    static async authenticate() {
+    static saveSession(resp) {
+        this.accessToken = resp.access_token;
+        gapi.client.setToken({ access_token: resp.access_token });
+        localStorage.setItem('drive_access_token', resp.access_token);
+        localStorage.setItem('drive_connected', 'true');
+        // Set expiry (default 1h = 3600s)
+        const expiry = Date.now() + (resp.expires_in ? resp.expires_in * 1000 : 3600000);
+        localStorage.setItem('drive_token_expiry', expiry.toString());
+    }
+
+    /**
+     * Requests a fresh token from user (interactive or silent)
+     */
+    static async authenticate(silent = false) {
         if (!this.tokenClient) await this.init();
+
         return new Promise((resolve, reject) => {
             this.tokenClient.callback = (resp) => {
                 if (resp.error) {
-                    reject(new Error(resp.error_description || 'Fallo en la autenticación'));
+                    if (silent) {
+                        localStorage.setItem('drive_connected', 'false');
+                        reject(new Error('Silent auth failed'));
+                    } else {
+                        reject(new Error(resp.error_description || 'Fallo en la autenticación'));
+                    }
                     return;
                 }
-                this.accessToken = resp.access_token;
-                gapi.client.setToken({ access_token: resp.access_token });
-                sessionStorage.setItem('drive_access_token', resp.access_token);
+                this.saveSession(resp);
                 resolve(resp.access_token);
             };
-            this.tokenClient.requestAccessToken({ prompt: 'consent' });
+
+            if (silent) {
+                this.tokenClient.requestAccessToken({ prompt: 'none' });
+            } else {
+                this.tokenClient.requestAccessToken({ prompt: 'consent' });
+            }
         });
+    }
+
+    /**
+     * Ensures the current token is fresh, refreshes silently if needed
+     */
+    static async ensureValidToken() {
+        const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+        const isConnected = localStorage.getItem('drive_connected') === 'true';
+
+        // If we are within 5 minutes of expiry, refresh silently
+        if (isConnected && Date.now() > (expiry - 300000)) {
+            console.log('[Drive] Token expired or near expiry, refreshing...');
+            try {
+                await this.authenticate(true);
+                return this.accessToken;
+            } catch (e) {
+                console.warn('[Drive] Silent refresh failed, manual re-connect may be needed');
+                this.accessToken = null;
+                throw new Error('Sesión de Drive expirada. Por favor reconecta en Configuración.');
+            }
+        }
+        return this.accessToken;
     }
 
     /**
      * Gets or creates a nested folder structure
      */
     static async getOrCreateFolderPath(path) {
+        await this.ensureValidToken();
         if (!gapi.client?.drive) await this.init();
 
         const parts = path.split('/').filter(p => p);
@@ -129,6 +172,7 @@ export class DriveService {
      */
     static async pushData(state, vaultKey) {
         try {
+            await this.ensureValidToken();
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
             gapi.client.setToken({ access_token: this.accessToken });
@@ -177,6 +221,7 @@ export class DriveService {
      */
     static async pullData(vaultKey) {
         try {
+            await this.ensureValidToken();
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
             gapi.client.setToken({ access_token: this.accessToken });
@@ -210,6 +255,7 @@ export class DriveService {
      */
     static async deleteBackup() {
         try {
+            await this.ensureValidToken();
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
             gapi.client.setToken({ access_token: this.accessToken });
