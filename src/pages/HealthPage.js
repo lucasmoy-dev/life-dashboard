@@ -88,18 +88,33 @@ export function renderHealthPage() {
                     <div class="routine-name">${routine.name}</div>
                     <div class="routine-meta">${routine.exercises.length} ejercicios</div>
                 </div>
-                <button class="icon-btn edit-routine" data-id="${routine.id}">
-                    ${getIcon('edit')}
                 </button>
             </div>
             <div class="exercise-list">
-                ${routine.exercises.slice(0, 3).map(ex => `
-                    <div class="exercise-item">
-                        <span class="ex-name">${ex.name}</span>
+                ${routine.exercises.map((ex, index) => {
+        const status = store.getExerciseStatus(routine.id, index);
+        let colorVar = 'var(--text-muted)';
+        if (status.color === 'red') colorVar = 'var(--accent-danger)';
+        if (status.color === 'orange') colorVar = 'var(--accent-warning)';
+        if (status.color === 'green') colorVar = 'var(--accent-success)';
+
+        // Star rating display if recently done
+        let ratingDisplay = '';
+        if (status.status === 'done_today' && status.lastLog) {
+            ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary); margin-left: 6px;">★ ${status.lastLog.rating}</span>`;
+        }
+
+        return `
+                    <div class="exercise-item clickable trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
+                            <span class="ex-name" style="${status.color === 'red' ? 'text-decoration: line-through; opacity: 0.7;' : ''}">${ex.name}</span>
+                            ${ratingDisplay}
+                        </div>
                         <span class="ex-weight">${ex.weight} kg</span>
                     </div>
-                `).join('')}
-                ${routine.exercises.length > 3 ? `<div class="more-exercises">+ ${routine.exercises.length - 3} más</div>` : ''}
+                    `;
+    }).join('')}
             </div>
           </div>
         `).join('')}
@@ -198,6 +213,38 @@ export function setupHealthPageListeners() {
             store.addFatLog(fat);
             ns.toast('Grasa registrada');
         }
+    });
+
+    // Exercise Logging
+    const exercises = document.querySelectorAll('.trigger-exercise-log');
+    exercises.forEach(el => {
+        el.addEventListener('click', async () => {
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const name = el.dataset.name;
+
+            // Simple rating prompt using standard confirm/prompt or a custom one?
+            // Since we don't have a star rating UI in notifications.js, we'll use a numeric prompt or a custom options dialog if possible.
+            // ns.confirm doesn't allow custom buttons beyond 2.
+            // We'll use prompt for now for simplicity: "Rate 1-5"
+
+            const ratingInput = await ns.prompt(
+                'Monitor de Ejercicio',
+                `¿Completaste "${name}" hoy? Califica tu desempeño (1-5):`,
+                '5',
+                'number'
+            );
+
+            if (ratingInput) {
+                const rating = parseInt(ratingInput);
+                if (rating >= 1 && rating <= 5) {
+                    store.logExercise(routineId, index, rating);
+                    ns.toast('Ejercicio registrado', 'success');
+                } else {
+                    ns.toast('Calificación inválida (1-5)', 'error');
+                }
+            }
+        });
     });
 
     // AI Scan Tool (Real IA)

@@ -45,6 +45,7 @@ const defaultState = {
         weightGoal: 70,
         fatLogs: [],
         fatGoal: 15,
+        exerciseLogs: [],
         routines: [
             { id: '1', name: 'Día 1: Empuje', exercises: [{ name: 'Press Banca', weight: 60 }, { name: 'Press Militar', weight: 40 }] },
             { id: '2', name: 'Día 2: Tirón', exercises: [{ name: 'Dominadas', weight: 0 }, { name: 'Remo con Barra', weight: 50 }] }
@@ -407,6 +408,47 @@ class Store {
     addCalorieLog(calories, note = '') {
         const log = { id: crypto.randomUUID(), date: Date.now(), calories: parseInt(calories), note };
         this.setState({ health: { ...this.state.health, calorieLogs: [...this.state.health.calorieLogs, log] } });
+    }
+
+    logExercise(routineId, exerciseIndex, rating) {
+        const log = {
+            id: crypto.randomUUID(),
+            routineId,
+            exerciseIndex,
+            date: Date.now(),
+            rating: parseInt(rating)
+        };
+        this.setState({
+            health: {
+                ...this.state.health,
+                exerciseLogs: [...(this.state.health.exerciseLogs || []), log]
+            }
+        });
+    }
+
+    getExerciseStatus(routineId, exerciseIndex) {
+        const logs = this.state.health.exerciseLogs || [];
+        // Filter logs for this specific exercise
+        const exerciseLogs = logs.filter(l => l.routineId === routineId && l.exerciseIndex === exerciseIndex);
+        if (exerciseLogs.length === 0) return { color: 'green', lastDate: null };
+
+        // Sort by date desc
+        exerciseLogs.sort((a, b) => b.date - a.date);
+        const lastLog = exerciseLogs[0];
+
+        const now = new Date();
+        const last = new Date(lastLog.date);
+
+        // Reset hours to compare days roughly
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+
+        const diffDays = (today - lastDay) / (1000 * 60 * 60 * 24);
+
+        if (diffDays === 0) return { color: 'red', status: 'done_today', lastLog }; // Done today
+        if (diffDays === 1) return { color: 'red', status: 'tired', lastLog }; // Done yesterday
+        if (diffDays === 2) return { color: 'orange', status: 'recovering', lastLog }; // Done 2 days ago
+        return { color: 'green', status: 'ready', lastLog }; // 3+ days
     }
 
     // ============================================
