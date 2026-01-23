@@ -1151,9 +1151,6 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
                     <div class="settings-action-icon" style="color: var(--accent-danger);">${v("trash")}</div>
                 </div>
             </div>
-
-                </div>
-            </div>
         </section>
 
         <section class="settings-section">
@@ -1183,7 +1180,7 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.35</p>
+            <p>Life Dashboard Pro v1.0.36</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
