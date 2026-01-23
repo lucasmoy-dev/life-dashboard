@@ -2825,6 +2825,7 @@ input:checked+.slider-premium:before {
     #bottom-nav {
         position: fixed;
         left: 0;
+        right: auto;
         top: 0;
         bottom: 0;
         width: 260px;
@@ -2840,6 +2841,7 @@ input:checked+.slider-premium:before {
         z-index: 1000;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
+        transform: none;
     }
 
     /* Brand Section inside Sidebar */
@@ -2909,23 +2911,22 @@ input:checked+.slider-premium:before {
     /* Content Area Adjustment */
     #main-content {
         margin-left: 260px;
-        /* Offset for sidebar */
-        padding: var(--spacing-2xl);
-        max-width: calc(100% - 260px);
-        width: 1200px;
+        padding: var(--spacing-xl) var(--spacing-2xl);
+        max-width: 1200px;
         margin-right: auto;
     }
 
     .page-header {
-        margin-bottom: var(--spacing-2xl);
+        margin-bottom: var(--spacing-xl);
+        margin-top: var(--spacing-md);
     }
 
     .page-title {
-        font-size: 42px;
+        font-size: 38px;
     }
 
     .page-subtitle {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     /* Cards & Layout distribution */
@@ -2933,6 +2934,7 @@ input:checked+.slider-premium:before {
         display: grid;
         grid-template-columns: repeat(12, 1fr);
         gap: var(--spacing-xl);
+        align-items: start;
     }
 
     .finance-page>* {
@@ -2941,17 +2943,18 @@ input:checked+.slider-premium:before {
 
     /* Main cards side-by-side on large screens */
     .finance-page .card:first-of-type {
-        grid-column: span 7;
+        grid-column: span 6;
     }
 
     .finance-page .highlight-card {
-        grid-column: span 5;
+        grid-column: span 6;
     }
 
-    /* Summary grid as section */
+    /* Summary grid as section - more compact headers */
     .summary-grid {
         grid-template-columns: repeat(4, 1fr);
         gap: var(--spacing-xl);
+        margin-top: var(--spacing-md);
     }
 
     /* Asset list as grid */
