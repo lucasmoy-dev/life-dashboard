@@ -62,6 +62,80 @@ function startDashboard() {
 
     // Handle global re-render requests (e.g. from async loaders)
     window.reRender = () => renderPage();
+
+    // Setup PWA install banner
+    setupPWAInstallBanner();
+}
+
+// Create and manage PWA install banner
+function setupPWAInstallBanner() {
+    // Check if banner was dismissed recently (don't show for 7 days after dismiss)
+    const dismissedAt = localStorage.getItem('pwa_install_dismissed');
+    if (dismissedAt) {
+        const daysSinceDismiss = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+        if (daysSinceDismiss < 7) return;
+    }
+
+    // Check if already installed (in standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        return;
+    }
+
+    // Create banner element
+    const banner = document.createElement('div');
+    banner.className = 'pwa-install-banner';
+    banner.id = 'pwa-install-banner';
+    banner.innerHTML = `
+        <div class="pwa-install-banner-icon">
+            ${getIcon('download')}
+        </div>
+        <div class="pwa-install-banner-text">
+            <div class="pwa-install-banner-title">Instalar Life Dashboard</div>
+            <div class="pwa-install-banner-subtitle">Accede más rápido desde tu pantalla de inicio</div>
+        </div>
+        <button class="pwa-install-btn" id="pwa-banner-install">Instalar</button>
+        <button class="pwa-install-close" id="pwa-banner-close">
+            ${getIcon('x')}
+        </button>
+    `;
+    document.body.appendChild(banner);
+
+    // Show banner when install prompt is available
+    const showBannerIfReady = () => {
+        if (window.deferredPrompt) {
+            setTimeout(() => {
+                banner.classList.add('visible');
+            }, 2000); // Show after 2 seconds for better UX
+        }
+    };
+
+    // Check if prompt already available
+    showBannerIfReady();
+
+    // Also listen for future prompts
+    window.addEventListener('beforeinstallprompt', showBannerIfReady);
+
+    // Handle install button click
+    document.getElementById('pwa-banner-install')?.addEventListener('click', async () => {
+        if (!window.deferredPrompt) return;
+
+        window.deferredPrompt.prompt();
+        const { outcome } = await window.deferredPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+            banner.classList.remove('visible');
+            setTimeout(() => banner.remove(), 500);
+        }
+
+        window.deferredPrompt = null;
+    });
+
+    // Handle close button
+    document.getElementById('pwa-banner-close')?.addEventListener('click', () => {
+        banner.classList.remove('visible');
+        localStorage.setItem('pwa_install_dismissed', Date.now().toString());
+        setTimeout(() => banner.remove(), 500);
+    });
 }
 
 // Render the entire app shell
@@ -254,18 +328,15 @@ if (document.readyState === 'loading') {
     init();
 }
 
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        const swPath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? '/sw.js'
-            : '/life-dashboard/sw.js';
+// Capture PWA install prompt for later use
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+    console.log('PWA Install Prompt ready');
 
-        navigator.serviceWorker.register(swPath).catch(err => {
-            console.log('Service Worker registration failed: ', err);
-        });
-    });
-}
-
-// Capture PWA install prompt (handled in index.html, but keeping this for HMR safety if needed)
-// window.deferredPrompt is already set by index.html script if event fired early
+    // If we're on the settings page, show the install button
+    const installCard = document.getElementById('install-pwa-card');
+    if (installCard) {
+        installCard.style.display = 'block';
+    }
+});

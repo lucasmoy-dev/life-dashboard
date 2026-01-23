@@ -1105,21 +1105,288 @@ body {
 /* ============================================
    DESKTOP ADAPTATIONS
    ============================================ */
+
+/* PWA Install Banner */
+.pwa-install-banner {
+    position: fixed;
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + var(--spacing-md));
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.95) 0%, rgba(0, 184, 148, 0.95) 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 212, 170, 0.4);
+    z-index: 1100;
+    max-width: calc(100vw - 32px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pwa-install-banner.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.pwa-install-banner-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pwa-install-banner-icon svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+.pwa-install-banner-text {
+    flex: 1;
+}
+
+.pwa-install-banner-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.pwa-install-banner-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.pwa-install-btn {
+    background: white;
+    color: #00b894;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.pwa-install-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+}
+
+.pwa-install-close {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: background var(--transition-fast);
+}
+
+.pwa-install-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.pwa-install-close svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Tablet and Desktop Styles */
 @media (min-width: 768px) {
+    :root {
+        --nav-height: 64px;
+    }
+
     #main-content {
-        max-width: 600px;
+        max-width: 800px;
         margin: 0 auto;
         padding: var(--spacing-xl);
         padding-bottom: calc(var(--nav-height) + var(--spacing-xl));
     }
 
+    /* Navigation stays centered on desktop */
+    #bottom-nav {
+        max-width: 600px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-item {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .nav-label {
+        font-size: 12px;
+    }
+
     .modal {
         border-radius: var(--radius-xl);
         margin-bottom: var(--spacing-lg);
+        max-width: 520px;
+    }
+
+    .modal-overlay.overlay-centered .modal {
+        max-width: 440px;
     }
 
     .highlight-value {
         font-size: 52px;
+    }
+
+    .page-title {
+        font-size: 32px;
+    }
+
+    /* Card grid layout for desktop */
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .card {
+        padding: var(--spacing-xl);
+    }
+
+    /* FAB positioning for desktop */
+    .fab {
+        bottom: calc(var(--nav-height) + var(--spacing-xl));
+        right: calc(50% - 380px);
+    }
+
+    /* Install banner position for desktop */
+    .pwa-install-banner {
+        bottom: calc(var(--nav-height) + var(--spacing-xl));
+        max-width: 400px;
+    }
+}
+
+/* Large Desktop Styles */
+@media (min-width: 1024px) {
+    #main-content {
+        max-width: 900px;
+        padding: var(--spacing-2xl);
+        padding-bottom: calc(var(--nav-height) + var(--spacing-2xl));
+    }
+
+    .page-header {
+        margin-bottom: var(--spacing-xl);
+    }
+
+    .page-title {
+        font-size: 36px;
+    }
+
+    .highlight-value {
+        font-size: 56px;
+    }
+
+    /* Two column grid for cards on large desktop */
+    .desktop-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+
+    .desktop-grid .card {
+        margin-bottom: 0;
+    }
+
+    /* Make stats more spacious */
+    .stat-row {
+        padding: var(--spacing-md) 0;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    /* Calendar improvements */
+    .calendar-day {
+        padding: var(--spacing-md);
+        font-size: 14px;
+    }
+
+    /* Better allocation chart on desktop */
+    .allocation-container {
+        gap: var(--spacing-2xl);
+    }
+
+    .pie-chart {
+        width: 160px;
+        height: 160px;
+    }
+
+    .pie-center {
+        width: 100px;
+        height: 100px;
+    }
+
+    .pie-total {
+        font-size: 15px;
+    }
+
+    .allocation-legend {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+
+    .legend-name {
+        font-size: 13px;
+    }
+
+    .legend-pct {
+        font-size: 14px;
+    }
+
+    /* Asset items larger */
+    .asset-item {
+        padding: var(--spacing-lg);
+    }
+
+    .asset-icon-wrapper {
+        width: 52px;
+        height: 52px;
+    }
+
+    .asset-name {
+        font-size: 15px;
+    }
+
+    .asset-value {
+        font-size: 17px;
+    }
+}
+
+/* Extra Large Desktop */
+@media (min-width: 1280px) {
+    #main-content {
+        max-width: 1100px;
+    }
+
+    /* Three column summary on very large screens */
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .fab {
+        right: calc(50% - 520px);
     }
 }
 
