@@ -1224,7 +1224,7 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.42</p>
+            <p>Life Dashboard Pro v1.0.43</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
