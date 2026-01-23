@@ -1320,7 +1320,7 @@ var Re=Object.defineProperty;var De=(n,e,a)=>e in n?Re(n,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.67</p>
+            <p>Life Dashboard Pro v1.0.68</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
