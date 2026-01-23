@@ -6,6 +6,7 @@
     /* Primary Colors */
     --bg-primary: #0f0f23;
     --bg-secondary: #1a1a2e;
+    --bg-secondary-rgb: 26, 26, 46;
     --bg-card: #16213e;
     --bg-card-hover: #1f2f52;
 
@@ -3807,10 +3808,69 @@ input:checked+.slider-premium:before {
     padding: 6px !important;
 }
 
+.health-routine-card {
+    background: rgba(var(--bg-secondary-rgb), 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.routine-card-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.02);
+}
+
 .reorder-routine-btn svg,
 .reorder-ex-btn svg {
     width: 18px !important;
     height: 18px !important;
+}
+
+.routine-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.delete-routine-btn,
+.reorder-routine-btn {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-routine-btn {
+    color: var(--accent-danger);
+}
+
+.delete-routine-btn:hover {
+    background: var(--accent-danger);
+    border-color: var(--accent-danger);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.reorder-routine-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.delete-routine-btn svg,
+.reorder-routine-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2.5;
 }
 
 .goal-color-dots {
