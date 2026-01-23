@@ -1,11 +1,8 @@
-/**
- * Edit Item Modal - For editing/deleting existing assets, incomes, expenses, or liabilities
- */
-
 import { store } from '../store.js';
 import { getIcon } from '../utils/icons.js';
 import { formatCurrency } from '../utils/format.js';
 import { ns } from '../utils/notifications.js';
+import { MARKET_ASSETS } from '../services/MarketService.js';
 
 const CATEGORY_CONFIG = {
   passive: {
@@ -82,56 +79,101 @@ export function openEditModal(id, category) {
   setupEditModalListeners(config);
 }
 
-const CURRENCIES = [
-  { value: 'EUR', label: 'Euro (€)' },
-  { value: 'USD', label: 'Dólar ($)' },
-  { value: 'BTC', label: 'Bitcoin (BTC)' },
-  { value: 'ETH', label: 'Ethereum (ETH)' },
-  { value: 'XRP', label: 'Ripple (XRP)' },
-  { value: 'GOLD', label: 'Oro (XAU)' },
-  { value: 'SP500', label: 'S&P 500 (SPX)' }
-];
+const ITEM_TYPES_MAP = {
+  passive: [
+    { value: 'rental', label: 'Inmueble en Renta' },
+    { value: 'stocks', label: 'Acciones/Dividendos' },
+    { value: 'etf', label: 'ETF/Fondos' },
+    { value: 'bonds', label: 'Bonos' },
+    { value: 'crypto', label: 'Crypto Staking' },
+    { value: 'business', label: 'Negocio Pasivo' },
+    { value: 'royalties', label: 'Regalías' },
+    { value: 'other', label: 'Otro' }
+  ],
+  investment: [
+    { value: 'property', label: 'Inmueble' },
+    { value: 'stocks', label: 'Acciones' },
+    { value: 'etf', label: 'ETF/Fondos' },
+    { value: 'crypto', label: 'Criptomoneda' },
+    { value: 'cash', label: 'Efectivo/Ahorro' },
+    { value: 'vehicle', label: 'Vehículo' },
+    { value: 'collectibles', label: 'Coleccionables' },
+    { value: 'other', label: 'Otro' }
+  ],
+  liability: [
+    { value: 'mortgage', label: 'Hipoteca' },
+    { value: 'loan', label: 'Préstamo Personal' },
+    { value: 'carloan', label: 'Préstamo Auto' },
+    { value: 'creditcard', label: 'Tarjeta de Crédito' },
+    { value: 'studentloan', label: 'Préstamo Estudiantil' },
+    { value: 'other', label: 'Otra Deuda' }
+  ],
+  activeIncome: [
+    { value: 'salary', label: 'Salario' },
+    { value: 'freelance', label: 'Freelance' },
+    { value: 'business', label: 'Negocio Activo' },
+    { value: 'other', label: 'Otro' }
+  ],
+  livingExpense: [
+    { value: 'rent', label: 'Alquiler/Hipoteca' },
+    { value: 'utilities', label: 'Servicios' },
+    { value: 'food', label: 'Alimentación' },
+    { value: 'transport', label: 'Transporte' },
+    { value: 'insurance', label: 'Seguros' },
+    { value: 'health', label: 'Salud' },
+    { value: 'other', label: 'Otro' }
+  ]
+};
 
 function renderEditModal(item, config) {
-  const symbol = store.getState().currencySymbol;
+  const isInvestment = currentCategory === 'investment' || currentCategory === 'passive';
+  const types = ITEM_TYPES_MAP[currentCategory] || [];
 
-  let valueFields = '';
+  let additionalFields = '';
 
-  if (config.fields.includes('value')) {
-    const label = currentCategory === 'investment' ? 'Cantidad / Valor' : 'Valor Total';
-    valueFields += `
+  if (config.fields.includes('value') && config.fields.includes('monthlyIncome')) {
+    // Passive Asset
+    additionalFields = `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor Total</label>
+          <input type="number" class="form-input" id="edit-value" value="${item.value || 0}" step="any" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ingreso Mensual</label>
+          <input type="number" class="form-input" id="edit-monthly" value="${item.monthlyIncome || 0}" inputmode="numeric">
+        </div>
+      </div>
+    `;
+  } else if (config.fields.includes('value')) {
+    // Investment Asset
+    additionalFields = `
       <div class="form-group">
-        <label class="form-label">${label}</label>
+        <label class="form-label">Cantidad / Valor</label>
         <input type="number" class="form-input" id="edit-value" value="${item.value || 0}" step="any" inputmode="decimal">
       </div>
     `;
-  }
-
-  if (config.fields.includes('amount')) {
-    const label = currentCategory === 'liability' ? 'Monto Total' :
-      currentCategory === 'livingExpense' ? 'Gasto Mensual' : 'Ingreso Mensual';
-    valueFields += `
+  } else if (config.fields.includes('amount') && config.fields.includes('monthlyPayment')) {
+    // Liability
+    additionalFields = `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto Total</label>
+          <input type="number" class="form-input" id="edit-amount" value="${item.amount || 0}" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pago Mensual</label>
+          <input type="number" class="form-input" id="edit-monthly" value="${item.monthlyPayment || 0}" inputmode="numeric">
+        </div>
+      </div>
+    `;
+  } else if (config.fields.includes('amount')) {
+    // Active Income or Living Expense
+    const label = currentCategory === 'livingExpense' ? 'Gasto Mensual' : 'Ingreso Mensual';
+    additionalFields = `
       <div class="form-group">
         <label class="form-label">${label}</label>
         <input type="number" class="form-input" id="edit-amount" value="${item.amount || 0}" inputmode="numeric">
-      </div>
-    `;
-  }
-
-  if (config.fields.includes('monthlyIncome')) {
-    valueFields += `
-      <div class="form-group">
-        <label class="form-label">Ingreso Mensual</label>
-        <input type="number" class="form-input" id="edit-monthly" value="${item.monthlyIncome || 0}" inputmode="numeric">
-      </div>
-    `;
-  }
-
-  if (config.fields.includes('monthlyPayment')) {
-    valueFields += `
-      <div class="form-group">
-        <label class="form-label">Pago Mensual</label>
-        <input type="number" class="form-input" id="edit-monthly" value="${item.monthlyPayment || 0}" inputmode="numeric">
       </div>
     `;
   }
@@ -145,20 +187,35 @@ function renderEditModal(item, config) {
           ${getIcon('x')}
         </button>
       </div>
-      
+
+      <div class="form-row">
+          <div class="form-group" style="flex: 1.5;">
+              <label class="form-label">Tipo</label>
+              <select class="form-input form-select" id="edit-type">
+                  ${types.map(t => `<option value="${t.value}" ${t.value === item.type ? 'selected' : ''}>${t.label}</option>`).join('')}
+              </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+              <label class="form-label">Activo/Moneda</label>
+              <select class="form-input form-select" id="edit-currency">
+                  <optgroup label="Divisas">
+                      ${CURRENCIES.map(c => `<option value="${c.value}" ${c.value === item.currency ? 'selected' : ''}>${c.label}</option>`).join('')}
+                  </optgroup>
+                  ${isInvestment ? `
+                  <optgroup label="Mercados Reales">
+                      ${MARKET_ASSETS.map(a => `<option value="${a.symbol}" ${a.symbol === item.currency ? 'selected' : ''}>${a.name} (${a.symbol})</option>`).join('')}
+                  </optgroup>
+                  ` : ''}
+              </select>
+          </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">Nombre</label>
         <input type="text" class="form-input" id="edit-name" value="${item.name || ''}">
       </div>
-
-      <div class="form-group">
-        <label class="form-label">Moneda/Activo</label>
-        <select class="form-input form-select" id="edit-currency">
-          ${CURRENCIES.map(c => `<option value="${c.value}" ${c.value === item.currency ? 'selected' : ''}>${c.label}</option>`).join('')}
-        </select>
-      </div>
       
-      ${valueFields}
+      ${additionalFields}
       
       <div class="form-group">
         <label class="form-label">Detalles (opcional)</label>
@@ -200,6 +257,7 @@ function setupEditModalListeners(config) {
 
 function handleUpdate(config) {
   const name = document.getElementById('edit-name')?.value?.trim();
+  const type = document.getElementById('edit-type')?.value;
   const currency = document.getElementById('edit-currency')?.value;
   const details = document.getElementById('edit-details')?.value?.trim();
   const value = parseFloat(document.getElementById('edit-value')?.value) || 0;
@@ -211,7 +269,7 @@ function handleUpdate(config) {
     return;
   }
 
-  const updates = { name, currency, details };
+  const updates = { name, type, currency, details };
 
   if (config.fields.includes('value')) {
     updates.value = value;

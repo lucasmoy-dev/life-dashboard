@@ -2,7 +2,7 @@
  * Price Service - Fetches real-time prices for currencies, cryptos and assets
  */
 
-const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,kaspa,solana,stellar,algorand,litecoin,sui,chainlink,render-token&vs_currencies=eur,ars';
+const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,kaspa,solana,stellar,algorand,litecoin,sui,chainlink,render-token,cardano,ondo-finance&vs_currencies=eur,ars';
 const FRANKFURTER_URL = 'https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,GBP,AUD';
 
 export async function fetchAllPrices() {
@@ -26,6 +26,8 @@ export async function fetchAllPrices() {
         rates.SUI = cryptoData.sui?.eur || 1.10;
         rates.LINK = cryptoData.chainlink?.eur || 14;
         rates.RNDR = cryptoData['render-token']?.eur || 4.5;
+        rates.ADA = cryptoData.cardano?.eur || 0.45;
+        rates.ONDO = cryptoData['ondo-finance']?.eur || 0.70;
 
         // Calculate ARS rate (EUR/ARS)
         if (cryptoData.bitcoin?.ars && cryptoData.bitcoin?.eur) {
