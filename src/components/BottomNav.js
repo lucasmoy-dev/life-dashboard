@@ -16,7 +16,7 @@ export function renderBottomNav(activeId = 'finance') {
     const brand = `
         <div class="nav-brand">
             <div class="nav-brand-logo">
-                ${getIcon('zap', 'brand-icon')}
+                <img src="icons/icon-192.png" alt="Logo" class="brand-logo-img">
             </div>
             <span class="nav-brand-text">LifeDashboard</span>
         </div>

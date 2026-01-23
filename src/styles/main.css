@@ -2854,11 +2854,20 @@ input:checked+.slider-premium:before {
         width: 100%;
     }
 
-    .brand-icon {
-        width: 32px;
-        height: 32px;
-        color: var(--accent-primary);
-        filter: drop-shadow(0 0 10px rgba(0, 212, 170, 0.4));
+    .nav-brand-logo {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .brand-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 8px rgba(0, 212, 170, 0.3));
     }
 
     .nav-brand-text {
