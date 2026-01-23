@@ -78,11 +78,17 @@ export function renderHealthPage() {
                                 </div>
                             ` : `
                                 <div class="exercise-log-actions">
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="1" title="Muy Pesado">😰</button>
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="3" title="Bien">💪</button>
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="5" title="Fácil">⚡</button>
-                                    <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" style="margin-left:8px; opacity:0.5;">${getIcon('x')}</button>
+                                    <button class="btn-perf hard log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="1">
+                                        <span>😰</span> DURO
+                                    </button>
+                                    <button class="btn-perf good log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="3">
+                                        <span>💪</span> BIEN
+                                    </button>
+                                    <button class="btn-perf easy log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="5">
+                                        <span>⚡</span> FÁCIL
+                                    </button>
                                 </div>
+                                <button class="delete-exercise-btn ex-delete-mini" data-routine="${routine.id}" data-index="${exIdx}" title="Quitar">${getIcon('trash')}</button>
                             `}
                         </div>
                     </div>
