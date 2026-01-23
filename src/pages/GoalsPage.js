@@ -40,9 +40,9 @@ export function renderGoalsPage() {
       <div class="goals-grid-layout">
         ${timeframes.map(tf => {
         const timeframeGoals = goals.filter(g => g.timeframe === tf.id);
-        const completed = timeframeGoals.filter(g => g.completed).length;
+        const completedCount = timeframeGoals.filter(g => g.completed).length;
         const total = timeframeGoals.length;
-        const progress = total > 0 ? (completed / total) * 100 : 0;
+        const progress = total > 0 ? (completedCount / total) * 100 : 0;
 
         return `
           <div class="goals-column-premium">
@@ -51,8 +51,13 @@ export function renderGoalsPage() {
                     <div class="column-icon" style="background: ${tf.color}22; color: ${tf.color}">${getIcon(tf.icon)}</div>
                     <div class="column-info">
                         <span class="column-title">${tf.label}</span>
-                        <span class="column-stats">${completed}/${total}</span>
+                        <span class="column-stats">${completedCount}/${total}</span>
                     </div>
+                    ${completedCount > 0 ? `
+                        <button class="btn-clear-completed" data-tf="${tf.id}" title="Limpiar completadas">
+                            ${getIcon('trash')}
+                        </button>
+                    ` : ''}
                 </div>
                 <div class="column-progress-bar">
                     <div class="column-progress-fill" style="width: ${progress}%; background: ${tf.color}"></div>
@@ -121,7 +126,7 @@ function renderGoalsForTimeframe(filtered, timeframe) {
                                 title="Cambiar color"></button>
                     </div>
                     
-                    <div class="goal-header-row" style="margin-top: 8px;">
+                    <div class="goal-header-row" style="margin-top: 4px;">
                         <div class="goal-actions-mini">
                             <button class="action-btn-mini add-subgoal" data-id="${goal.id}" title="Hito">${getIcon('plus')}</button>
                             <button class="action-btn-mini delete-goal" data-id="${goal.id}" title="Borrar">${getIcon('trash')}</button>
@@ -158,6 +163,19 @@ function renderGoalsForTimeframe(filtered, timeframe) {
 }
 
 export function setupGoalsPageListeners() {
+    // Clear completed goals
+    document.querySelectorAll('.btn-clear-completed').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const timeframe = btn.dataset.tf;
+            const confirmed = await ns.confirm('Limpiar completadas', '¿Borrar todas las metas ya terminadas de esta columna?');
+            if (confirmed) {
+                store.deleteCompletedGoals(timeframe);
+                ns.toast('Metas limpiadas');
+            }
+        });
+    });
+
     // Toggle main goal
     document.querySelectorAll('.toggle-goal').forEach(btn => {
         btn.addEventListener('click', (e) => {

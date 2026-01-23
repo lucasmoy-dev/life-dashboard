@@ -565,6 +565,12 @@ class Store {
         this.setState({ goals: this.state.goals.filter(g => g.id !== id) });
     }
 
+    deleteCompletedGoals(timeframe) {
+        this.setState({
+            goals: this.state.goals.filter(g => g.timeframe !== timeframe || !g.completed)
+        });
+    }
+
     updateGoal(id, updates) {
         this.setState({
             goals: this.state.goals.map(g => g.id === id ? { ...g, ...updates } : g)
