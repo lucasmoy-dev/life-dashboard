@@ -13,12 +13,23 @@ const NAV_ITEMS = [
 ];
 
 export function renderBottomNav(activeId = 'finance') {
-    return NAV_ITEMS.map(item => `
-    <div class="nav-item ${item.id === activeId ? 'active' : ''}" data-nav="${item.id}">
-      ${getIcon(item.icon, 'nav-icon')}
-      <span class="nav-label">${item.label}</span>
-    </div>
-  `).join('');
+    const brand = `
+        <div class="nav-brand">
+            <div class="nav-brand-logo">
+                ${getIcon('zap', 'brand-icon')}
+            </div>
+            <span class="nav-brand-text">LifeDashboard</span>
+        </div>
+    `;
+
+    const items = NAV_ITEMS.map(item => `
+        <div class="nav-item ${item.id === activeId ? 'active' : ''}" data-nav="${item.id}">
+            ${getIcon(item.icon, 'nav-icon')}
+            <span class="nav-label">${item.label}</span>
+        </div>
+    `).join('');
+
+    return brand + items;
 }
 
 export function setupNavListeners(onNavigate) {
