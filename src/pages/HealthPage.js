@@ -65,13 +65,15 @@ export function renderHealthPage() {
                                     <span class="ex-clickable-val update-weight" data-routine="${routine.id}" data-index="${exIdx}">${ex.weight || 50}kg</span>
                                     <span style="opacity: 0.3;">•</span>
                                     <span class="ex-clickable-val update-reps" data-routine="${routine.id}" data-index="${exIdx}">${ex.reps || 10} reps</span>
-                                    <span style="opacity: 0.3;">•</span>
-                                    <span style="font-size: 11px; font-weight: 500;">4 series</span>
-                                    ${ratingDisplay ? `<span style="opacity: 0.3;">•</span> ${ratingDisplay}` : ''}
+                                    ${status.lastLog ? `
+                                        <span style="opacity: 0.3;">•</span>
+                                        <span class="last-effort-badge ${getRatingClass(status.lastLog.rating)}">Último: ${getRatingLabel(status.lastLog.rating)}</span>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
                         <div class="ex-health-actions">
+                            <button class="delete-exercise-btn ex-delete-mini" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar">${getIcon('trash')}</button>
                             ${isDoneToday ? `
                                 <div class="exercise-done-badge-solid">
                                     ${getIcon('check', 'done-icon-solid')}
@@ -88,7 +90,6 @@ export function renderHealthPage() {
                                         <span>⚡</span> FÁCIL
                                     </button>
                                 </div>
-                                <button class="delete-exercise-btn ex-delete-mini" data-routine="${routine.id}" data-index="${exIdx}" title="Quitar">${getIcon('trash')}</button>
                             `}
                         </div>
                     </div>
@@ -96,7 +97,7 @@ export function renderHealthPage() {
     }).join('')}
             </div>
             <div class="add-ex-row" style="margin-top: var(--spacing-md);">
-                <button class="btn btn-secondary btn-sm add-ex-btn" data-id="${routine.id}">
+                <button class="btn btn-secondary add-ex-btn w-full" data-id="${routine.id}">
                     ${getIcon('plus')} Agregar Ejercicio
                 </button>
             </div>
@@ -137,13 +138,25 @@ export function renderHealthPage() {
       <div class="card ai-calorie-card" style="margin-bottom: var(--spacing-2xl); display: flex; flex-direction: column; align-items: center;">
           <div class="summary-value" style="font-size: 28px;">${calculateTodayCalories(health)} kcal</div>
           <div class="summary-label">Calorías Registradas Hoy</div>
-          <button class="btn btn-primary btn-sm" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: auto;">
+          <button class="btn btn-primary" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: auto; padding: 10px 20px;">
              ${getIcon('camera')} Escanear Comida (AI)
           </button>
       </div>
 
     </div>
     `;
+}
+
+function getRatingLabel(rating) {
+    if (rating <= 2) return 'DURO';
+    if (rating <= 4) return 'BIEN';
+    return 'FÁCIL';
+}
+
+function getRatingClass(rating) {
+    if (rating <= 2) return 'effort-hard';
+    if (rating <= 4) return 'effort-good';
+    return 'effort-easy';
 }
 
 function calculateTodayCalories(health) {

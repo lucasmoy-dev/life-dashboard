@@ -79,7 +79,7 @@ class NotificationService {
     /**
      * Custom Prompt Modal (Centered)
      */
-    prompt(title, message, placeholder = '', inputType = 'text') {
+    prompt(title, message, initialValue = '', inputType = 'text') {
         return new Promise((resolve) => {
             const inputId = `prompt-input-${Date.now()}`;
             this._showModal({
@@ -88,7 +88,7 @@ class NotificationService {
                 centered: true,
                 content: `
                     <div class="form-group" style="margin-top: var(--spacing-md);">
-                        <input type="${inputType}" id="${inputId}" class="form-input" placeholder="${placeholder}" autofocus>
+                        <input type="${inputType}" id="${inputId}" class="form-input" value="${initialValue}" autofocus>
                     </div>
                 `,
                 buttons: [
@@ -103,6 +103,14 @@ class NotificationService {
                     }
                 ]
             });
+            // Focus and select text
+            setTimeout(() => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.focus();
+                    if (input.select) input.select();
+                }
+            }, 100);
         });
     }
 
@@ -119,7 +127,7 @@ class NotificationService {
                 content: `
                     <div style="${gridStyle}">
                         ${options.map((opt, i) => `
-                            <button class="btn btn-secondary select-option-btn" style="padding: 10px 4px; font-size: 13px; font-weight: 600;" data-value="${opt.value || opt}">
+                            <button class="btn btn-secondary select-option-btn" style="padding: 15px 4px; font-size: 15px; font-weight: 700;" data-value="${opt.value || opt}">
                                 ${opt.label || opt}
                             </button>
                         `).join('')}
@@ -243,9 +251,9 @@ class NotificationService {
                     <div style="color: var(--text-secondary); line-height: 1.5; font-size: 14px;">${message}</div>
                     ${content}
                 </div>
-                <div class="modal-footer" style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg);">
+                <div class="modal-footer" style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
                     ${buttons.map((btn, i) => `
-                        <button class="btn btn-${btn.type} w-full" data-index="${i}" ${btn.disabled ? 'disabled style="opacity: 0.3; pointer-events: none;"' : ''} ${btn.id ? `id="${btn.id}"` : ''}>
+                        <button class="btn btn-${btn.type} w-full" data-index="${i}" style="min-height: 48px; font-size: 16px; ${btn.disabled ? 'opacity: 0.3; pointer-events: none;' : ''}" ${btn.id ? `id="${btn.id}"` : ''}>
                             ${btn.text}
                         </button>
                     `).join('')}

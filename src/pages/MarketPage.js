@@ -8,32 +8,34 @@ import { formatCurrency, formatPercentage } from '../utils/format.js';
 import { getIcon } from '../utils/icons.js';
 
 let marketData = store.getState().lastMarketData || [];
-let isLoading = marketData.length === 0;
+let isLoading = false;
 let sortConfig = { key: 'price', direction: 'desc' };
+let currentMarketCurrency = '';
 
 export function renderMarketPage() {
     const state = store.getState();
     const currency = state.currency || 'EUR';
     const symbol = state.currencySymbol || '€';
 
-    // Background refresh if data is present, otherwise full screen loading
-    if (marketData.length === 0) {
-        loadData();
-        return `
-            <div class="market-page">
-                <header class="page-header">
-                    <h1 class="page-title">Mercados del Mundo</h1>
-                    <p class="page-subtitle">Precios y tendencias globales</p>
-                </header>
-                <div class="empty-state">
-                    <div class="loading-spinner"></div>
-                    <p class="empty-description">Cargando datos reales de mercado...</p>
+    // Refresh if currency changed or no data
+    if (marketData.length === 0 || currentMarketCurrency !== currency) {
+        if (!isLoading) {
+            loadData();
+        }
+        if (marketData.length === 0) {
+            return `
+                <div class="market-page">
+                    <header class="page-header">
+                        <h1 class="page-title">Mercados del Mundo</h1>
+                        <p class="page-subtitle">Precios y tendencias globales</p>
+                    </header>
+                    <div class="empty-state">
+                        <div class="loading-spinner"></div>
+                        <p class="empty-description">Cargando datos reales de mercado...</p>
+                    </div>
                 </div>
-            </div>
-        `;
-    } else if (!isLoading) {
-        // Trigger background refresh once on enter
-        loadData();
+            `;
+        }
     }
 
     const categories = Object.values(ASSET_CATEGORIES);
@@ -60,9 +62,9 @@ export function renderMarketPage() {
                         </div>
                     </div>
                     
-                    <div class="market-currency-toggle" style="background: rgba(255,255,255,0.05); padding: 4px; border-radius: var(--radius-md); display: flex; gap: 4px;">
-                        <button class="btn-toggle ${currency === 'EUR' ? 'active' : ''}" data-curr="EUR" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${currency === 'EUR' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'EUR' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 600;">EUR</button>
-                        <button class="btn-toggle ${currency === 'USD' ? 'active' : ''}" data-curr="USD" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${currency === 'USD' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'USD' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 600;">USD</button>
+                    <div class="market-currency-toggle" style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: var(--radius-md); display: flex; gap: 6px;">
+                        <button class="btn-toggle ${currency === 'EUR' ? 'active' : ''}" data-curr="EUR" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; background: ${currency === 'EUR' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'EUR' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 700;">EUR</button>
+                        <button class="btn-toggle ${currency === 'USD' ? 'active' : ''}" data-curr="USD" style="padding: 8px 16px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; background: ${currency === 'USD' ? 'var(--accent-primary)' : 'transparent'}; color: ${currency === 'USD' ? 'var(--bg-primary)' : 'var(--text-secondary)'}; font-weight: 700;">USD</button>
                     </div>
                 </div>
             </header>
@@ -139,9 +141,14 @@ function renderCategoryTable(categoryName, data, symbol) {
 async function loadData() {
     const state = store.getState();
     const currency = state.currency || 'EUR';
+    if (isLoading) return;
+
     isLoading = true;
+    currentMarketCurrency = currency;
+
     marketData = await fetchMarketData(currency);
     store.saveMarketData(marketData);
+
     isLoading = false;
     window.dispatchEvent(new CustomEvent('market-ready'));
 }
