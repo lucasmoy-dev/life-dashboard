@@ -26,8 +26,7 @@ export function renderGoalsPage() {
     const timeframes = [
         { id: 'day', label: 'Hoy', icon: 'zap', color: '#FFD700' },
         { id: 'week', label: 'Semana', icon: 'calendar', color: '#00D4AA' },
-        { id: 'year', label: 'Año 2026', icon: 'target', color: '#7C3AED' },
-        { id: 'long', label: 'Visión', icon: 'trendingUp', color: '#EF4444' }
+        { id: 'year', label: 'Año 2026', icon: 'target', color: '#7C3AED' }
     ];
 
     return `
@@ -76,17 +75,6 @@ export function renderGoalsPage() {
     }).join('')}
       </div>
 
-      <div class="advanced-goals-section" style="margin-top: var(--spacing-2xl); display: flex; justify-content: center;">
-         <div class="card premium-long-term-card" id="add-goal-primary" style="margin: 0;">
-            <div class="premium-card-content">
-                <div class="premium-icon-circle">${getIcon('trendingUp')}</div>
-                <div class="premium-text" style="flex: 1;">
-                    <h3>Visión de Largo Plazo</h3>
-                    <p>Crea hitos estratégicos para tu futuro</p>
-                </div>
-                <button class="btn btn-primary btn-round">${getIcon('plus')}</button>
-            </div>
-         </div>
       </div>
     </div>
   `;
@@ -334,23 +322,7 @@ export function setupGoalsPageListeners() {
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
-    // Primary ADD button
-    document.getElementById('add-goal-primary')?.addEventListener('click', async () => {
-        const title = await ns.prompt('Meta Estratégica', '¿Qué quieres lograr?');
-        if (title) {
-            const options = [
-                { value: 'day', label: 'Hoy' },
-                { value: 'week', label: 'Semana' },
-                { value: 'year', label: 'Año' },
-                { value: 'long', label: 'Largo Plazo' }
-            ];
-            const timeframe = await ns.select('Plazo', 'Selecciona el horizonte:', options, 1);
-            if (timeframe) {
-                store.addGoal({ title, timeframe, color: GOAL_COLORS[1] });
-                ns.toast('Meta estratégica guardada', 'success');
-            }
-        }
-    });
+
 
     document.querySelectorAll('.quick-add-plus-btn').forEach(btn => {
         btn.addEventListener('click', () => {

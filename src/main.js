@@ -236,7 +236,7 @@ function renderPage() {
             setupSubPageButtons();
             break;
         case 'goals':
-            showFAB();
+            hideFAB();
             main.innerHTML = renderGoalsPage();
             setupGoalsPageListeners();
             break;
