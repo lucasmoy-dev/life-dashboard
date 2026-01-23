@@ -185,6 +185,46 @@ class NotificationService {
         });
     }
 
+    /**
+     * Star Rating Modal
+     */
+    stars(title, message) {
+        return new Promise((resolve) => {
+            let selectedRating = 5;
+            this._showModal({
+                title,
+                message,
+                centered: true,
+                content: `
+                    <div class="star-rating-container" style="display: flex; justify-content: center; gap: 12px; margin-top: 20px; font-size: 32px;">
+                        ${[1, 2, 3, 4, 5].map(num => `
+                            <span class="star-btn" data-value="${num}" style="cursor: pointer; color: ${num <= 5 ? 'var(--accent-tertiary)' : 'var(--text-muted)'}; transition: transform 0.2s ease;">★</span>
+                        `).join('')}
+                    </div>
+                `,
+                buttons: [
+                    { text: 'Cancelar', type: 'secondary', onClick: () => resolve(null) },
+                    { text: 'Guardar Calificación', type: 'primary', onClick: () => resolve(selectedRating) }
+                ]
+            });
+
+            // Attach listeners to stars
+            const modal = document.querySelector('.modal-overlay.active');
+            if (modal) {
+                const stars = modal.querySelectorAll('.star-btn');
+                stars.forEach(star => {
+                    star.addEventListener('click', () => {
+                        selectedRating = parseInt(star.dataset.value);
+                        stars.forEach((s, i) => {
+                            s.style.color = (i < selectedRating) ? 'var(--accent-tertiary)' : 'var(--text-muted)';
+                            s.style.transform = (i < selectedRating) ? 'scale(1.2)' : 'scale(1)';
+                        });
+                    });
+                });
+            }
+        });
+    }
+
     _showModal({ title, message, content = '', buttons = [], centered = false }) {
         const overlay = document.createElement('div');
         overlay.className = `modal-overlay ${centered ? 'overlay-centered' : ''}`;

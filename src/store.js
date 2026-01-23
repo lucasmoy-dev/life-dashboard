@@ -437,12 +437,36 @@ class Store {
                 ...this.state.health,
                 routines: this.state.health.routines.map(r => {
                     if (r.id === routineId) {
-                        return { ...r, exercises: [...r.exercises, { weight: 0, reps: 14, sets: 4, ...exercise }] };
+                        return { ...r, exercises: [...r.exercises, { weight: 50, reps: 10, sets: 4, ...exercise }] };
                     }
                     return r;
                 })
             }
         });
+    }
+
+    reorderRoutine(index, direction) {
+        const routines = [...this.state.health.routines];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= routines.length) return;
+
+        [routines[index], routines[newIndex]] = [routines[newIndex], routines[index]];
+        this.setState({ health: { ...this.state.health, routines } });
+    }
+
+    reorderExercise(routineId, index, direction) {
+        const newRoutines = this.state.health.routines.map(r => {
+            if (r.id === routineId) {
+                const exercises = [...r.exercises];
+                const newIndex = direction === 'up' ? index - 1 : index + 1;
+                if (newIndex < 0 || newIndex >= exercises.length) return r;
+
+                [exercises[index], exercises[newIndex]] = [exercises[newIndex], exercises[index]];
+                return { ...r, exercises };
+            }
+            return r;
+        });
+        this.setState({ health: { ...this.state.health, routines: newRoutines } });
     }
 
     deleteExerciseFromRoutine(routineId, exerciseIndex) {

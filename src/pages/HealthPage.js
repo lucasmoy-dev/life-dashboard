@@ -24,14 +24,20 @@ export function renderHealthPage() {
       </div>
 
       <div class="routines-list">
-        ${health.routines.map(routine => `
+        ${health.routines.map((routine, rIdx) => `
           <div class="card routine-card">
             <div class="routine-header">
                 <div class="routine-info">
                     <div class="routine-name clickable rename-routine" data-id="${routine.id}">${routine.name}</div>
-                    <div class="routine-meta">${routine.exercises.length} ejercicios</div>
+                    <div class="routine-meta">
+                        ${routine.exercises.length} ejercicios
+                        <div class="routine-reorder-btns">
+                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="up">${getIcon('chevronUp')}</button>
+                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="down">${getIcon('chevronDown')}</button>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 4px;">
                     <button class="icon-btn add-exercise-btn" data-id="${routine.id}" style="color: var(--accent-primary);">
                         ${getIcon('plus')}
                     </button>
@@ -41,41 +47,51 @@ export function renderHealthPage() {
                 </div>
             </div>
             <div class="exercise-list">
-                ${routine.exercises.map((ex, index) => {
-        const status = store.getExerciseStatus(routine.id, index);
+                ${routine.exercises.map((ex, exIdx) => {
+        const status = store.getExerciseStatus(routine.id, exIdx);
         let colorVar = 'var(--text-muted)';
         if (status.color === 'red') colorVar = 'var(--accent-danger)';
         if (status.color === 'orange') colorVar = 'var(--accent-warning)';
         if (status.color === 'green') colorVar = 'var(--accent-success)';
 
-        // Star rating display if recently done
+        const isDoneToday = status.status === 'done_today';
         let ratingDisplay = '';
-        if (status.status === 'done_today' && status.lastLog) {
+        if (isDoneToday && status.lastLog) {
             ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary);">★ ${status.lastLog.rating}</span>`;
         }
 
         return `
-                    <div class="exercise-item-health">
+                    <div class="exercise-item-health ${isDoneToday ? 'exercise-done' : ''}">
                         <div class="ex-health-main">
                             <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
                             <div class="ex-health-info" style="${status.color === 'red' ? 'opacity: 0.6;' : ''}">
-                                <div class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${index}">${ex.name}</div>
+                                <div class="ex-health-name-row">
+                                    <span class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${exIdx}">${ex.name}</span>
+                                    <div class="ex-reorder-btns">
+                                        <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="up">${getIcon('chevronUp')}</button>
+                                        <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="down">${getIcon('chevronDown')}</button>
+                                    </div>
+                                </div>
                                 <div class="ex-health-stats">
-                                    <span class="ex-clickable-val update-weight" data-routine="${routine.id}" data-index="${index}">${ex.weight || 0}kg</span>
+                                    <span class="ex-clickable-val update-weight" data-routine="${routine.id}" data-index="${exIdx}">${ex.weight || 50}kg</span>
                                     <span style="opacity: 0.3;">•</span>
-                                    <span class="ex-clickable-val update-reps" data-routine="${routine.id}" data-index="${index}">${ex.reps || 14} reps</span>
+                                    <span class="ex-clickable-val update-reps" data-routine="${routine.id}" data-index="${exIdx}">${ex.reps || 10} reps</span>
                                     <span style="opacity: 0.3;">•</span>
                                     <span style="font-size: 11px; font-weight: 500;">4 series</span>
                                     ${ratingDisplay ? `<span style="opacity: 0.3;">•</span> ${ratingDisplay}` : ''}
                                 </div>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${index}" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
-                                ${getIcon('x', '', 'style="width: 14px; height: 14px;"')}
+                        <div class="ex-health-actions">
+                            <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar ejercicio">
+                                ${getIcon('x')}
                             </button>
-                            <button class="log-exercise-large-btn trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
-                                🏋️
+                            <button class="log-exercise-large-btn trigger-exercise-log" 
+                                    data-routine="${routine.id}" 
+                                    data-index="${exIdx}" 
+                                    data-name="${ex.name}"
+                                    ${isDoneToday ? 'disabled' : ''}>
+                                ${isDoneToday ? '✅' : '🏋️'}
                             </button>
                         </div>
                     </div>
@@ -291,6 +307,27 @@ export function setupHealthPageListeners() {
         });
     });
 
+    // Reorder Routine
+    document.querySelectorAll('.reorder-routine-btn').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(el.dataset.index);
+            const dir = el.dataset.dir;
+            store.reorderRoutine(index, dir);
+        });
+    });
+
+    // Reorder Exercise
+    document.querySelectorAll('.reorder-ex-btn').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const dir = el.dataset.dir;
+            store.reorderExercise(routineId, index, dir);
+        });
+    });
+
     // Update Weight (Select Picker)
     document.querySelectorAll('.update-weight').forEach(el => {
         el.addEventListener('click', async (e) => {
@@ -298,7 +335,6 @@ export function setupHealthPageListeners() {
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
 
-            // Generate kg options: 10 to 150 in 2.5kg steps
             const options = [];
             for (let kg = 10; kg <= 150; kg += 2.5) {
                 options.push(`${kg}kg`);
@@ -320,7 +356,6 @@ export function setupHealthPageListeners() {
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
 
-            // Generate reps options: 7 to 20
             const options = [];
             for (let r = 7; r <= 20; r++) {
                 options.push(`${r} reps`);
@@ -335,7 +370,7 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Exercise Logging
+    // Exercise Logging (STARS)
     const exercises = document.querySelectorAll('.trigger-exercise-log');
     exercises.forEach(el => {
         el.addEventListener('click', async (e) => {
@@ -344,21 +379,14 @@ export function setupHealthPageListeners() {
             const index = parseInt(el.dataset.index);
             const name = el.dataset.name;
 
-            const ratingInput = await ns.prompt(
-                'Monitor de Ejercicio',
-                `¿Completaste "${name}" hoy? Califica tu desempeño (1-5):`,
-                '5',
-                'number'
+            const rating = await ns.stars(
+                'Monitor de Gym',
+                `¿Cómo fue tu desempeño en "${name}"?`
             );
 
-            if (ratingInput) {
-                const rating = parseInt(ratingInput);
-                if (rating >= 1 && rating <= 5) {
-                    store.logExercise(routineId, index, rating);
-                    ns.toast('¡Entrenamiento guardado!', 'success');
-                } else {
-                    ns.toast('Calificación inválida (1-5)', 'error');
-                }
+            if (rating) {
+                store.logExercise(routineId, index, rating);
+                ns.toast('¡Entrenamiento guardado!', 'success');
             }
         });
     });

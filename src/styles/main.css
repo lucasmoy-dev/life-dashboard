@@ -3288,17 +3288,101 @@ input:checked+.slider-premium:before {
     align-items: center;
     gap: var(--spacing-sm);
     flex: 1;
+    min-width: 0;
+}
+
+.ex-health-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ex-reorder-btns,
+.routine-reorder-btns {
+    display: flex;
+    gap: 2px;
+    opacity: 0.3;
+    transition: opacity 0.2s ease;
+}
+
+.routine-card:hover .routine-reorder-btns,
+.exercise-item-health:hover .ex-reorder-btns {
+    opacity: 1;
+}
+
+.ex-reorder-btns button,
+.routine-reorder-btns button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+}
+
+.ex-reorder-btns svg,
+.routine-reorder-btns svg {
+    width: 14px;
+    height: 14px;
 }
 
 .ex-health-info {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .ex-health-name {
     font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ex-health-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.delete-exercise-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    opacity: 0.4;
+    transition: all 0.2s ease;
+}
+
+.delete-exercise-btn:hover {
+    color: var(--accent-danger);
+    opacity: 1;
+}
+
+.routine-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exercise-done {
+    background: rgba(0, 212, 170, 0.05);
+    border: 1px solid rgba(0, 212, 170, 0.1);
+}
+
+.log-exercise-large-btn:disabled {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.8;
 }
 
 .ex-health-stats {
