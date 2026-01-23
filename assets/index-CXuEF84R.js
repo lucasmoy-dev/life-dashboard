@@ -199,36 +199,38 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
         </div>
       </div>
       
-      <button class="compound-link-btn" id="open-expenses" style="margin-bottom: var(--spacing-sm); background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); border-color: rgba(239, 68, 68, 0.3);">
-        <div class="compound-link-content">
-          <div class="compound-link-icon" style="background: rgba(239,68,68,0.2); color: var(--accent-danger);">
-            ${v("creditCard")}
+      <div class="finance-links-grid">
+        <button class="compound-link-btn" id="open-expenses" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); border-color: rgba(239, 68, 68, 0.3);">
+          <div class="compound-link-content">
+            <div class="compound-link-icon" style="background: rgba(239,68,68,0.2); color: var(--accent-danger);">
+              ${v("creditCard")}
+            </div>
+            <div class="compound-link-text">
+              <div class="compound-link-title">Ver Gastos Mensuales</div>
+              <div class="compound-link-subtitle">Detalle de salidas y deudas</div>
+            </div>
           </div>
-          <div class="compound-link-text">
-            <div class="compound-link-title">Ver Gastos Mensuales</div>
-            <div class="compound-link-subtitle">Detalle de salidas y deudas</div>
+          <div class="compound-link-arrow">
+            ${v("chevronRight")}
           </div>
-        </div>
-        <div class="compound-link-arrow">
-          ${v("chevronRight")}
-        </div>
-      </button>
+        </button>
 
-      <!-- COMPOUND INTEREST CALCULATOR LINK -->
-      <button class="compound-link-btn" id="open-compound" style="margin-bottom: var(--spacing-lg);">
-        <div class="compound-link-content">
-          <div class="compound-link-icon">
-            ${v("calculator")}
+        <!-- COMPOUND INTEREST CALCULATOR LINK -->
+        <button class="compound-link-btn" id="open-compound">
+          <div class="compound-link-content">
+            <div class="compound-link-icon">
+              ${v("calculator")}
+            </div>
+            <div class="compound-link-text">
+              <div class="compound-link-title">Calculadora de Interés Compuesto</div>
+              <div class="compound-link-subtitle">Proyecta el crecimiento de tu patrimonio</div>
+            </div>
           </div>
-          <div class="compound-link-text">
-            <div class="compound-link-title">Calculadora de Interés Compuesto</div>
-            <div class="compound-link-subtitle">Proyecta el crecimiento de tu patrimonio</div>
+          <div class="compound-link-arrow">
+            ${v("chevronRight")}
           </div>
-        </div>
-        <div class="compound-link-arrow">
-          ${v("chevronRight")}
-        </div>
-      </button>
+        </button>
+      </div>
 
       <!-- ASSETS LIST -->
       <div class="section-divider">
@@ -1181,7 +1183,7 @@ var $e=Object.defineProperty;var Ce=(s,e,t)=>e in s?$e(s,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.33</p>
+            <p>Life Dashboard Pro v1.0.34</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
