@@ -3764,7 +3764,7 @@ input:checked+.slider-premium:before {
     }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1024px) {
     .goals-grid-layout {
         grid-template-columns: repeat(4, 1fr);
     }
@@ -3994,26 +3994,53 @@ input:checked+.slider-premium:before {
 .quick-add-goal-premium {
     display: flex;
     align-items: center;
-    padding: var(--spacing-sm);
-    background: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: var(--radius-md);
     margin: var(--spacing-sm);
+    transition: all 0.2s ease;
+    gap: 4px;
 }
 
-.quick-add-plus-btn {
-    background: none;
-    border: none;
-    color: var(--accent-primary);
-    cursor: pointer;
-    padding: 4px;
+.quick-add-goal-premium:focus-within {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-primary);
 }
 
 .quick-add-input-premium {
+    flex: 1;
     background: none;
     border: none;
     color: var(--text-primary);
     font-size: 13px;
-    width: 100%;
+    outline: none;
+    padding: 8px 0;
+    min-width: 0;
+}
+
+.btn-quick-add-submit {
+    background: transparent;
+    border: none;
+    color: var(--accent-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    opacity: 0.5;
+    transition: all 0.2s;
+    border-radius: 6px;
+}
+
+.btn-quick-add-submit:hover {
+    opacity: 1;
+    background: rgba(0, 212, 170, 0.1);
+}
+
+.btn-quick-add-submit svg {
+    width: 14px;
+    height: 14px;
 }
 
 .premium-long-term-card {

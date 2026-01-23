@@ -26,7 +26,8 @@ export function renderGoalsPage() {
     const timeframes = [
         { id: 'day', label: 'Hoy', icon: 'zap', color: '#FFD700' },
         { id: 'week', label: 'Semana', icon: 'calendar', color: '#00D4AA' },
-        { id: 'year', label: 'Año 2026', icon: 'target', color: '#7C3AED' }
+        { id: 'year', label: 'Año 2026', icon: 'target', color: '#7C3AED' },
+        { id: 'long', label: 'Largo Plazo', icon: 'trendingUp', color: '#EF4444' }
     ];
 
     return `
@@ -66,15 +67,15 @@ export function renderGoalsPage() {
 
             <div class="column-footer">
                 <div class="quick-add-goal-premium">
-                    <button class="quick-add-plus-btn">${getIcon('plus')}</button>
                     <input type="text" class="quick-add-input-premium" placeholder="Nueva meta..." data-timeframe="${tf.id}">
+                    <button class="btn-quick-add-submit" data-timeframe="${tf.id}">
+                        ${getIcon('plus')}
+                    </button>
                 </div>
             </div>
           </div>
         `;
     }).join('')}
-      </div>
-
       </div>
     </div>
   `;
@@ -111,12 +112,16 @@ function renderGoalsForTimeframe(filtered, timeframe) {
                     ${goal.completed ? getIcon('check', 'check-icon-white') : ''}
                 </div>
                 <div class="goal-main-content">
-                    <div class="goal-title-premium clickable-edit-goal" 
-                         data-id="${goal.id}" 
-                         style="color: ${goalColor}; font-weight: 700;">${goal.title}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div class="goal-title-premium clickable-edit-goal" 
+                             data-id="${goal.id}" 
+                             style="color: ${goalColor}; font-weight: 700; flex: 1;">${goal.title}</div>
+                        <button class="open-color-picker" data-id="${goal.id}" 
+                                style="width: 14px; height: 14px; background: ${goalColor}; border: 1px solid rgba(255,255,255,0.2); border-radius: 3px; cursor: pointer; flex-shrink: 0; margin-top: 4px;" 
+                                title="Cambiar color"></button>
+                    </div>
                     
                     <div class="goal-header-row" style="margin-top: 8px;">
-                        <button class="action-btn-mini open-color-picker" data-id="${goal.id}" style="background: ${goalColor}22; color: ${goalColor}; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; border: none; cursor: pointer;">COLOR</button>
                         <div class="goal-actions-mini">
                             <button class="action-btn-mini add-subgoal" data-id="${goal.id}" title="Hito">${getIcon('plus')}</button>
                             <button class="action-btn-mini delete-goal" data-id="${goal.id}" title="Borrar">${getIcon('trash')}</button>
@@ -235,7 +240,7 @@ export function setupGoalsPageListeners() {
         });
     });
 
-    // Quick Add
+    // Quick Add (Enter Key)
     document.querySelectorAll('.quick-add-input-premium').forEach(input => {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && input.value.trim()) {
@@ -247,6 +252,25 @@ export function setupGoalsPageListeners() {
                 });
                 input.value = '';
                 ns.toast('Creada');
+            }
+        });
+    });
+
+    // Quick Add (Submit Button)
+    document.querySelectorAll('.btn-quick-add-submit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const timeframe = btn.dataset.timeframe;
+            const input = btn.previousElementSibling;
+            if (input && input.value.trim()) {
+                store.addGoal({
+                    title: input.value.trim(),
+                    timeframe,
+                    color: GOAL_COLORS[0]
+                });
+                input.value = '';
+                ns.toast('Creada');
+            } else if (input) {
+                input.focus();
             }
         });
     });
@@ -321,13 +345,4 @@ export function setupGoalsPageListeners() {
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
-
-
-
-    document.querySelectorAll('.quick-add-plus-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const input = btn.nextElementSibling;
-            if (input) input.focus();
-        });
-    });
 }
