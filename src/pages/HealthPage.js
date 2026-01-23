@@ -18,14 +18,82 @@ export function renderHealthPage() {
         <p class="page-subtitle">Trackeo de bienestar y fitness</p>
       </header>
 
+      <!-- WORKOUT ROUTINES (TOP) -->
+      <div class="section-divider" style="margin-top: 0;">
+        <span class="section-title">Rutinas de Entrenamiento</span>
+      </div>
+
+      <div class="routines-list">
+        ${health.routines.map(routine => `
+          <div class="card routine-card">
+            <div class="routine-header">
+                <div class="routine-info">
+                    <div class="routine-name clickable rename-routine" data-id="${routine.id}">${routine.name}</div>
+                    <div class="routine-meta">${routine.exercises.length} ejercicios</div>
+                </div>
+                <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);">
+                    ${getIcon('trash')}
+                </button>
+            </div>
+            <div class="exercise-list">
+                ${routine.exercises.map((ex, index) => {
+        const status = store.getExerciseStatus(routine.id, index);
+        let colorVar = 'var(--text-muted)';
+        if (status.color === 'red') colorVar = 'var(--accent-danger)';
+        if (status.color === 'orange') colorVar = 'var(--accent-warning)';
+        if (status.color === 'green') colorVar = 'var(--accent-success)';
+
+        // Star rating display if recently done
+        let ratingDisplay = '';
+        if (status.status === 'done_today' && status.lastLog) {
+            ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary);">★ ${status.lastLog.rating}</span>`;
+        }
+
+        return `
+                    <div class="exercise-item-health">
+                        <div class="ex-health-main">
+                            <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
+                            <div class="ex-health-info" style="${status.color === 'red' ? 'opacity: 0.6;' : ''}">
+                                <div class="ex-health-name">${ex.name}</div>
+                                <div class="ex-health-stats">
+                                    <span class="ex-clickable-val update-weight" data-routine="${routine.id}" data-index="${index}">${ex.weight || 0}kg</span>
+                                    <span style="opacity: 0.3;">•</span>
+                                    <span class="ex-clickable-val update-reps" data-routine="${routine.id}" data-index="${index}">${ex.reps || 14} reps</span>
+                                    <span style="opacity: 0.3;">•</span>
+                                    <span style="font-size: 11px; font-weight: 500;">4 series</span>
+                                    ${ratingDisplay ? `<span style="opacity: 0.3;">•</span> ${ratingDisplay}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <button class="log-exercise-large-btn trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
+                            🏋️
+                        </button>
+                    </div>
+                    `;
+    }).join('')}
+            </div>
+          </div>
+        `).join('')}
+        
+        <div class="add-routine-card-placeholder">
+            <button class="btn btn-secondary add-routine-btn" id="add-routine-btn">
+                ${getIcon('plus')} Nueva Rutina
+            </button>
+        </div>
+      </div>
+
       <!-- METRICS: WEIGHT & FAT -->
+      <div class="section-divider">
+        <span class="section-title">Métricas de Cuerpo</span>
+      </div>
+
       <div class="summary-grid">
         <div class="summary-item card clickable" id="log-weight-btn">
           <div class="summary-value">${health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--'} kg</div>
           <div class="summary-label">Peso Actual</div>
         </div>
         <div class="summary-item card clickable" id="log-fat-btn">
-          <div class="summary-value">${health.fatLogs.length > 0 ? health.fatLogs[health.fatLogs.length - 1].fat : '--'} %</div>
+          <div class="summary-value">${health.fatLogs.length > 0 ? (health.fatLogs[health.fatLogs.length - 1].fat || '--') : '--'} %</div>
           <div class="summary-label">Grasa Corporal</div>
         </div>
         <div class="summary-item card">
@@ -42,7 +110,7 @@ export function renderHealthPage() {
         <!-- GOAL PROGRESS -->
         <div class="card health-goal-card">
           <div class="card-header">
-            <span class="card-title">Progreso hacia el Objetivo</span>
+            <span class="card-title">Progreso de Peso</span>
             ${getIcon('target', 'card-icon')}
           </div>
           <div class="burndown-container">
@@ -50,7 +118,7 @@ export function renderHealthPage() {
           </div>
           <div class="goal-stats" style="margin-top: var(--spacing-md); border-top: 1px solid rgba(255,255,255,0.05); padding-top: var(--spacing-sm);">
               <div class="goal-stat">
-                  <span class="goal-label">Pendiente:</span>
+                  <span class="goal-label">Faltan:</span>
                   <span class="goal-value" style="color: var(--accent-primary); font-weight: 700;">${calculateRemainingWeight(health)} kg</span>
               </div>
           </div>
@@ -59,10 +127,10 @@ export function renderHealthPage() {
         <!-- AI CALORIE TRACKER -->
         <div class="card ai-calorie-card">
           <div class="card-header">
-            <span class="card-title">Contador de Calorías IA</span>
+            <span class="card-title">Analizador de Platos IA</span>
             ${getIcon('zap', 'card-icon', 'style="color: var(--accent-tertiary)"')}
           </div>
-          <p class="card-desc">Análisis visual instantáneo de platos con IA real.</p>
+          <p class="card-desc">Análisis visual instantáneo de comida con Gemini Flash.</p>
           <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; margin: var(--spacing-lg) 0;">
             <button class="btn btn-primary ai-scan-btn" id="ai-scan-photo" style="width: 100%;">
                 ${getIcon('camera')}
@@ -74,76 +142,20 @@ export function renderHealthPage() {
           </div>
         </div>
       </div>
-
-      <!-- WORKOUT ROUTINES -->
-      <div class="section-divider">
-        <span class="section-title">Rutinas de Entrenamiento</span>
-      </div>
-
-      <div class="routines-list">
-        ${health.routines.map(routine => `
-          <div class="card routine-card">
-            <div class="routine-header">
-                <div class="routine-info">
-                    <div class="routine-name">${routine.name}</div>
-                    <div class="routine-meta">${routine.exercises.length} ejercicios</div>
-                </div>
-                </button>
-            </div>
-            <div class="exercise-list">
-                ${routine.exercises.map((ex, index) => {
-        const status = store.getExerciseStatus(routine.id, index);
-        let colorVar = 'var(--text-muted)';
-        if (status.color === 'red') colorVar = 'var(--accent-danger)';
-        if (status.color === 'orange') colorVar = 'var(--accent-warning)';
-        if (status.color === 'green') colorVar = 'var(--accent-success)';
-
-        // Star rating display if recently done
-        let ratingDisplay = '';
-        if (status.status === 'done_today' && status.lastLog) {
-            ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary); margin-left: 6px;">★ ${status.lastLog.rating}</span>`;
-        }
-
-        return `
-                    <div class="exercise-item clickable trigger-exercise-log" data-routine="${routine.id}" data-index="${index}" data-name="${ex.name}">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
-                            <span class="ex-name" style="${status.color === 'red' ? 'text-decoration: line-through; opacity: 0.7;' : ''}">${ex.name}</span>
-                            ${ratingDisplay}
-                        </div>
-                        <span class="ex-weight">${ex.weight} kg</span>
-                    </div>
-                    `;
-    }).join('')}
-            </div>
-          </div>
-        `).join('')}
-        
-        <div class="add-routine-card-placeholder">
-            <button class="btn btn-secondary add-routine-btn" id="add-routine-btn">
-                ${getIcon('plus')} Nueva Rutina
-            </button>
-        </div>
-      </div>
     </div>
   `;
 }
 
 function renderBurndownChart(health) {
-    // We'll simulate a SVG burndown chart
     const logs = health.weightLogs;
     if (logs.length < 2) {
         return `<div class="empty-chart-msg">Registra al menos 2 pesos para ver el gráfico.</div>`;
     }
 
-    // Simple line chart shell
     return `
         <div class="simple-chart-placeholder">
             <svg viewBox="0 0 100 40" class="burndown-line" preserveAspectRatio="none">
-                <!-- Goal Line -->
                 <line x1="0" y1="35" x2="100" y2="35" stroke="rgba(255,255,255,0.1)" stroke-dasharray="2" stroke-width="0.5" />
-                
-                <!-- Progress Line -->
                 <path d="${generateChartPath(logs, health.weightGoal)}" fill="none" stroke="var(--accent-primary)" stroke-width="2" vector-effect="non-scaling-stroke" />
             </svg>
         </div>
@@ -152,30 +164,17 @@ function renderBurndownChart(health) {
 
 function generateChartPath(logs, goal) {
     if (logs.length < 2) return '';
-
-    // Normalize data to fit 100x40 SVG coordinate system
-    // X axis: time (0 to 100)
-    // Y axis: weight (0 to 40, inverted because SVG Y is down)
-
-    // Find min and max for scaling
     const weights = logs.map(l => l.weight);
-    const minWeight = Math.min(...weights, goal) - 1; // buffer
-    const maxWeight = Math.max(...weights, goal) + 1; // buffer
+    const minWeight = Math.min(...weights, goal) - 1;
+    const maxWeight = Math.max(...weights, goal) + 1;
     const range = maxWeight - minWeight;
-
     const startTime = logs[0].date;
     const endTime = logs[logs.length - 1].date;
-    const timeRange = endTime - startTime || 1; // avoid divide by zero
+    const timeRange = endTime - startTime || 1;
 
     const points = logs.map((log, index) => {
-        // X position: percentage of time passed
         const x = index === 0 ? 0 : ((log.date - startTime) / timeRange) * 100;
-
-        // Y position: percentage of weight range, inverted (higher weight = lower Y value? No, SVG 0 is top)
-        // High weight should be low Y value (top of graph = max weight? No usually bottom is 0)
-        // Let's say top (0) is maxWeight, bottom (40) is minWeight
         const y = 40 - (((log.weight - minWeight) / range) * 40);
-
         return `${x},${y}`;
     });
 
@@ -208,25 +207,81 @@ export function setupHealthPageListeners() {
 
     // Fat tool
     document.getElementById('log-fat-btn')?.addEventListener('click', async () => {
-        const fat = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa:', 'Ej: 18.2', 'number');
-        if (fat && !isNaN(fat)) {
-            store.addFatLog(fat);
-            ns.toast('Grasa registrada');
+        const fatValue = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa (deja en blanco si no lo sabes):', 'Ej: 18.2', 'number');
+        if (fatValue !== null) {
+            const fat = parseFloat(fatValue);
+            if (!isNaN(fat)) {
+                store.addFatLog(fat);
+                ns.toast('Grasa registrada');
+            }
         }
+    });
+
+    // Rename Routine
+    document.querySelectorAll('.rename-routine').forEach(el => {
+        el.addEventListener('click', async () => {
+            const id = el.dataset.id;
+            const currentName = el.textContent;
+            const newName = await ns.prompt('Renombrar Rutina', 'Nuevo nombre:', currentName);
+            if (newName && newName !== currentName) {
+                store.renameRoutine(id, newName);
+                ns.toast('Rutina renombrada');
+            }
+        });
+    });
+
+    // Delete Routine
+    document.querySelectorAll('.delete-routine').forEach(el => {
+        el.addEventListener('click', async () => {
+            const id = el.dataset.id;
+            const confirmed = await ns.confirm('Borrar Rutina', '¿Estás seguro de eliminar esta rutina?', 'BORRAR', 'CANCELAR');
+            if (confirmed) {
+                store.deleteRoutine(id);
+                ns.toast('Rutina eliminada');
+            }
+        });
+    });
+
+    // Update Weight
+    document.querySelectorAll('.update-weight').forEach(el => {
+        el.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const current = el.textContent.replace('kg', '');
+
+            const newVal = await ns.prompt('Cambiar Peso', 'Ingresa el nuevo peso (kg):', current, 'number');
+            if (newVal !== null && !isNaN(newVal)) {
+                store.updateExercise(routineId, index, { weight: parseFloat(newVal) });
+                ns.toast('Peso actualizado');
+            }
+        });
+    });
+
+    // Update Reps
+    document.querySelectorAll('.update-reps').forEach(el => {
+        el.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const routineId = el.dataset.routine;
+            const index = parseInt(el.dataset.index);
+            const current = el.textContent.replace(' reps', '');
+
+            const newVal = await ns.prompt('Cambiar Repeticiones', 'Ingresa las reps objetivo:', current, 'number');
+            if (newVal !== null && !isNaN(newVal)) {
+                store.updateExercise(routineId, index, { reps: parseInt(newVal) });
+                ns.toast('Reps actualizadas');
+            }
+        });
     });
 
     // Exercise Logging
     const exercises = document.querySelectorAll('.trigger-exercise-log');
     exercises.forEach(el => {
-        el.addEventListener('click', async () => {
+        el.addEventListener('click', async (e) => {
+            e.stopPropagation();
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
             const name = el.dataset.name;
-
-            // Simple rating prompt using standard confirm/prompt or a custom one?
-            // Since we don't have a star rating UI in notifications.js, we'll use a numeric prompt or a custom options dialog if possible.
-            // ns.confirm doesn't allow custom buttons beyond 2.
-            // We'll use prompt for now for simplicity: "Rate 1-5"
 
             const ratingInput = await ns.prompt(
                 'Monitor de Ejercicio',
@@ -239,7 +294,7 @@ export function setupHealthPageListeners() {
                 const rating = parseInt(ratingInput);
                 if (rating >= 1 && rating <= 5) {
                     store.logExercise(routineId, index, rating);
-                    ns.toast('Ejercicio registrado', 'success');
+                    ns.toast('¡Entrenamiento guardado!', 'success');
                 } else {
                     ns.toast('Calificación inválida (1-5)', 'error');
                 }
@@ -247,7 +302,7 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // AI Scan Tool (Real IA)
+    // AI Scan Tool
     document.getElementById('ai-scan-photo')?.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -257,72 +312,45 @@ export function setupHealthPageListeners() {
             if (!file) return;
 
             if (!GeminiService.hasKey()) {
-                const setup = await ns.confirm(
-                    'IA no configurada',
-                    'Para usar IA real debes añadir tu Gemini API Key en Ajustes. ¿Quieres ir a Ajustes?',
-                    'Configurar IA',
-                    'Usar Simulación'
-                );
-
+                const setup = await ns.confirm('IA no configurada', 'Añade tu Gemini API Key en Ajustes.', 'Configurar', 'Simulación');
                 if (setup) {
-                    // Navigate to settings (simulate click on nav)
                     document.querySelector('[data-nav="settings"]')?.click();
                     return;
                 }
-
-                // Fallback to simulation
-                ns.toast('Ejecutando Simulación...', 'info');
+                ns.toast('Usando simulación...', 'info');
                 runSimulation();
                 return;
             }
 
             try {
-                ns.toast('Analizando con Gemini AI...', 'info');
+                ns.toast('Analizando con Gemini...', 'info');
                 const result = await GeminiService.analyzeFood(file);
-
-                const confirmed = await ns.confirm(
-                    'IA Detectada',
-                    `La IA identificó: "${result.name}" con unas ${result.calories} kcal. ¿Deseas registrarlo?`,
-                    'Registrar',
-                    'Cancelar'
-                );
-
+                const confirmed = await ns.confirm('IA Detectada', `Identificado: "${result.name}" (${result.calories} kcal). ¿Registrar?`);
                 if (confirmed) {
-                    store.addCalorieLog(result.calories, `${result.name} (Gemini AI)`);
-                    ns.toast('Calorías registradas con IA real');
+                    store.addCalorieLog(result.calories, `${result.name} (AI)`);
+                    ns.toast('Calorías registradas');
                 }
             } catch (err) {
-                console.error(err);
-                ns.alert('Error IA', err.message || 'No se pudo analizar la imagen.');
+                ns.alert('Error IA', err.message);
             }
         };
 
         function runSimulation() {
             setTimeout(async () => {
-                const foods = [
-                    { name: 'Ensalada César', cals: 350 },
-                    { name: 'Poke Bowl de Atún', cals: 520 },
-                    { name: 'Hamburguesa con Queso', cals: 780 },
-                    { name: 'Pasta Carbonara', cals: 650 },
-                    { name: 'Tostada de Aguacate', cals: 280 },
-                    { name: 'Salmón a la Plancha', cals: 410 },
-                    { name: 'Pizza Margherita', cals: 850 }
-                ];
-                const detected = foods[Math.floor(Math.random() * foods.length)];
-                const confirmed = await ns.confirm('IA Simulada', `La visión (simulada) detectó "${detected.name}" con ${detected.cals} kcal. ¿Registrar?`);
+                const detected = { name: 'Bowl Saludable', cals: 450 };
+                const confirmed = await ns.confirm('IA Simulada', `Detectado "${detected.name}" con ${detected.cals} kcal. ¿Registrar?`);
                 if (confirmed) {
-                    store.addCalorieLog(detected.cals, `${detected.name} (Simulación)`);
-                    ns.toast('Calorías registradas');
+                    store.addCalorieLog(detected.cals, detected.name);
+                    ns.toast('Registrado');
                 }
-            }, 1500);
+            }, 1000);
         }
-
         input.click();
     });
 
     // Add routine
     document.getElementById('add-routine-btn')?.addEventListener('click', async () => {
-        const name = await ns.prompt('Nueva Rutina', 'Nombre de la rutina (ej: Pierna):', 'Nombre');
+        const name = await ns.prompt('Nueva Rutina', 'Nombre (ej: Pecho y Triceps):', 'Día X');
         if (name) {
             store.saveRoutine({ name, exercises: [] });
             ns.toast('Rutina creada');

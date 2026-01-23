@@ -284,9 +284,19 @@ function addFAB() {
     fab.innerHTML = getIcon('plus', 'fab-icon');
     fab.setAttribute('aria-label', 'Agregar');
 
-    fab.addEventListener('click', () => {
+    fab.addEventListener('click', async () => {
         if (currentPage === 'calendar') {
             openAddModal('event');
+        } else if (currentPage === 'health') {
+            // Simplified prompt for health metrics
+            const options = await ns.confirm('Registrar Métrica', '¿Qué deseas registrar hoy?', 'Peso', 'Grasa');
+            if (options === true) {
+                const weight = await ns.prompt('Registrar Peso', 'Ingresa tu peso actual en kg:', '', 'number');
+                if (weight) store.addWeightLog(weight);
+            } else if (options === false) {
+                const fat = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa:', '', 'number');
+                if (fat) store.addFatLog(fat);
+            }
         } else {
             openAddModal();
         }

@@ -47,8 +47,8 @@ const defaultState = {
         fatGoal: 15,
         exerciseLogs: [],
         routines: [
-            { id: '1', name: 'Día 1: Empuje', exercises: [{ name: 'Press Banca', weight: 60 }, { name: 'Press Militar', weight: 40 }] },
-            { id: '2', name: 'Día 2: Tirón', exercises: [{ name: 'Dominadas', weight: 0 }, { name: 'Remo con Barra', weight: 50 }] }
+            { id: '1', name: 'Día 1: Empuje', exercises: [{ name: 'Press Banca', weight: 60, reps: 14, sets: 4 }, { name: 'Press Militar', weight: 40, reps: 14, sets: 4 }] },
+            { id: '2', name: 'Día 2: Tirón', exercises: [{ name: 'Dominadas', weight: 0, reps: 14, sets: 4 }, { name: 'Remo con Barra', weight: 50, reps: 14, sets: 4 }] }
         ],
         calorieLogs: []
     },
@@ -402,6 +402,31 @@ class Store {
 
     deleteRoutine(id) {
         this.setState({ health: { ...this.state.health, routines: this.state.health.routines.filter(r => r.id !== id) } });
+    }
+
+    renameRoutine(id, newName) {
+        this.setState({
+            health: {
+                ...this.state.health,
+                routines: this.state.health.routines.map(r => r.id === id ? { ...r, name: newName } : r)
+            }
+        });
+    }
+
+    updateExercise(routineId, exerciseIndex, updates) {
+        this.setState({
+            health: {
+                ...this.state.health,
+                routines: this.state.health.routines.map(r => {
+                    if (r.id === routineId) {
+                        const newExs = [...r.exercises];
+                        newExs[exerciseIndex] = { ...newExs[exerciseIndex], ...updates };
+                        return { ...r, exercises: newExs };
+                    }
+                    return r;
+                })
+            }
+        });
     }
 
     addCalorieLog(calories, note = '') {
