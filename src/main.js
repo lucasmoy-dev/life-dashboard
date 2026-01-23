@@ -180,6 +180,10 @@ import { renderSettingsPage, setupSettingsListeners } from './pages/SettingsPage
 // Render current page content
 function renderPage() {
     const main = document.getElementById('main-content');
+    if (!main) return;
+
+    // Save scroll position
+    const scrollTop = main.scrollTop;
 
     // Handle sub-pages first
     if (currentSubPage === 'compound') {
@@ -190,6 +194,7 @@ function renderPage() {
             showFAB();
             renderPage();
         });
+        main.scrollTop = scrollTop;
         return;
     }
 
@@ -200,6 +205,7 @@ function renderPage() {
             showFAB();
             renderPage();
         });
+        main.scrollTop = scrollTop;
         return;
     }
 
@@ -210,6 +216,7 @@ function renderPage() {
             showFAB();
             renderPage();
         });
+        main.scrollTop = scrollTop;
         return;
     }
 
@@ -246,6 +253,11 @@ function renderPage() {
             setupFinancePageListeners();
             setupSubPageButtons();
     }
+
+    // Restore scroll position
+    requestAnimationFrame(() => {
+        main.scrollTop = scrollTop;
+    });
 }
 
 // Setup buttons that open sub-pages (Markets, Compound)

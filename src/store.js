@@ -564,6 +564,15 @@ class Store {
         this.updateGoal(goalId, { subGoals: newSubGoals });
     }
 
+    reorderGoals(newGoals) {
+        // newGoals should be the full list or a subset to be merged
+        this.setState({ goals: newGoals });
+    }
+
+    updateGoalColor(id, color) {
+        this.updateGoal(id, { color });
+    }
+
     // ============================================
     // AGENDA METHODS
     // ============================================

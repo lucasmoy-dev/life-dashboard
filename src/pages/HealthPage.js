@@ -108,7 +108,7 @@ export function renderHealthPage() {
         `).join('')}
         
         <div class="add-routine-card-placeholder">
-            <button class="btn btn-secondary add-routine-btn" id="add-routine-btn">
+            <button class="btn btn-success add-routine-btn" id="add-routine-btn">
                 ${getIcon('plus')} Nueva Rutina
             </button>
         </div>
