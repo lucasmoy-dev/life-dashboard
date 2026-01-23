@@ -21,7 +21,9 @@ export class DriveService {
      * Initializes Google API client and Token Client
      */
     static async init() {
-        return new Promise((resolve, reject) => {
+        if (this._initPromise) return this._initPromise;
+
+        this._initPromise = new Promise((resolve, reject) => {
             const checkGapi = () => {
                 if (window.gapi && window.google) {
                     gapi.load('client', async () => {
@@ -44,8 +46,10 @@ export class DriveService {
 
                             // Silent restoration: If we were connected, try to get a fresh token silently
                             if (localStorage.getItem('life-dashboard/drive_connected') === 'true') {
-                                console.log('[Drive] Attempting silent token restoration...');
-                                this.tokenClient.requestAccessToken({ prompt: 'none' });
+                                console.log('[Drive] Initial check: Attempting silent token restoration...');
+                                this.authenticate(true).catch(() => {
+                                    console.log('[Drive] Initial silent restoration skipped (expired or no session)');
+                                });
                             }
 
                             resolve(true);
@@ -60,6 +64,7 @@ export class DriveService {
             };
             checkGapi();
         });
+        return this._initPromise;
     }
 
     /**
@@ -111,16 +116,22 @@ export class DriveService {
         const expiry = parseInt(localStorage.getItem('life-dashboard/drive_token_expiry') || '0');
         const isConnected = localStorage.getItem('life-dashboard/drive_connected') === 'true';
 
-        // If we are within 5 minutes of expiry, refresh silently
-        if (isConnected && Date.now() > (expiry - 300000)) {
-            console.log('[Drive] Token expired or near expiry, refreshing...');
+        if (!isConnected) return null;
+        if (!this.tokenClient) await this.init();
+
+        // If token is missing from memory OR expired/expiring soon, refresh
+        const needsRefresh = !this.accessToken || Date.now() > (expiry - 300000);
+
+        if (needsRefresh) {
+            console.log('[Drive] Refreshing token silently...');
             try {
-                await this.authenticate(true);
-                return this.accessToken;
+                return await this.authenticate(true);
             } catch (e) {
-                console.warn('[Drive] Silent refresh failed, manual re-connect may be needed');
-                this.accessToken = null;
-                throw new Error('Sesión de Drive expirada. Por favor reconecta en Configuración.');
+                console.warn('[Drive] Silent refresh failed:', e.message);
+                // We DON'T set drive_connected=false here yet,
+                // we only do that if the user explicitly disconnects or a critical error occurs.
+                // This keeps the "connection intent" alive for next time.
+                throw new Error('Google Drive session expired. Click "Sync" in settings to reconnect.');
             }
         }
         return this.accessToken;
@@ -158,8 +169,15 @@ export class DriveService {
                 }
             } catch (e) {
                 if (e.status === 401) {
-                    this.accessToken = null;
-                    throw new Error('Sesión de Google expirada. Por favor reconecta.');
+                    console.log('[Drive] 401 error, attempting auto-reconnect...');
+                    try {
+                        await this.authenticate(true);
+                        // Retry loop could be here, but for now we just throw so the parent can retry if needed
+                        throw new Error('RETRY');
+                    } catch (authErr) {
+                        this.accessToken = null;
+                        throw new Error('Sesión de Google expirada. Por favor reconecta.');
+                    }
                 }
                 throw e;
             }
@@ -170,14 +188,14 @@ export class DriveService {
     /**
      * Uploads encrypted state to Drive
      */
-    static async pushData(state, vaultKey) {
+    static async pushData(state, vaultKey, isRetry = false) {
         try {
             await this.ensureValidToken();
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
             gapi.client.setToken({ access_token: this.accessToken });
 
-            console.log('[Drive] Pushing full encrypted data...');
+            console.log(`[Drive] Pushing encrypted data...${isRetry ? ' (Retry)' : ''}`);
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
             const encrypted = await SecurityService.encrypt(state, vaultKey);
 
@@ -195,6 +213,12 @@ export class DriveService {
                     headers: { 'Authorization': `Bearer ${this.accessToken}` },
                     body: blob
                 });
+
+                if (response.status === 401 && !isRetry) {
+                    await this.authenticate(true);
+                    return await this.pushData(state, vaultKey, true);
+                }
+
                 if (!response.ok) throw new Error(`Error al actualizar backup: ${response.status}`);
             } else {
                 const metadata = { name: fileName, parents: [folderId] };
@@ -207,10 +231,19 @@ export class DriveService {
                     headers: { 'Authorization': `Bearer ${this.accessToken}` },
                     body: form
                 });
+
+                if (response.status === 401 && !isRetry) {
+                    await this.authenticate(true);
+                    return await this.pushData(state, vaultKey, true);
+                }
+
                 if (!response.ok) throw new Error(`Error al crear backup: ${response.status}`);
             }
             return true;
         } catch (e) {
+            if (e.message === 'RETRY' && !isRetry) {
+                return await this.pushData(state, vaultKey, true);
+            }
             console.error('[Drive] Push failed:', e);
             throw new Error(e.result?.error?.message || e.message || 'Fallo al subir datos a Drive');
         }
@@ -219,14 +252,14 @@ export class DriveService {
     /**
      * Pulls encrypted state from Drive
      */
-    static async pullData(vaultKey) {
+    static async pullData(vaultKey, isRetry = false) {
         try {
             await this.ensureValidToken();
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
             gapi.client.setToken({ access_token: this.accessToken });
 
-            console.log('[Drive] Pulling data...');
+            console.log(`[Drive] Pulling data...${isRetry ? ' (Retry)' : ''}`);
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
             const fileName = 'dashboard_vault_v5.bin';
             const q = `name = '${fileName}' and '${folderId}' in parents and trashed = false`;
@@ -240,11 +273,19 @@ export class DriveService {
                 headers: { 'Authorization': `Bearer ${this.accessToken}` }
             });
 
+            if (resp.status === 401 && !isRetry) {
+                await this.authenticate(true);
+                return await this.pullData(vaultKey, true);
+            }
+
             if (!resp.ok) throw new Error(`Error al descargar backup: ${resp.status}`);
 
             const encryptedData = await resp.json();
             return await SecurityService.decrypt(encryptedData, vaultKey);
         } catch (e) {
+            if (e.message === 'RETRY' && !isRetry) {
+                return await this.pullData(vaultKey, true);
+            }
             console.error('[Drive] Pull failed:', e);
             throw new Error(e.result?.error?.message || e.message || 'Fallo al recuperar datos de Drive');
         }

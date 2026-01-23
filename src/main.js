@@ -13,6 +13,7 @@ import { renderCalendarPage, setupCalendarPageListeners } from './pages/Calendar
 import { renderExpensesPage, setupExpensesPageListeners } from './pages/ExpensesPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { getIcon } from './utils/icons.js';
+import { DriveService } from './services/DriveService.js';
 
 import { renderAuthShield, setupAuthListeners } from './components/AuthShield.js';
 import { AuthService } from './services/AuthService.js';
@@ -24,6 +25,9 @@ if (currentSubPage === 'null') currentSubPage = null;
 
 // Initialize app
 async function init() {
+    // Proactive Drive init
+    DriveService.init().catch(e => console.warn('[Drive] Pre-init failed:', e));
+
     // Check if we have an active vault key
     const vaultKey = AuthService.getVaultKey();
 
