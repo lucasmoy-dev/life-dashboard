@@ -123,6 +123,21 @@ export function renderFinancePage() {
         </div>
       </div>
       
+      <button class="compound-link-btn" id="open-expenses" style="margin-bottom: var(--spacing-sm); background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); border-color: rgba(239, 68, 68, 0.3);">
+        <div class="compound-link-content">
+          <div class="compound-link-icon" style="background: rgba(239,68,68,0.2); color: var(--accent-danger);">
+            ${getIcon('creditCard')}
+          </div>
+          <div class="compound-link-text">
+            <div class="compound-link-title">Ver Gastos Mensuales</div>
+            <div class="compound-link-subtitle">Detalle de salidas y deudas</div>
+          </div>
+        </div>
+        <div class="compound-link-arrow">
+          ${getIcon('chevronRight')}
+        </div>
+      </button>
+
       <!-- COMPOUND INTEREST CALCULATOR LINK -->
       <button class="compound-link-btn" id="open-compound" style="margin-bottom: var(--spacing-lg);">
         <div class="compound-link-content">

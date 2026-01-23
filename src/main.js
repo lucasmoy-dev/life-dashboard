@@ -10,6 +10,7 @@ import { renderMarketPage, setupMarketPageListeners } from './pages/MarketPage.j
 import { renderHealthPage, setupHealthPageListeners } from './pages/HealthPage.js';
 import { renderGoalsPage, setupGoalsPageListeners } from './pages/GoalsPage.js';
 import { renderCalendarPage, setupCalendarPageListeners } from './pages/CalendarPage.js';
+import { renderExpensesPage, setupExpensesPageListeners } from './pages/ExpensesPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { getIcon } from './utils/icons.js';
 
@@ -109,6 +110,16 @@ function renderPage() {
         return;
     }
 
+    if (currentSubPage === 'expenses') {
+        main.innerHTML = renderExpensesPage();
+        setupExpensesPageListeners(() => {
+            currentSubPage = null;
+            showFAB();
+            renderPage();
+        });
+        return;
+    }
+
     if (currentSubPage === 'market') {
         main.innerHTML = renderMarketPage();
         setupMarketPageListeners(() => {
@@ -163,6 +174,15 @@ function setupSubPageButtons() {
     if (marketsBtn) {
         marketsBtn.addEventListener('click', () => {
             currentSubPage = 'market';
+            hideFAB();
+            renderPage();
+        });
+    }
+
+    const expensesBtn = document.getElementById('open-expenses');
+    if (expensesBtn) {
+        expensesBtn.addEventListener('click', () => {
+            currentSubPage = 'expenses';
             hideFAB();
             renderPage();
         });
@@ -233,3 +253,10 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
+// Capture PWA install prompt
+window.deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+});

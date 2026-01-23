@@ -113,10 +113,20 @@ export function renderSettingsPage() {
                     <div class="settings-action-icon" style="color: var(--accent-danger);">${getIcon('trash')}</div>
                 </div>
             </div>
+
+            <div class="card premium-settings-card" id="install-pwa-card" style="margin-top: var(--spacing-md); display: none;">
+                <div class="settings-item-row clickable" id="btn-install-pwa">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label" style="color: var(--accent-primary);">Instalar App Móvil</div>
+                        <div class="settings-item-desc">Añadir a la pantalla de inicio para acceso rápido.</div>
+                    </div>
+                    <div class="settings-action-icon" style="color: var(--accent-primary);">${getIcon('download')}</div>
+                </div>
+            </div>
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.9</p>
+            <p>Life Dashboard Pro v1.0.10</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -134,7 +144,7 @@ export function setupSettingsListeners() {
                     await AuthService.registerBiometrics(pass);
                     ns.toast('Biometría activada correctamente');
                 } catch (err) {
-                    ns.alert('Error', err.message);
+                    await ns.alert('Error', err.message);
                     e.target.checked = false;
                 }
             } else {
@@ -145,6 +155,21 @@ export function setupSettingsListeners() {
             ns.toast('Biometría desactivada', 'info');
         }
     });
+
+    // Install App Button
+    const installBtn = document.getElementById('btn-install-pwa');
+    if (installBtn && window.deferredPrompt) {
+        installBtn.style.display = 'flex'; // Show if prompt is available
+        installBtn.addEventListener('click', async () => {
+            window.deferredPrompt.prompt();
+            const { outcome } = await window.deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                ns.toast('Instalando aplicación...');
+                installBtn.style.display = 'none';
+            }
+            window.deferredPrompt = null;
+        });
+    }
 
     // Cloud Sync (Push/Connect)
     document.getElementById('sync-drive-btn')?.addEventListener('click', async () => {
