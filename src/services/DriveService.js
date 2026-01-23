@@ -22,27 +22,42 @@ export class DriveService {
      * Initializes Google API client and Token Client
      */
     static async init() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const checkGapi = () => {
                 if (window.gapi && window.google) {
                     gapi.load('client', async () => {
-                        await gapi.client.init({
-                            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                        });
+                        try {
+                            await gapi.client.init({
+                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                            });
 
-                        this.tokenClient = google.accounts.oauth2.initTokenClient({
-                            client_id: CLIENT_ID,
-                            scope: SCOPES,
-                            callback: (resp) => {
-                                if (resp.error) throw resp;
-                                this.accessToken = resp.access_token;
-                                resolve(true);
-                            },
-                        });
-                        resolve(true);
+                            this.tokenClient = google.accounts.oauth2.initTokenClient({
+                                client_id: CLIENT_ID,
+                                scope: SCOPES,
+                                callback: (resp) => {
+                                    if (resp.error) {
+                                        console.error('[Drive] Auth callback error:', resp);
+                                        return;
+                                    }
+                                    this.accessToken = resp.access_token;
+                                    gapi.client.setToken({ access_token: resp.access_token });
+                                    sessionStorage.setItem('drive_access_token', resp.access_token);
+                                },
+                            });
+
+                            // If we have a saved token, try to use it
+                            if (this.accessToken) {
+                                gapi.client.setToken({ access_token: this.accessToken });
+                            }
+
+                            resolve(true);
+                        } catch (err) {
+                            console.error('[Drive] Init error:', err);
+                            reject(err);
+                        }
                     });
                 } else {
-                    setTimeout(checkGapi, 100);
+                    setTimeout(checkGapi, 150);
                 }
             };
             checkGapi();
@@ -56,8 +71,12 @@ export class DriveService {
         if (!this.tokenClient) await this.init();
         return new Promise((resolve, reject) => {
             this.tokenClient.callback = (resp) => {
-                if (resp.error) reject(resp);
+                if (resp.error) {
+                    reject(new Error(resp.error_description || 'Fallo en la autenticación'));
+                    return;
+                }
                 this.accessToken = resp.access_token;
+                gapi.client.setToken({ access_token: resp.access_token });
                 sessionStorage.setItem('drive_access_token', resp.access_token);
                 resolve(resp.access_token);
             };
@@ -69,32 +88,37 @@ export class DriveService {
      * Gets or creates a nested folder structure
      */
     static async getOrCreateFolderPath(path) {
-        // Ensure client is initialized before using Drive API
-        if (!gapi.client?.drive) {
-            await this.init();
-        }
+        if (!gapi.client?.drive) await this.init();
 
         const parts = path.split('/').filter(p => p);
         let parentId = 'root';
 
         for (const part of parts) {
-            const q = `name = '${part}' and mimeType = 'application/vnd.google-apps.folder' and '${parentId}' in parents and trashed = false`;
-            const resp = await gapi.client.drive.files.list({ q, fields: 'files(id, name)' });
-            const folders = resp.result.files;
+            try {
+                const q = `name = '${part}' and mimeType = 'application/vnd.google-apps.folder' and '${parentId}' in parents and trashed = false`;
+                const resp = await gapi.client.drive.files.list({ q, fields: 'files(id, name)' });
+                const folders = resp.result.files;
 
-            if (folders.length > 0) {
-                parentId = folders[0].id;
-            } else {
-                const folderMetadata = {
-                    name: part,
-                    mimeType: 'application/vnd.google-apps.folder',
-                    parents: [parentId]
-                };
-                const createResp = await gapi.client.drive.files.create({
-                    resource: folderMetadata,
-                    fields: 'id'
-                });
-                parentId = createResp.result.id;
+                if (folders && folders.length > 0) {
+                    parentId = folders[0].id;
+                } else {
+                    const folderMetadata = {
+                        name: part,
+                        mimeType: 'application/vnd.google-apps.folder',
+                        parents: [parentId]
+                    };
+                    const createResp = await gapi.client.drive.files.create({
+                        resource: folderMetadata,
+                        fields: 'id'
+                    });
+                    parentId = createResp.result.id;
+                }
+            } catch (e) {
+                if (e.status === 401) {
+                    this.accessToken = null;
+                    throw new Error('Sesión de Google expirada. Por favor reconecta.');
+                }
+                throw e;
             }
         }
         return parentId;
@@ -106,6 +130,8 @@ export class DriveService {
     static async pushData(state, vaultKey) {
         try {
             if (!this.accessToken) throw new Error('Cloud not connected');
+            if (!gapi.client?.drive) await this.init();
+            gapi.client.setToken({ access_token: this.accessToken });
 
             console.log('[Drive] Pushing full encrypted data...');
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
@@ -118,14 +144,14 @@ export class DriveService {
 
             const blob = new Blob([JSON.stringify(encrypted)], { type: 'application/json' });
 
-            if (existingFiles.length > 0) {
+            if (existingFiles && existingFiles.length > 0) {
                 const fileId = existingFiles[0].id;
                 const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${this.accessToken}` },
                     body: blob
                 });
-                if (!response.ok) throw new Error(`Drive update failed: ${response.status}`);
+                if (!response.ok) throw new Error(`Error al actualizar backup: ${response.status}`);
             } else {
                 const metadata = { name: fileName, parents: [folderId] };
                 const form = new FormData();
@@ -137,12 +163,12 @@ export class DriveService {
                     headers: { 'Authorization': `Bearer ${this.accessToken}` },
                     body: form
                 });
-                if (!response.ok) throw new Error(`Drive creation failed: ${response.status}`);
+                if (!response.ok) throw new Error(`Error al crear backup: ${response.status}`);
             }
             return true;
         } catch (e) {
             console.error('[Drive] Push failed:', e);
-            throw e;
+            throw new Error(e.result?.error?.message || e.message || 'Fallo al subir datos a Drive');
         }
     }
 
@@ -152,11 +178,8 @@ export class DriveService {
     static async pullData(vaultKey) {
         try {
             if (!this.accessToken) throw new Error('Cloud not connected');
-
-            // Ensure client is initialized before using Drive API
-            if (!gapi.client?.drive) {
-                await this.init();
-            }
+            if (!gapi.client?.drive) await this.init();
+            gapi.client.setToken({ access_token: this.accessToken });
 
             console.log('[Drive] Pulling data...');
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
@@ -165,18 +188,20 @@ export class DriveService {
             const listResp = await gapi.client.drive.files.list({ q, fields: 'files(id, name)' });
             const existingFiles = listResp.result.files;
 
-            if (existingFiles.length === 0) return null;
+            if (!existingFiles || existingFiles.length === 0) return null;
 
             const fileId = existingFiles[0].id;
             const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
                 headers: { 'Authorization': `Bearer ${this.accessToken}` }
             });
 
+            if (!resp.ok) throw new Error(`Error al descargar backup: ${resp.status}`);
+
             const encryptedData = await resp.json();
             return await SecurityService.decrypt(encryptedData, vaultKey);
         } catch (e) {
             console.error('[Drive] Pull failed:', e);
-            throw e;
+            throw new Error(e.result?.error?.message || e.message || 'Fallo al recuperar datos de Drive');
         }
     }
 
@@ -187,6 +212,7 @@ export class DriveService {
         try {
             if (!this.accessToken) throw new Error('Cloud not connected');
             if (!gapi.client?.drive) await this.init();
+            gapi.client.setToken({ access_token: this.accessToken });
 
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
             const fileName = 'dashboard_vault_v5.bin';
@@ -194,7 +220,7 @@ export class DriveService {
             const listResp = await gapi.client.drive.files.list({ q, fields: 'files(id)' });
             const existingFiles = listResp.result.files;
 
-            if (existingFiles.length > 0) {
+            if (existingFiles && existingFiles.length > 0) {
                 const fileId = existingFiles[0].id;
                 await gapi.client.drive.files.delete({ fileId });
                 console.log('[Drive] Backup deleted successfully');
@@ -203,7 +229,7 @@ export class DriveService {
             return false;
         } catch (e) {
             console.error('[Drive] Deletion failed:', e);
-            throw e;
+            throw new Error(e.result?.error?.message || e.message || 'Fallo al borrar backup en Drive');
         }
     }
 }

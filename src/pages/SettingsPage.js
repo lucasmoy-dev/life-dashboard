@@ -156,7 +156,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.30</p>
+            <p>Life Dashboard Pro v1.0.31</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -284,11 +284,40 @@ export function setupSettingsListeners() {
                     }
                 }
             } else {
-                ns.alert('Error', e.message || 'Error al conectar con Google');
+                ns.alert('Error', e.message || (typeof e === 'object' ? JSON.stringify(e) : 'Error al conectar con Google'));
             }
         } finally {
             btn.innerHTML = originalContent;
             btn.style.pointerEvents = 'auto';
+        }
+    });
+
+    // Manual Export Backup
+    document.getElementById('export-data-btn')?.addEventListener('click', async () => {
+        try {
+            ns.toast('Preparando archivo encriptado...', 'info');
+            const state = store.getState();
+            const vaultKey = AuthService.getVaultKey();
+
+            const { SecurityService } = await import('../services/SecurityService.js');
+            const encryptedData = await SecurityService.encrypt(state, vaultKey);
+
+            const blob = new Blob([JSON.stringify(encryptedData)], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `life_dashboard_backup_${date}.bin`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            ns.toast('Backup exportado correctamente');
+        } catch (err) {
+            console.error('Export error:', err);
+            ns.alert('Error de Exportación', 'No se pudieron encriptar o descargar los datos.');
         }
     });
 
