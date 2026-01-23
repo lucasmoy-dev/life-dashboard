@@ -32,11 +32,14 @@ export function renderHealthPage() {
                     </div>
                     <h3 class="routine-name clickable rename-routine" data-id="${routine.id}" data-current="${routine.name}">${routine.name}</h3>
                 </div>
-                <div class="routine-actions">
+                <div class="routine-actions desktop-only">
                     <button class="reorder-routine-btn" data-index="${ridx}" data-dir="up">${getIcon('chevronUp')}</button>
                     <button class="reorder-routine-btn" data-index="${ridx}" data-dir="down">${getIcon('chevronDown')}</button>
                     <button class="delete-routine-btn" data-id="${routine.id}">${getIcon('trash')}</button>
                 </div>
+                <button class="icon-btn mobile-only routine-more-btn" data-id="${routine.id}" data-index="${ridx}" data-name="${routine.name}">
+                    ${getIcon('moreVertical')}
+                </button>
             </header>
 
             <div class="exercise-list-health">
@@ -44,10 +47,6 @@ export function renderHealthPage() {
         const status = store.getExerciseStatus(routine.id, exIdx);
         const colorVar = `var(--accent-${status.color})`;
         const isDoneToday = status.status === 'done_today';
-        let ratingDisplay = '';
-        if (status.lastLog && status.lastLog.rating) {
-            ratingDisplay = `<span style="font-size: 10px; color: var(--accent-tertiary);">★ ${status.lastLog.rating}</span>`;
-        }
 
         return `
                     <div class="exercise-item-health ${isDoneToday ? 'exercise-done' : ''}">
@@ -56,7 +55,7 @@ export function renderHealthPage() {
                             <div class="ex-health-info">
                                 <div class="ex-health-name-row">
                                     <span class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${exIdx}" data-current="${ex.name}">${ex.name}</span>
-                                    <div class="ex-reorder-btns">
+                                    <div class="ex-reorder-btns desktop-only">
                                         <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="up">${getIcon('chevronUp')}</button>
                                         <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="down">${getIcon('chevronDown')}</button>
                                     </div>
@@ -73,24 +72,19 @@ export function renderHealthPage() {
                             </div>
                         </div>
                         <div class="ex-health-actions">
-                            <button class="delete-exercise-btn ex-delete-mini" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar">${getIcon('trash')}</button>
                             ${isDoneToday ? `
                                 <div class="exercise-done-badge-solid">
                                     ${getIcon('check', 'done-icon-solid')}
                                 </div>
                             ` : `
-                                <div class="exercise-log-actions">
-                                    <button class="btn-perf hard log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="1">
-                                        <span>😰</span> DURO
-                                    </button>
-                                    <button class="btn-perf good log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="3">
-                                        <span>💪</span> BIEN
-                                    </button>
-                                    <button class="btn-perf easy log-ex-rating-btn" data-rid="${routine.id}" data-idx="${exIdx}" data-rating="5">
-                                        <span>⚡</span> FÁCIL
-                                    </button>
-                                </div>
+                                <button class="btn btn-secondary btn-sm log-stars-btn" data-rid="${routine.id}" data-idx="${exIdx}" style="padding: 8px 12px;">
+                                    ${getIcon('check')} Marcar
+                                </button>
                             `}
+                            <button class="icon-btn mobile-only ex-more-btn" data-routine="${routine.id}" data-index="${exIdx}" data-name="${ex.name}">
+                                ${getIcon('moreVertical')}
+                            </button>
+                            <button class="delete-exercise-btn ex-delete-mini desktop-only" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar">${getIcon('trash')}</button>
                         </div>
                     </div>
                     `;
@@ -105,7 +99,7 @@ export function renderHealthPage() {
         `).join('')}
         
         <div class="add-routine-card-placeholder">
-            <button class="btn btn-success add-routine-btn" id="add-routine-btn">
+            <button class="btn btn-success add-routine-btn w-full" id="add-routine-btn">
                 ${getIcon('plus')} Nueva Rutina
             </button>
         </div>
@@ -204,6 +198,40 @@ export function setupHealthPageListeners() {
         });
     });
 
+    // Mobile More Actions for Routine
+    document.querySelectorAll('.routine-more-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const index = parseInt(btn.dataset.index);
+            const name = btn.dataset.name;
+
+            const options = [
+                { value: 'rename', label: '✏️ Renombrar' },
+                { value: 'up', label: '⬆️ Mover Arriba' },
+                { value: 'down', label: '⬇️ Mover Abajo' },
+                { value: 'delete', label: '🗑️ Eliminar Rutina' }
+            ];
+
+            const action = await ns.select(`Menú: ${name}`, 'Elige una acción:', options, 1);
+            if (action === 'rename') {
+                const newName = await ns.prompt('Editar Rutina', 'Nuevo nombre:', name);
+                if (newName && newName !== name) {
+                    store.renameRoutine(id, newName);
+                    ns.toast('Rutina renombrada');
+                }
+            } else if (action === 'up') store.reorderRoutine(index, 'up');
+            else if (action === 'down') store.reorderRoutine(index, 'down');
+            else if (action === 'delete') {
+                const confirmed = await ns.confirm('¿Borrar Rutina?', 'No se puede deshacer.', 'Eliminar', 'Cancelar');
+                if (confirmed) {
+                    store.deleteRoutine(id);
+                    ns.toast('Rutina eliminada');
+                }
+            }
+        });
+    });
+
     // Rename Exercise
     document.querySelectorAll('.rename-exercise').forEach(el => {
         el.addEventListener('click', async () => {
@@ -227,6 +255,40 @@ export function setupHealthPageListeners() {
             if (confirmed) {
                 store.deleteExerciseFromRoutine(routineId, index);
                 ns.toast('Ejercicio eliminado');
+            }
+        });
+    });
+
+    // Mobile More Actions for Exercise
+    document.querySelectorAll('.ex-more-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const routineId = btn.dataset.routine;
+            const index = parseInt(btn.dataset.index);
+            const name = btn.dataset.name;
+
+            const options = [
+                { value: 'rename', label: '✏️ Renombrar' },
+                { value: 'up', label: '⬆️ Mover Arriba' },
+                { value: 'down', label: '⬇️ Mover Abajo' },
+                { value: 'delete', label: '🗑️ Eliminar Ejercicio' }
+            ];
+
+            const action = await ns.select(`Ejercicio: ${name}`, 'Elige una acción:', options, 1);
+            if (action === 'rename') {
+                const newName = await ns.prompt('Renombrar Ejercicio', 'Nuevo nombre:', name);
+                if (newName && newName !== name) {
+                    store.updateExercise(routineId, index, { name: newName });
+                    ns.toast('Ejercicio renombrado');
+                }
+            } else if (action === 'up') store.reorderExercise(routineId, index, 'up');
+            else if (action === 'down') store.reorderExercise(routineId, index, 'down');
+            else if (action === 'delete') {
+                const confirmed = await ns.confirm('Eliminar Ejercicio', '¿Quitar de la rutina?', 'Eliminar', 'Cancelar');
+                if (confirmed) {
+                    store.deleteExerciseFromRoutine(routineId, index);
+                    ns.toast('Ejercicio eliminado');
+                }
             }
         });
     });
@@ -294,15 +356,18 @@ export function setupHealthPageListeners() {
         });
     });
 
-    // Exercise Logging (Instant Ratings)
-    document.querySelectorAll('.log-ex-rating-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    // Exercise Logging (Stars)
+    document.querySelectorAll('.log-stars-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const routineId = btn.dataset.rid;
             const index = parseInt(btn.dataset.idx);
-            const rating = parseInt(btn.dataset.rating);
-            store.logExercise(routineId, index, rating);
-            ns.toast('Registrado', 'success', 800);
+
+            const rating = await ns.stars('Finalizar Ejercicio', '¿Qué tan intenso te ha parecido?');
+            if (rating) {
+                store.logExercise(routineId, index, rating);
+                ns.toast('Ejercicio registrado', 'success');
+            }
         });
     });
 

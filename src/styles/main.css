@@ -1157,6 +1157,24 @@ body {
     width: auto !important;
 }
 
+.desktop-only {
+    display: flex !important;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: flex !important;
+    }
+}
+
 .text-positive {
     color: var(--accent-success);
 }
@@ -2278,6 +2296,27 @@ body {
     display: flex;
     gap: 2px;
     margin-left: 8px;
+}
+
+.routines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+@media (max-width: 600px) {
+    .routines-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.health-routine-card {
+    width: 100%;
+}
+
+.icon-btn.mobile-only {
+    padding: 8px;
+    color: var(--text-muted);
 }
 
 .ex-reorder-btns button {
