@@ -28,20 +28,20 @@ export function renderHealthPage() {
           <div class="card routine-card">
             <div class="routine-header">
                 <div class="routine-info">
-                    <div class="routine-name clickable rename-routine" data-id="${routine.id}">${routine.name}</div>
+                    <div class="routine-name clickable rename-routine" data-id="${routine.id}" data-current="${routine.name}">${routine.name}</div>
                     <div class="routine-meta">
                         ${routine.exercises.length} ejercicios
                         <div class="routine-reorder-btns">
-                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="up">${getIcon('chevronUp')}</button>
-                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="down">${getIcon('chevronDown')}</button>
+                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="up" title="Subir">${getIcon('chevronUp')}</button>
+                            <button class="reorder-routine-btn" data-index="${rIdx}" data-dir="down" title="Bajar">${getIcon('chevronDown')}</button>
                         </div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 4px;">
-                    <button class="icon-btn add-exercise-btn" data-id="${routine.id}" style="color: var(--accent-primary);">
+                    <button class="icon-btn add-exercise-btn" data-id="${routine.id}" title="Agregar ejercicio">
                         ${getIcon('plus')}
                     </button>
-                    <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);">
+                    <button class="icon-btn delete-routine" data-id="${routine.id}" style="color: var(--accent-danger);" title="Eliminar rutina">
                         ${getIcon('trash')}
                     </button>
                 </div>
@@ -64,9 +64,9 @@ export function renderHealthPage() {
                     <div class="exercise-item-health ${isDoneToday ? 'exercise-done' : ''}">
                         <div class="ex-health-main">
                             <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${colorVar}; box-shadow: 0 0 6px ${colorVar};"></div>
-                            <div class="ex-health-info" style="${status.color === 'red' ? 'opacity: 0.6;' : ''}">
+                            <div class="ex-health-info">
                                 <div class="ex-health-name-row">
-                                    <span class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${exIdx}">${ex.name}</span>
+                                    <span class="ex-health-name clickable rename-exercise" data-routine="${routine.id}" data-index="${exIdx}" data-current="${ex.name}">${ex.name}</span>
                                     <div class="ex-reorder-btns">
                                         <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="up">${getIcon('chevronUp')}</button>
                                         <button class="reorder-ex-btn" data-routine="${routine.id}" data-index="${exIdx}" data-dir="down">${getIcon('chevronDown')}</button>
@@ -83,16 +83,22 @@ export function renderHealthPage() {
                             </div>
                         </div>
                         <div class="ex-health-actions">
-                            <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar ejercicio">
-                                ${getIcon('x')}
-                            </button>
-                            <button class="log-exercise-large-btn trigger-exercise-log" 
-                                    data-routine="${routine.id}" 
-                                    data-index="${exIdx}" 
-                                    data-name="${ex.name}"
-                                    ${isDoneToday ? 'disabled' : ''}>
-                                ${isDoneToday ? '✅' : '🏋️'}
-                            </button>
+                            ${isDoneToday ? `
+                                <div class="exercise-done-badge-solid">
+                                    ${getIcon('check', 'done-icon-solid')}
+                                </div>
+                            ` : `
+                                <button class="delete-exercise-btn" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar ejercicio">
+                                    ${getIcon('x')}
+                                </button>
+                                <button class="log-exercise-large-btn trigger-exercise-log" 
+                                        data-routine="${routine.id}" 
+                                        data-index="${exIdx}" 
+                                        data-name="${ex.name}"
+                                        title="Registrar entrenamiento">
+                                    🏋️
+                                </button>
+                            `}
                         </div>
                     </div>
                     `;
@@ -113,7 +119,7 @@ export function renderHealthPage() {
         <span class="section-title">Métricas de Cuerpo</span>
       </div>
 
-      <div class="summary-grid">
+      <div class="summary-grid" style="margin-bottom: var(--spacing-2xl);">
         <div class="summary-item card clickable" id="log-weight-btn">
           <div class="summary-value">${health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--'} kg</div>
           <div class="summary-label">Peso Actual</div>
@@ -247,7 +253,7 @@ export function setupHealthPageListeners() {
     document.querySelectorAll('.rename-routine').forEach(el => {
         el.addEventListener('click', async () => {
             const id = el.dataset.id;
-            const currentName = el.textContent;
+            const currentName = el.dataset.current;
             const newName = await ns.prompt('Renombrar Rutina', 'Nuevo nombre:', currentName);
             if (newName && newName !== currentName) {
                 store.renameRoutine(id, newName);
@@ -285,7 +291,7 @@ export function setupHealthPageListeners() {
         el.addEventListener('click', async () => {
             const routineId = el.dataset.routine;
             const index = parseInt(el.dataset.index);
-            const currentName = el.textContent;
+            const currentName = el.dataset.current;
             const newName = await ns.prompt('Renombrar Ejercicio', 'Nuevo nombre:', currentName);
             if (newName && newName !== currentName) {
                 store.updateExercise(routineId, index, { name: newName });

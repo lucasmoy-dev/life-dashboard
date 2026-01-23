@@ -547,6 +547,23 @@ class Store {
         this.setState({ goals: this.state.goals.filter(g => g.id !== id) });
     }
 
+    updateGoal(id, updates) {
+        this.setState({
+            goals: this.state.goals.map(g => g.id === id ? { ...g, ...updates } : g)
+        });
+    }
+
+    toggleSubGoal(goalId, subGoalIndex) {
+        const goal = this.state.goals.find(g => g.id === goalId);
+        if (!goal || !goal.subGoals) return;
+
+        const newSubGoals = [...goal.subGoals];
+        newSubGoals[subGoalIndex].completed = !newSubGoals[subGoalIndex].completed;
+
+        // Auto-complete parent if all subgoals are done? (Optional, let's keep it manual for now)
+        this.updateGoal(goalId, { subGoals: newSubGoals });
+    }
+
     // ============================================
     // AGENDA METHODS
     // ============================================

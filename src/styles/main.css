@@ -3327,143 +3327,350 @@ input:checked+.slider-premium:before {
     height: 14px;
 }
 
-.ex-health-info {
+/* Goals Page Overhaul */
+.goals-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+    .goals-grid-layout {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .goals-grid-layout {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.goals-column-premium {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
+    height: fit-content;
+    max-height: 80vh;
+}
+
+.goals-column-header-premium {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.column-header-main {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.column-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.column-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.column-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.column-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.column-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.column-progress-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.goals-scroll-area {
+    padding: var(--spacing-sm);
+    overflow-y: auto;
+}
+
+.goal-card-premium {
+    background: rgba(var(--bg-secondary-rgb), 0.4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.3s ease;
+}
+
+.goal-card-premium:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.goal-card-premium.is-completed {
+    opacity: 0.5;
+}
+
+.goal-card-body {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.goal-checkbox-premium {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.goal-checkbox-premium.toggle-goal svg {
+    width: 14px;
+    height: 14px;
+    color: var(--bg-primary);
+}
+
+.goal-card-premium.is-completed .goal-checkbox-premium {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.goal-main-content {
+    flex: 1;
     min-width: 0;
 }
 
-.ex-health-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ex-health-actions {
+.goal-header-row {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    flex-shrink: 0;
+    justify-content: space-between;
+    margin-bottom: 4px;
 }
 
-.delete-exercise-btn {
+.goal-category-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 800;
+    color: var(--accent-primary);
+    background: rgba(var(--accent-primary-rgb), 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.goal-actions-mini {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.goal-card-premium:hover .goal-actions-mini {
+    opacity: 1;
+}
+
+.action-btn-mini {
     background: none;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 8px;
-    opacity: 0.4;
-    transition: all 0.2s ease;
+    padding: 2px;
 }
 
-.delete-exercise-btn:hover {
-    color: var(--accent-danger);
-    opacity: 1;
+.action-btn-mini:hover {
+    color: var(--text-primary);
 }
 
-.routine-meta {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.exercise-done {
-    background: rgba(0, 212, 170, 0.05);
-    border: 1px solid rgba(0, 212, 170, 0.1);
-}
-
-.log-exercise-large-btn:disabled {
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: none;
-    cursor: default;
-    opacity: 0.8;
-}
-
-.ex-health-stats {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 2px;
-}
-
-.ex-clickable-val {
-    font-size: 12px;
+.goal-title-premium {
+    font-size: 14px;
     font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.is-completed .goal-title-premium {
+    text-decoration: line-through;
+}
+
+.subgoals-list-premium {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.subgoal-item-premium {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    cursor: pointer;
+    padding: 2px 0;
+}
+
+.subgoal-item-premium.sub-done {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.sub-check-svg {
+    width: 12px;
+    height: 12px;
+}
+
+.sub-progress-mini {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-top: 8px;
+}
+
+.sub-progress-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    transition: width 0.3s ease;
+}
+
+.quick-add-goal-premium {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-md);
+    margin: var(--spacing-sm);
+}
+
+.quick-add-plus-btn {
+    background: none;
+    border: none;
     color: var(--accent-primary);
     cursor: pointer;
-    background: rgba(0, 212, 170, 0.1);
-    padding: 1px 6px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    padding: 4px;
 }
 
-.ex-clickable-val:hover {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
+.quick-add-input-premium {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    width: 100%;
 }
 
-.log-exercise-large-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+.premium-long-term-card {
     background: var(--gradient-primary);
     border: none;
-    font-size: 20px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.premium-card-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+}
+
+.premium-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+    color: white;
 }
 
-.log-exercise-large-btn:active {
-    transform: scale(0.9);
+.premium-text h3 {
+    margin: 0;
+    font-size: 18px;
+    color: white;
 }
 
-.rename-routine:hover {
+.premium-text p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-round {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    background: white;
     color: var(--accent-primary);
-    text-decoration: underline;
 }
 
-@media (min-width: 1400px) {
-    #main-content {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .asset-list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-lg);
-    }
+.empty-column-state {
+    padding: var(--spacing-xl) var(--spacing-md);
+    text-align: center;
+    opacity: 0.3;
 }
 
-@media (min-width: 1024px) {
-    .net-worth-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-height: 140px;
-    }
+.empty-column-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto var(--spacing-sm);
+}
 
-    .asset-item {
-        padding: var(--spacing-lg);
-    }
 
-    .expense-item .asset-value {
-        font-size: 18px;
-    }
+/* Health Done Badge */
+.exercise-done-badge-solid {
+    width: 36px;
+    height: 36px;
+    background: var(--accent-success);
+    color: var(--bg-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
 
-    .routines-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-lg);
-    }
+.done-icon-solid {
+    width: 20px;
+    height: 20px;
+    stroke-width: 4;
+}
+
+.reorder-routine-btn,
+.reorder-ex-btn {
+    padding: 6px !important;
+}
+
+.reorder-routine-btn svg,
+.reorder-ex-btn svg {
+    width: 18px !important;
+    height: 18px !important;
 }

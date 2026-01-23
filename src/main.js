@@ -211,21 +211,25 @@ function renderPage() {
 
     switch (currentPage) {
         case 'finance':
+            showFAB();
             main.innerHTML = renderFinancePage();
             setupFinancePageListeners();
             setupSubPageButtons();
             break;
         case 'goals':
+            showFAB();
             main.innerHTML = renderGoalsPage();
             setupGoalsPageListeners();
             break;
         case 'calendar':
+            showFAB();
             main.innerHTML = renderCalendarPage();
             setupCalendarPageListeners();
             break;
         case 'health':
             main.innerHTML = renderHealthPage();
             setupHealthPageListeners();
+            hideFAB();
             break;
         case 'settings':
             main.innerHTML = renderSettingsPage();
@@ -233,6 +237,7 @@ function renderPage() {
             hideFAB();
             break;
         default:
+            showFAB();
             main.innerHTML = renderFinancePage();
             setupFinancePageListeners();
             setupSubPageButtons();
