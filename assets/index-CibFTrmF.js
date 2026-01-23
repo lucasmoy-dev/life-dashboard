@@ -1141,7 +1141,7 @@ var Ie=Object.defineProperty;var Se=(s,e,t)=>e in s?Ie(s,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.24</p>
+            <p>Life Dashboard Pro v1.0.25</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
