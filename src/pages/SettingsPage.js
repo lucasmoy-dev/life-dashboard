@@ -105,6 +105,16 @@ export function renderSettingsPage() {
 
                 <div class="settings-divider"></div>
 
+                <div class="settings-item-row clickable" id="btn-force-update">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Forzar Actualización</div>
+                        <div class="settings-item-desc">Recargar la última versión de la App (limpia caché).</div>
+                    </div>
+                    <div class="settings-action-icon">${getIcon('refreshCw')}</div>
+                </div>
+
+                <div class="settings-divider"></div>
+
                 <div class="settings-item-row clickable" id="btn-factory-reset">
                     <div class="settings-item-info">
                         <div class="settings-item-label" style="color: var(--accent-danger);">Borrar todos los datos</div>
@@ -126,7 +136,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.11</p>
+            <p>Life Dashboard Pro v1.0.12</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>

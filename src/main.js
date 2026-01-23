@@ -18,8 +18,9 @@ import { renderAuthShield, setupAuthListeners } from './components/AuthShield.js
 import { AuthService } from './services/AuthService.js';
 
 // Current page state
-let currentPage = 'finance';
-let currentSubPage = null; // For sub-navigation like compound calculator or markets
+let currentPage = localStorage.getItem('app_current_page') || 'finance';
+let currentSubPage = localStorage.getItem('app_current_sub_page') || null; // For sub-navigation like compound calculator or markets
+if (currentSubPage === 'null') currentSubPage = null;
 
 // Initialize app
 async function init() {
@@ -71,6 +72,8 @@ function renderApp() {
     setupNavListeners((pageId) => {
         currentPage = pageId;
         currentSubPage = null;
+        localStorage.setItem('app_current_page', currentPage);
+        localStorage.setItem('app_current_sub_page', currentSubPage);
         showFAB();
         renderPage();
 
@@ -79,6 +82,8 @@ function renderApp() {
         setupNavListeners((p) => {
             currentPage = p;
             currentSubPage = null;
+            localStorage.setItem('app_current_page', currentPage);
+            localStorage.setItem('app_current_sub_page', currentSubPage);
             showFAB();
             renderPage();
             renderApp(); // Refresh nav
@@ -166,6 +171,7 @@ function setupSubPageButtons() {
     if (compoundBtn) {
         compoundBtn.addEventListener('click', () => {
             currentSubPage = 'compound';
+            localStorage.setItem('app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });
@@ -175,6 +181,7 @@ function setupSubPageButtons() {
     if (marketsBtn) {
         marketsBtn.addEventListener('click', () => {
             currentSubPage = 'market';
+            localStorage.setItem('app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });
@@ -184,6 +191,7 @@ function setupSubPageButtons() {
     if (expensesBtn) {
         expensesBtn.addEventListener('click', () => {
             currentSubPage = 'expenses';
+            localStorage.setItem('app_current_sub_page', currentSubPage);
             hideFAB();
             renderPage();
         });

@@ -24,9 +24,9 @@ export function renderExpensesPage() {
 
     // Combine all expense items for the list
     const allItems = [
-        ...livingExpenses.map(item => ({ ...item, category: 'livingExpense', typeLabel: 'Gasto de Vida' })),
-        ...otherExpenses.map(item => ({ ...item, category: 'otherExpense', typeLabel: 'Otro Gasto' })),
-        ...liabilities.filter(l => l.monthlyPayment > 0).map(item => ({
+        ...(livingExpenses || []).map(item => ({ ...item, category: 'livingExpense', typeLabel: 'Gasto de Vida' })),
+        ...(otherExpenses || []).map(item => ({ ...item, category: 'otherExpense', typeLabel: 'Otro Gasto' })),
+        ...(liabilities || []).filter(l => l.monthlyPayment > 0).map(item => ({
             ...item,
             amount: item.monthlyPayment,
             category: 'liability',
