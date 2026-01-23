@@ -1,0 +1,1337 @@
+var Te=Object.defineProperty;var De=(n,e,a)=>e in n?Te(n,e,{enumerable:!0,configurable:!0,writable:!0,value:a}):n[e]=a;var Q=(n,e,a)=>De(n,typeof e!="symbol"?e+"":e,a);(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))t(s);new MutationObserver(s=>{for(const o of s)if(o.type==="childList")for(const i of o.addedNodes)i.tagName==="LINK"&&i.rel==="modulepreload"&&t(i)}).observe(document,{childList:!0,subtree:!0});function a(s){const o={};return s.integrity&&(o.integrity=s.integrity),s.referrerPolicy&&(o.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?o.credentials="include":s.crossOrigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function t(s){if(s.ep)return;s.ep=!0;const o=a(s);fetch(s.href,o)}})();const Re="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple,kaspa,solana,stellar,algorand,litecoin,sui,chainlink,render-token,cardano,ondo-finance&vs_currencies=eur,ars",Be="https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,GBP,AUD";async function Pe(){var e,a,t,s,o,i,r,l,d,c,u,p,h,w,E;const n={EUR:1};try{const f=await(await fetch(Re)).json();n.BTC=((e=f.bitcoin)==null?void 0:e.eur)||4e4,n.ETH=((a=f.ethereum)==null?void 0:a.eur)||2200,n.XRP=((t=f.ripple)==null?void 0:t.eur)||.5,n.KAS=((s=f.kaspa)==null?void 0:s.eur)||.1,n.SOL=((o=f.solana)==null?void 0:o.eur)||90,n.XLM=((i=f.stellar)==null?void 0:i.eur)||.11,n.ALGO=((r=f.algorand)==null?void 0:r.eur)||.18,n.LTC=((l=f.litecoin)==null?void 0:l.eur)||65,n.SUI=((d=f.sui)==null?void 0:d.eur)||1.1,n.LINK=((c=f.chainlink)==null?void 0:c.eur)||14,n.RNDR=((u=f["render-token"])==null?void 0:u.eur)||4.5,n.ADA=((p=f.cardano)==null?void 0:p.eur)||.45,n.ONDO=((h=f["ondo-finance"])==null?void 0:h.eur)||.7,(w=f.bitcoin)!=null&&w.ars&&((E=f.bitcoin)!=null&&E.eur)&&(n.ARS=f.bitcoin.eur/f.bitcoin.ars);const L=await fetch(Be);if(L.ok){const T=await L.json();n.USD=1/T.rates.USD,n.CHF=1/T.rates.CHF,n.GBP=1/T.rates.GBP,n.AUD=1/T.rates.AUD}n.GOLD=2100,n.SP500=4700}catch(k){console.error("Failed to fetch some prices:",k),n.USD=n.USD||.92,n.CHF=n.CHF||1.05,n.GBP=n.GBP||1.15,n.AUD=n.AUD||.6,n.ARS=n.ARS||.001}return n}class P{static async hash(e,a="salt_life_dashboard_2026"){const s=new TextEncoder().encode(e+a),o=await crypto.subtle.digest("SHA-512",s);return Array.from(new Uint8Array(o)).map(r=>r.toString(16).padStart(2,"0")).join("")}static async deriveVaultKey(e){return await this.hash(e,"vault_v4_dashboard_key")}static async deriveKey(e,a){const t=new TextEncoder,s=await crypto.subtle.importKey("raw",t.encode(e),{name:"PBKDF2"},!1,["deriveKey"]);return await crypto.subtle.deriveKey({name:"PBKDF2",salt:t.encode(a),iterations:25e4,hash:"SHA-512"},s,{name:"AES-GCM",length:256},!1,["encrypt","decrypt"])}static async encrypt(e,a){try{const t=crypto.getRandomValues(new Uint8Array(16)),s=crypto.getRandomValues(new Uint8Array(12)),o=await this.deriveKey(a,this.bufToBase64(t)),i=typeof e=="string"?e:JSON.stringify(e),r=new TextEncoder().encode(i),l=await crypto.subtle.encrypt({name:"AES-GCM",iv:s},o,r);return{payload:this.bufToBase64(new Uint8Array(l)),iv:this.bufToBase64(s),salt:this.bufToBase64(t),v:"5.0"}}catch(t){throw console.error("[Security] Encryption failed:",t),new Error("No se pudo encriptar la información")}}static async decrypt(e,a){try{if(!e||!e.payload||!e.iv||!e.salt)throw new Error("Formato de datos encriptados inválido");const{payload:t,iv:s,salt:o}=e,i=await this.deriveKey(a,o),r=await crypto.subtle.decrypt({name:"AES-GCM",iv:this.base64ToBuf(s)},i,this.base64ToBuf(t)),l=new TextDecoder().decode(r);try{return JSON.parse(l)}catch{return l}}catch(t){throw console.error("[Security] Decryption failed:",t),new Error("Contraseña incorrecta o datos corruptos")}}static bufToBase64(e){return btoa(String.fromCharCode(...new Uint8Array(e)))}static base64ToBuf(e){return new Uint8Array(atob(e).split("").map(a=>a.charCodeAt(0)))}}const re=Object.freeze(Object.defineProperty({__proto__:null,SecurityService:P},Symbol.toStringTag,{value:"Module"})),A={MASTER_HASH:"life-dashboard/db_master_hash",VAULT_KEY:"life-dashboard/db_vault_key",BIO_ENABLED:"life-dashboard/db_bio_enabled"};class x{static isSetup(){return!!localStorage.getItem(A.MASTER_HASH)}static async setup(e){const a=await P.hash(e),t=await P.deriveVaultKey(e);return localStorage.setItem(A.MASTER_HASH,a),sessionStorage.setItem(A.VAULT_KEY,t),t}static async unlock(e){const a=await P.hash(e),t=localStorage.getItem(A.MASTER_HASH);if(a===t){const s=await P.deriveVaultKey(e);return sessionStorage.setItem(A.VAULT_KEY,s),s}throw new Error("Contraseña incorrecta")}static async registerBiometrics(e){await this.unlock(e);const a=sessionStorage.getItem(A.VAULT_KEY);if(!window.PublicKeyCredential)throw new Error("Biometría no soportada en este dispositivo");try{const t=crypto.getRandomValues(new Uint8Array(32));return await navigator.credentials.create({publicKey:{challenge:t,rp:{name:"Life Dashboard",id:window.location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:"user",displayName:"User"},pubKeyCredParams:[{alg:-7,type:"public-key"}],timeout:6e4,authenticatorSelection:{authenticatorAttachment:"platform"},attestation:"none"}}),localStorage.setItem(A.BIO_ENABLED,"true"),localStorage.setItem(A.VAULT_KEY,a),!0}catch(t){throw console.error("Biometric setup failed:",t),new Error("Error al configurar biometría")}}static async unlockWithBiometrics(){if(!(localStorage.getItem(A.BIO_ENABLED)==="true"))throw new Error("Biometría no activada");try{const a=crypto.getRandomValues(new Uint8Array(32));await navigator.credentials.get({publicKey:{challenge:a,rpId:window.location.hostname,userVerification:"required",timeout:6e4}});const t=localStorage.getItem(A.VAULT_KEY);if(t)return sessionStorage.setItem(A.VAULT_KEY,t),t;throw new Error("Llave no encontrada. Usa contraseña.")}catch(a){throw console.error("Biometric auth failed:",a),new Error("Fallo de identificación biométrica")}}static logout(){sessionStorage.removeItem(A.VAULT_KEY)}static getVaultKey(){return sessionStorage.getItem(A.VAULT_KEY)}static isBioEnabled(){return localStorage.getItem(A.BIO_ENABLED)==="true"}}const Me="974464877836-721dprai6taijtuufmrkh438q68e97sp.apps.googleusercontent.com",_e="https://www.googleapis.com/auth/drive.file";class C{static hasToken(){return!!this.accessToken&&localStorage.getItem("life-dashboard/drive_connected")==="true"}static async init(){return this._initPromise?this._initPromise:(this._initPromise=new Promise((e,a)=>{const t=()=>{window.gapi&&window.google?gapi.load("client",async()=>{try{await gapi.client.init({discoveryDocs:["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]}),this.tokenClient=google.accounts.oauth2.initTokenClient({client_id:Me,scope:_e,callback:s=>{if(s.error){console.error("[Drive] Auth callback error:",s);return}this.saveSession(s)}}),localStorage.getItem("life-dashboard/drive_connected")==="true"&&(console.log("[Drive] Initial check: Attempting silent token restoration..."),this.authenticate(!0).catch(()=>{console.log("[Drive] Initial silent restoration skipped (expired or no session)")})),e(!0)}catch(s){console.error("[Drive] Init error:",s),a(s)}}):setTimeout(t,200)};t()}),this._initPromise)}static saveSession(e){this.accessToken=e.access_token,gapi.client.setToken({access_token:e.access_token}),localStorage.setItem("life-dashboard/drive_access_token",e.access_token),localStorage.setItem("life-dashboard/drive_connected","true");const a=Date.now()+(e.expires_in?e.expires_in*1e3:36e5);localStorage.setItem("life-dashboard/drive_token_expiry",a.toString())}static async authenticate(e=!1){return this.tokenClient||await this.init(),new Promise((a,t)=>{this.tokenClient.callback=s=>{if(s.error){e?(localStorage.setItem("life-dashboard/drive_connected","false"),t(new Error("Silent auth failed"))):t(new Error(s.error_description||"Fallo en la autenticación"));return}this.saveSession(s),a(s.access_token)},e?this.tokenClient.requestAccessToken({prompt:"none"}):this.tokenClient.requestAccessToken({prompt:"consent"})})}static async ensureValidToken(){const e=parseInt(localStorage.getItem("life-dashboard/drive_token_expiry")||"0");if(!(localStorage.getItem("life-dashboard/drive_connected")==="true"))return null;if(this.tokenClient||await this.init(),!this.accessToken||Date.now()>e-3e5){console.log("[Drive] Refreshing token silently...");try{return await this.authenticate(!0)}catch(s){throw console.warn("[Drive] Silent refresh failed:",s.message),new Error('Google Drive session expired. Click "Sync" in settings to reconnect.')}}return this.accessToken}static async getOrCreateFolderPath(e){var s;await this.ensureValidToken(),(s=gapi.client)!=null&&s.drive||await this.init();const a=e.split("/").filter(o=>o);let t="root";for(const o of a)try{const i=`name = '${o}' and mimeType = 'application/vnd.google-apps.folder' and '${t}' in parents and trashed = false`,l=(await gapi.client.drive.files.list({q:i,fields:"files(id, name)"})).result.files;if(l&&l.length>0)t=l[0].id;else{const d={name:o,mimeType:"application/vnd.google-apps.folder",parents:[t]};t=(await gapi.client.drive.files.create({resource:d,fields:"id"})).result.id}}catch(i){if(i.status===401){console.log("[Drive] 401 error, attempting auto-reconnect...");try{throw await this.authenticate(!0),new Error("RETRY")}catch{throw this.accessToken=null,new Error("Sesión de Google expirada. Por favor reconecta.")}}throw i}return t}static async pushData(e,a,t=!1){var s,o,i;try{if(await this.ensureValidToken(),!this.accessToken)throw new Error("Cloud not connected");(s=gapi.client)!=null&&s.drive||await this.init(),gapi.client.setToken({access_token:this.accessToken}),console.log(`[Drive] Pushing encrypted data...${t?" (Retry)":""}`);const r=await this.getOrCreateFolderPath("/backup/life-dashboard/"),l=await P.encrypt(e,a),d="dashboard_vault_v5.bin",c=`name = '${d}' and '${r}' in parents and trashed = false`,p=(await gapi.client.drive.files.list({q:c,fields:"files(id)"})).result.files,h=new Blob([JSON.stringify(l)],{type:"application/json"});if(p&&p.length>0){const w=p[0].id,E=await fetch(`https://www.googleapis.com/upload/drive/v3/files/${w}?uploadType=media`,{method:"PATCH",headers:{Authorization:`Bearer ${this.accessToken}`},body:h});if(E.status===401&&!t)return await this.authenticate(!0),await this.pushData(e,a,!0);if(!E.ok)throw new Error(`Error al actualizar backup: ${E.status}`)}else{const w={name:d,parents:[r]},E=new FormData;E.append("metadata",new Blob([JSON.stringify(w)],{type:"application/json"})),E.append("file",h);const k=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{method:"POST",headers:{Authorization:`Bearer ${this.accessToken}`},body:E});if(k.status===401&&!t)return await this.authenticate(!0),await this.pushData(e,a,!0);if(!k.ok)throw new Error(`Error al crear backup: ${k.status}`)}return!0}catch(r){if(r.message==="RETRY"&&!t)return await this.pushData(e,a,!0);throw console.error("[Drive] Push failed:",r),new Error(((i=(o=r.result)==null?void 0:o.error)==null?void 0:i.message)||r.message||"Fallo al subir datos a Drive")}}static async pullData(e,a=!1){var t,s,o;try{if(await this.ensureValidToken(),!this.accessToken)throw new Error("Cloud not connected");(t=gapi.client)!=null&&t.drive||await this.init(),gapi.client.setToken({access_token:this.accessToken}),console.log(`[Drive] Pulling data...${a?" (Retry)":""}`);const l=`name = 'dashboard_vault_v5.bin' and '${await this.getOrCreateFolderPath("/backup/life-dashboard/")}' in parents and trashed = false`,c=(await gapi.client.drive.files.list({q:l,fields:"files(id, name)"})).result.files;if(!c||c.length===0)return null;const u=c[0].id,p=await fetch(`https://www.googleapis.com/drive/v3/files/${u}?alt=media`,{headers:{Authorization:`Bearer ${this.accessToken}`}});if(p.status===401&&!a)return await this.authenticate(!0),await this.pullData(e,!0);if(!p.ok)throw new Error(`Error al descargar backup: ${p.status}`);const h=await p.json();return await P.decrypt(h,e)}catch(i){if(i.message==="RETRY"&&!a)return await this.pullData(e,!0);throw console.error("[Drive] Pull failed:",i),new Error(((o=(s=i.result)==null?void 0:s.error)==null?void 0:o.message)||i.message||"Fallo al recuperar datos de Drive")}}static async deleteBackup(){var e,a,t;try{if(await this.ensureValidToken(),!this.accessToken)throw new Error("Cloud not connected");(e=gapi.client)!=null&&e.drive||await this.init(),gapi.client.setToken({access_token:this.accessToken});const i=`name = 'dashboard_vault_v5.bin' and '${await this.getOrCreateFolderPath("/backup/life-dashboard/")}' in parents and trashed = false`,l=(await gapi.client.drive.files.list({q:i,fields:"files(id)"})).result.files;if(l&&l.length>0){const d=l[0].id;return await gapi.client.drive.files.delete({fileId:d}),console.log("[Drive] Backup deleted successfully"),!0}return!1}catch(s){throw console.error("[Drive] Deletion failed:",s),new Error(((t=(a=s.result)==null?void 0:a.error)==null?void 0:t.message)||s.message||"Fallo al borrar backup en Drive")}}}Q(C,"tokenClient",null),Q(C,"accessToken",localStorage.getItem("life-dashboard/drive_access_token")||null);const le={wallet:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>',target:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',calendar:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',heart:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',settings:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',building:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>',home:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',trendingUp:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',bitcoin:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>',dollarSign:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',car:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>',creditCard:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>',landmark:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>',plus:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',x:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',trash:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',edit:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',chevronRight:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',chevronLeft:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',chevronUp:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',chevronDown:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',calculator:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>',arrowUpRight:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>',arrowDownRight:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 7v10H7"/></svg>',piggyBank:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></svg>',receipt:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>',coins:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>',scale:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',briefcase:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',zap:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',download:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',downloadCloud:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>',cloud:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',shield:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',link:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',refreshCw:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',lock:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',logOut:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',package:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',check:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'};function g(n,e=""){return(le[n]||le.package).replace("<svg",`<svg class="${e}"`)}class Ue{constructor(){this.toastContainer=null,this._initToastContainer()}_initToastContainer(){document.getElementById("toast-container")||(this.toastContainer=document.createElement("div"),this.toastContainer.id="toast-container",this.toastContainer.className="toast-container",document.body.appendChild(this.toastContainer))}toast(e,a="success",t=3e3){const s=document.createElement("div");s.className=`toast toast-${a} stagger-in`;const o=a==="success"?"check":a==="error"?"alertCircle":"info";s.innerHTML=`
+            <div class="toast-content">
+                ${g(o,"toast-icon")}
+                <span>${e}</span>
+            </div>
+        `,this.toastContainer.appendChild(s),setTimeout(()=>{s.classList.add("fade-out"),setTimeout(()=>s.remove(),500)},t)}alert(e,a){return new Promise(t=>{this._showModal({title:e,message:a,centered:!0,buttons:[{text:"Entendido",type:"primary",onClick:()=>t(!0)}]})})}confirm(e,a,t="Confirmar",s="Cancelar"){return new Promise(o=>{this._showModal({title:e,message:a,centered:!0,buttons:[{text:s,type:"secondary",onClick:()=>o(!1)},{text:t,type:"danger",onClick:()=>o(!0)}]})})}prompt(e,a,t="",s="text"){return new Promise(o=>{const i=`prompt-input-${Date.now()}`;this._showModal({title:e,message:a,centered:!0,content:`
+                    <div class="form-group" style="margin-top: var(--spacing-md);">
+                        <input type="${s}" id="${i}" class="form-input" placeholder="${t}" autofocus>
+                    </div>
+                `,buttons:[{text:"Cancelar",type:"secondary",onClick:()=>o(null)},{text:"Aceptar",type:"primary",onClick:()=>{const r=document.getElementById(i).value;o(r)}}]})})}select(e,a,t=[],s=4){return new Promise(o=>{const i=`display: grid; grid-template-columns: repeat(${s}, 1fr); gap: 8px; margin-top: 16px;`;this._showModal({title:e,message:a,centered:!0,content:`
+                    <div style="${i}">
+                        ${t.map((l,d)=>`
+                            <button class="btn btn-secondary select-option-btn" style="padding: 10px 4px; font-size: 13px; font-weight: 600;" data-value="${l.value||l}">
+                                ${l.label||l}
+                            </button>
+                        `).join("")}
+                    </div>
+                `,buttons:[{text:"Cancelar",type:"secondary",onClick:()=>o(null)}]});const r=document.querySelector(".modal-overlay.active");r&&r.querySelectorAll(".select-option-btn").forEach(l=>{l.addEventListener("click",()=>{o(l.dataset.value),this._closeModal(r)})})})}hardConfirm(e,a,t="BORRAR"){return new Promise(s=>{const o=`hard-confirm-input-${Date.now()}`,i=`hard-confirm-btn-${Date.now()}`;this._showModal({title:e,message:`<div style="color: var(--accent-danger); font-weight: 600; margin-bottom: 8px;">ACCIÓN IRREVERSIBLE</div>${a}<br><br>Escribe <strong>${t}</strong> para confirmar:`,centered:!0,content:`
+                    <div class="form-group" style="margin-top: var(--spacing-sm);">
+                        <input type="text" id="${o}" class="form-input" style="text-align: center; font-weight: 800; border-color: rgba(239, 68, 68, 0.2);" placeholder="..." autofocus autocomplete="off">
+                    </div>
+                `,buttons:[{text:"Cancelar",type:"secondary",onClick:()=>s(!1)},{text:"Borrar Todo",type:"danger",id:i,disabled:!0,onClick:()=>s(!0)}]});const r=document.getElementById(o),l=document.getElementById(i);r.addEventListener("input",()=>{const d=r.value.trim().toUpperCase()===t.toUpperCase();l.disabled=!d,l.style.opacity=d?"1":"0.3",l.style.pointerEvents=d?"auto":"none"})})}stars(e,a){return new Promise(t=>{let s=5;this._showModal({title:e,message:a,centered:!0,content:`
+                    <div class="star-rating-container" style="display: flex; justify-content: center; gap: 12px; margin-top: 20px; font-size: 32px;">
+                        ${[1,2,3,4,5].map(i=>`
+                            <span class="star-btn" data-value="${i}" style="cursor: pointer; color: ${i<=5?"var(--accent-tertiary)":"var(--text-muted)"}; transition: transform 0.2s ease;">★</span>
+                        `).join("")}
+                    </div>
+                `,buttons:[{text:"Cancelar",type:"secondary",onClick:()=>t(null)},{text:"Guardar Calificación",type:"primary",onClick:()=>t(s)}]});const o=document.querySelector(".modal-overlay.active");if(o){const i=o.querySelectorAll(".star-btn");i.forEach(r=>{r.addEventListener("click",()=>{s=parseInt(r.dataset.value),i.forEach((l,d)=>{l.style.color=d<s?"var(--accent-tertiary)":"var(--text-muted)",l.style.transform=d<s?"scale(1.2)":"scale(1)"})})})}})}_showModal({title:e,message:a,content:t="",buttons:s=[],centered:o=!1}){const i=document.createElement("div");i.className=`modal-overlay ${o?"overlay-centered":""}`,i.style.zIndex="9999";const r=`modal-${Date.now()}-${Math.floor(Math.random()*1e3)}`;i.id=r;const l=`
+            <div class="modal premium-alert-modal animate-pop">
+                <div class="modal-header">
+                    <h2 class="modal-title">${e}</h2>
+                </div>
+                <div class="modal-body">
+                    <div style="color: var(--text-secondary); line-height: 1.5; font-size: 14px;">${a}</div>
+                    ${t}
+                </div>
+                <div class="modal-footer" style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg);">
+                    ${s.map((c,u)=>`
+                        <button class="btn btn-${c.type} w-full" data-index="${u}" ${c.disabled?'disabled style="opacity: 0.3; pointer-events: none;"':""} ${c.id?`id="${c.id}"`:""}>
+                            ${c.text}
+                        </button>
+                    `).join("")}
+                </div>
+            </div>
+        `;i.innerHTML=l,document.body.appendChild(i),i.offsetHeight,i.classList.add("active"),i.querySelectorAll(".modal-footer button").forEach(c=>{const u=c.dataset.index;if(u!==void 0){const p=s[u];p.id,c.addEventListener("click",async h=>{h.stopPropagation();try{p.onClick&&await p.onClick(),await this._closeModal(i)}catch(w){console.error("Modal button action failed",w)}})}}),i.addEventListener("click",async c=>{if(c.target===i&&!s.some(p=>p.type==="danger")){const p=s.find(h=>h.type==="secondary");p&&p.onClick(),await this._closeModal(i)}})}async _closeModal(e){e.classList.remove("active");const a=e.querySelector(".modal");return a&&a.classList.add("animate-out"),new Promise(t=>{setTimeout(()=>{e.remove(),t()},300)})}}const v=new Ue,ee="life-dashboard/data",ce="life-dashboard/secured",te={passiveAssets:[],activeIncomes:[],livingExpenses:[],otherExpenses:[],investmentAssets:[],liabilities:[],currency:"EUR",currencySymbol:"€",rates:{EUR:1,USD:.92,BTC:37e3,ETH:2100,XRP:.45,GOLD:1900,SP500:4500,CHF:1.05,GBP:1.15,AUD:.6,ARS:.001,RNDR:4.5},hideRealEstate:!1,health:{weightLogs:[],weightGoal:70,fatLogs:[],fatGoal:15,exerciseLogs:[],routines:[{id:"1",name:"Día 1: Empuje",exercises:[{name:"Press Banca",weight:60,reps:14,sets:4},{name:"Press Militar",weight:40,reps:14,sets:4}]},{id:"2",name:"Día 2: Tirón",exercises:[{name:"Dominadas",weight:0,reps:14,sets:4},{name:"Remo con Barra",weight:50,reps:14,sets:4}]}],calorieLogs:[]},goals:[{id:"1",title:"Ejemplo de Meta Diaria",timeframe:"day",completed:!1,category:"Personal"}],events:[],lastMarketData:[]};class Oe{constructor(){this.state=this.loadState(),this.listeners=new Set,this.refreshRates(),setInterval(()=>this.refreshRates(),5*60*1e3),this.syncTimeout=null}loadState(){return{...te}}async loadEncrypted(e){const a=localStorage.getItem(ce),t=localStorage.getItem(ee);if(a)try{const s=JSON.parse(a),o=await P.decrypt(s,e);return this.state={...te,...o},this.notify(),!0}catch(s){return console.error("Failed to decrypt state:",s),!1}else if(t)try{const s=JSON.parse(t);return this.state={...te,...s},await this.saveState(),localStorage.removeItem(ee),console.log("Migration to encrypted storage successful"),this.notify(),!0}catch(s){return console.error("Migration failed:",s),!1}return!1}async refreshRates(){const e=await Pe();this.setState({rates:{...this.state.rates,...e},lastRatesUpdate:Date.now()})}async saveState(){try{const e=x.getVaultKey();if(e){const a=await P.encrypt(this.state,e);localStorage.setItem(ce,JSON.stringify(a)),localStorage.removeItem(ee)}else console.warn("[Store] Attempted to save without Vault Key. Save skipped.")}catch(e){console.error("Failed to save state:",e)}}getState(){return this.state}setState(e){this.state={...this.state,...e},this.saveState().then(()=>{const a=x.getVaultKey();a&&C.hasToken()&&(this.syncTimeout&&clearTimeout(this.syncTimeout),this.syncTimeout=setTimeout(()=>{const{hideRealEstate:t,...s}=this.state;C.pushData(s,a).then(()=>{console.log("[Auto-Sync] Success"),v.toast("Sincronizado con Drive","success",2e3)}).catch(o=>{console.warn("[Auto-Sync] Failed:",o)})},5e3))}),this.notify()}subscribe(e){return this.listeners.add(e),()=>this.listeners.delete(e)}notify(){this.listeners.forEach(e=>e(this.state))}toggleRealEstate(){this.setState({hideRealEstate:!this.state.hideRealEstate})}setCurrency(e){const a={EUR:"€",USD:"$",CHF:"Fr",GBP:"£",AUD:"A$",ARS:"$",BTC:"₿"};this.setState({currency:e,currencySymbol:a[e]||"$"})}convertToEUR(e,a){if(!a||a==="EUR")return e||0;const t=this.state.rates[a]||1;return(e||0)*t}convertFromEUR(e,a){if(!a||a==="EUR")return e;const t=this.state.rates[a];return t&&t!==0?e/t:e}saveMarketData(e){this.setState({lastMarketData:e})}addAssetFromMarket(e,a="investment"){const t={name:e.name,currency:e.symbol.toUpperCase(),value:1,details:`Añadido desde Mercados del Mundo (${e.id})`};return a==="passive"?this.addPassiveAsset({...t,monthlyIncome:0}):this.addInvestmentAsset(t)}convertValue(e,a){const t=this.convertToEUR(e,a);return this.convertFromEUR(t,this.state.currency)}addPassiveAsset(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",...e};return this.setState({passiveAssets:[...this.state.passiveAssets,a]}),a}updatePassiveAsset(e,a){this.setState({passiveAssets:this.state.passiveAssets.map(t=>t.id===e?{...t,...a}:t)})}deletePassiveAsset(e){this.setState({passiveAssets:this.state.passiveAssets.filter(a=>a.id!==e)})}addActiveIncome(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",...e};return this.setState({activeIncomes:[...this.state.activeIncomes,a]}),a}updateActiveIncome(e,a){this.setState({activeIncomes:this.state.activeIncomes.map(t=>t.id===e?{...t,...a}:t)})}deleteActiveIncome(e){this.setState({activeIncomes:this.state.activeIncomes.filter(a=>a.id!==e)})}addLivingExpense(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",...e};return this.setState({livingExpenses:[...this.state.livingExpenses,a]}),a}updateLivingExpense(e,a){this.setState({livingExpenses:this.state.livingExpenses.map(t=>t.id===e?{...t,...a}:t)})}deleteLivingExpense(e){this.setState({livingExpenses:this.state.livingExpenses.filter(a=>a.id!==e)})}addOtherExpense(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",...e};return this.setState({otherExpenses:[...this.state.otherExpenses,a]}),a}updateOtherExpense(e,a){this.setState({otherExpenses:this.state.otherExpenses.map(t=>t.id===e?{...t,...a}:t)})}deleteOtherExpense(e){this.setState({otherExpenses:this.state.otherExpenses.filter(a=>a.id!==e)})}addInvestmentAsset(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",isQuantity:!1,...e};return this.setState({investmentAssets:[...this.state.investmentAssets,a]}),a}updateInvestmentAsset(e,a){this.setState({investmentAssets:this.state.investmentAssets.map(t=>t.id===e?{...t,...a}:t)})}deleteInvestmentAsset(e){this.setState({investmentAssets:this.state.investmentAssets.filter(a=>a.id!==e)})}addLiability(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),currency:"EUR",...e};return this.setState({liabilities:[...this.state.liabilities,a]}),a}updateLiability(e,a){this.setState({liabilities:this.state.liabilities.map(t=>t.id===e?{...t,...a}:t)})}deleteLiability(e){this.setState({liabilities:this.state.liabilities.filter(a=>a.id!==e)})}sumItems(e,a){return e.reduce((t,s)=>{const o=s[a]||0;return t+this.convertValue(o,s.currency)},0)}getPassiveIncome(){return this.sumItems(this.state.passiveAssets,"monthlyIncome")}getLivingExpenses(){const e=this.sumItems(this.state.livingExpenses,"amount"),a=this.sumItems(this.state.liabilities,"monthlyPayment");return e+a}getNetPassiveIncome(){return this.getPassiveIncome()-this.getLivingExpenses()}getInvestmentAssetsValue(){const e=this.sumItems(this.state.passiveAssets,"value"),a=this.sumItems(this.state.investmentAssets,"value");return e+a}getTotalLiabilities(){return this.sumItems(this.state.liabilities,"amount")}getNetWorth(){return this.getInvestmentAssetsValue()-this.getTotalLiabilities()}getAllIncomes(){const e=this.getPassiveIncome(),a=this.sumItems(this.state.activeIncomes,"amount");return e+a}getAllExpenses(){const e=this.getLivingExpenses(),a=this.sumItems(this.state.otherExpenses,"amount");return e+a}getNetIncome(){return this.getAllIncomes()-this.getAllExpenses()}updateHealthGoal(e,a){this.setState({health:{...this.state.health,[e]:a}})}setHealthState(e){this.setState({health:{...this.state.health,...e}})}addWeightLog(e){const a={id:crypto.randomUUID(),date:Date.now(),weight:parseFloat(e)};this.setState({health:{...this.state.health,weightLogs:[...this.state.health.weightLogs,a]}})}addFatLog(e){const a={id:crypto.randomUUID(),date:Date.now(),fat:parseFloat(e)};this.setState({health:{...this.state.health,fatLogs:[...this.state.health.fatLogs,a]}})}saveRoutine(e){const a=this.state.health.routines,s=a.find(o=>o.id===e.id)?a.map(o=>o.id===e.id?e:o):[...a,{...e,id:crypto.randomUUID()}];this.setState({health:{...this.state.health,routines:s}})}deleteRoutine(e){this.setState({health:{...this.state.health,routines:this.state.health.routines.filter(a=>a.id!==e)}})}renameRoutine(e,a){this.setState({health:{...this.state.health,routines:this.state.health.routines.map(t=>t.id===e?{...t,name:a}:t)}})}updateExercise(e,a,t){this.setState({health:{...this.state.health,routines:this.state.health.routines.map(s=>{if(s.id===e){const o=[...s.exercises];return o[a]={...o[a],...t},{...s,exercises:o}}return s})}})}addExerciseToRoutine(e,a){this.setState({health:{...this.state.health,routines:this.state.health.routines.map(t=>t.id===e?{...t,exercises:[...t.exercises,{weight:50,reps:10,sets:4,...a}]}:t)}})}reorderRoutine(e,a){const t=[...this.state.health.routines],s=a==="up"?e-1:e+1;s<0||s>=t.length||([t[e],t[s]]=[t[s],t[e]],this.setState({health:{...this.state.health,routines:t}}))}reorderExercise(e,a,t){const s=this.state.health.routines.map(o=>{if(o.id===e){const i=[...o.exercises],r=t==="up"?a-1:a+1;return r<0||r>=i.length?o:([i[a],i[r]]=[i[r],i[a]],{...o,exercises:i})}return o});this.setState({health:{...this.state.health,routines:s}})}deleteExerciseFromRoutine(e,a){this.setState({health:{...this.state.health,routines:this.state.health.routines.map(t=>{if(t.id===e){const s=[...t.exercises];return s.splice(a,1),{...t,exercises:s}}return t})}})}addCalorieLog(e,a=""){const t={id:crypto.randomUUID(),date:Date.now(),calories:parseInt(e),note:a};this.setState({health:{...this.state.health,calorieLogs:[...this.state.health.calorieLogs,t]}})}logExercise(e,a,t){const s={id:crypto.randomUUID(),routineId:e,exerciseIndex:a,date:Date.now(),rating:parseInt(t)};this.setState({health:{...this.state.health,exerciseLogs:[...this.state.health.exerciseLogs||[],s]}})}getExerciseStatus(e,a){const s=(this.state.health.exerciseLogs||[]).filter(u=>u.routineId===e&&u.exerciseIndex===a);if(s.length===0)return{color:"green",lastDate:null};s.sort((u,p)=>p.date-u.date);const o=s[0],i=new Date,r=new Date(o.date),l=new Date(i.getFullYear(),i.getMonth(),i.getDate()).getTime(),d=new Date(r.getFullYear(),r.getMonth(),r.getDate()).getTime(),c=(l-d)/(1e3*60*60*24);return c===0?{color:"red",status:"done_today",lastLog:o}:c===1?{color:"red",status:"tired",lastLog:o}:c===2?{color:"orange",status:"recovering",lastLog:o}:{color:"green",status:"ready",lastLog:o}}addGoal(e){const a={id:crypto.randomUUID(),createdAt:Date.now(),completed:!1,subGoals:[],...e};this.setState({goals:[...this.state.goals,a]})}toggleGoal(e){this.setState({goals:this.state.goals.map(a=>a.id===e?{...a,completed:!a.completed}:a)})}deleteGoal(e){this.setState({goals:this.state.goals.filter(a=>a.id!==e)})}updateGoal(e,a){this.setState({goals:this.state.goals.map(t=>t.id===e?{...t,...a}:t)})}toggleSubGoal(e,a){const t=this.state.goals.find(o=>o.id===e);if(!t||!t.subGoals)return;const s=[...t.subGoals];s[a].completed=!s[a].completed,this.updateGoal(e,{subGoals:s})}reorderGoals(e){this.setState({goals:e})}updateGoalColor(e,a){this.updateGoal(e,{color:a})}addEvent(e){const a={id:crypto.randomUUID(),...e};this.setState({events:[...this.state.events,a]}),this.scheduleNotification(a)}deleteEvent(e){this.setState({events:this.state.events.filter(a=>a.id!==e)})}scheduleNotification(e){!("Notification"in window)||Notification.permission!=="granted"||console.log(`Scheduling notification for: ${e.title} at ${e.time}`)}}const m=new Oe,Ne=[{id:"finance",icon:"wallet",label:"Finanzas"},{id:"health",icon:"heart",label:"Salud"},{id:"goals",icon:"target",label:"Metas"},{id:"calendar",icon:"calendar",label:"Agenda"},{id:"settings",icon:"settings",label:"Ajustes"}];function de(n="finance"){const e=`
+        <div class="nav-brand">
+            <div class="nav-brand-logo">
+                <img src="icons/icon-192.png" alt="Logo" class="brand-logo-img">
+            </div>
+            <span class="nav-brand-text">LifeDashboard</span>
+        </div>
+    `,a=Ne.map(t=>`
+        <div class="nav-item ${t.id===n?"active":""}" data-nav="${t.id}">
+            ${g(t.icon,"nav-icon")}
+            <span class="nav-label">${t.label}</span>
+        </div>
+    `).join("");return e+a}function ue(n){const e=document.querySelectorAll(".nav-item");e.forEach(a=>{a.addEventListener("click",()=>{const t=a.dataset.nav;e.forEach(s=>s.classList.remove("active")),a.classList.add("active"),n&&n(t)})})}function b(n,e="$"){const a=Math.abs(n);let t=0,s=0;e==="₿"?(t=4,s=6):(e==="$"||e==="€"||e==="£"||e==="Fr")&&(t=0,s=2);const o=new Intl.NumberFormat("en-US",{minimumFractionDigits:t,maximumFractionDigits:s}).format(a);return`${n<0?"-":""}${e}${o}`}function pe(n){return n==null?"0.0%":`${n>=0?"+":""}${n.toFixed(1)}%`}const Fe="https://api.coingecko.com/api/v3",y={STOCKS:"Stocks & Índices",CURRENCIES:"Divisas (Forex)",CRYPTO_MAJORS:"Cripto (Principales)",CRYPTO_ALTS:"Cripto (Altcoins)",COMMODITIES:"Materias Primas"},Ge=5*60*1e3;let z={data:null,timestamp:0,currency:""};const U=[{id:"sp500",name:"S&P 500",symbol:"SPX",category:y.STOCKS,yahooId:"%5EGSPC",icon:"trendingUp"},{id:"nasdaq100",name:"Nasdaq 100",symbol:"NDX",category:y.STOCKS,yahooId:"%5ENDX",icon:"trendingUp"},{id:"msciworld",name:"MSCI World ETF",symbol:"URTH",category:y.STOCKS,yahooId:"URTH",icon:"trendingUp"},{id:"microsoft",name:"Microsoft",symbol:"MSFT",category:y.STOCKS,yahooId:"MSFT",icon:"trendingUp"},{id:"tesla",name:"Tesla",symbol:"TSLA",category:y.STOCKS,yahooId:"TSLA",icon:"trendingUp"},{id:"apple",name:"Apple",symbol:"AAPL",category:y.STOCKS,yahooId:"AAPL",icon:"trendingUp"},{id:"amazon",name:"Amazon",symbol:"AMZN",category:y.STOCKS,yahooId:"AMZN",icon:"trendingUp"},{id:"nvidia",name:"Nvidia",symbol:"NVDA",category:y.STOCKS,yahooId:"NVDA",icon:"trendingUp"},{id:"google",name:"Google",symbol:"GOOGL",category:y.STOCKS,yahooId:"GOOGL",icon:"trendingUp"},{id:"meta",name:"Meta",symbol:"META",category:y.STOCKS,yahooId:"META",icon:"trendingUp"},{id:"oracle",name:"Oracle",symbol:"ORCL",category:y.STOCKS,yahooId:"ORCL",icon:"trendingUp"},{id:"netflix",name:"Netflix",symbol:"NFLX",category:y.STOCKS,yahooId:"NFLX",icon:"trendingUp"},{id:"ypf",name:"YPF",symbol:"YPF",category:y.STOCKS,yahooId:"YPF",icon:"trendingUp"},{id:"ibex35",name:"IBEX 35",symbol:"IBEX",category:y.STOCKS,yahooId:"%5EIBEX",icon:"trendingUp"},{id:"eurusd",name:"Euro / Dólar",symbol:"EUR/USD",category:y.CURRENCIES,yahooId:"EURUSD=X",icon:"dollarSign"},{id:"usdars",name:"Dólar / Peso Arg",symbol:"USD/ARS",category:y.CURRENCIES,yahooId:"USDARS=X",icon:"dollarSign"},{id:"usdchf",name:"Dólar / Franco Suizo",symbol:"USD/CHF",category:y.CURRENCIES,yahooId:"USDCHF=X",icon:"dollarSign"},{id:"gbpusd",name:"Libra / Dólar",symbol:"GBP/USD",category:y.CURRENCIES,yahooId:"GBPUSD=X",icon:"dollarSign"},{id:"audusd",name:"Aus Dólar / USD",symbol:"AUD/USD",category:y.CURRENCIES,yahooId:"AUDUSD=X",icon:"dollarSign"},{id:"usdbrl",name:"Dólar / Real Bra",symbol:"USD/BRL",category:y.CURRENCIES,yahooId:"USDBRL=X",icon:"dollarSign"},{id:"gold",name:"Oro",symbol:"XAU",category:y.COMMODITIES,cgId:"pax-gold",icon:"package"},{id:"silver",name:"Plata",symbol:"XAG",category:y.COMMODITIES,cgId:"tether-gold",icon:"package"},{id:"copper",name:"Cobre",symbol:"HG",category:y.COMMODITIES,yahooId:"HG=F",icon:"package"},{id:"bitcoin",name:"Bitcoin",symbol:"BTC",cgId:"bitcoin",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"ethereum",name:"Ethereum",symbol:"ETH",cgId:"ethereum",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"ripple",name:"XRP",symbol:"XRP",cgId:"ripple",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"solana",name:"Solana",symbol:"SOL",cgId:"solana",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"cardano",name:"Cardano",symbol:"ADA",cgId:"cardano",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"dogecoin",name:"Dogecoin",symbol:"DOGE",cgId:"dogecoin",category:y.CRYPTO_MAJORS,icon:"bitcoin"},{id:"kaspa",name:"Kaspa",symbol:"KAS",cgId:"kaspa",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"litecoin",name:"Litecoin",symbol:"LTC",cgId:"litecoin",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"bitcoin-cash",name:"Bitcoin Cash",symbol:"BCH",cgId:"bitcoin-cash",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"monero",name:"Monero",symbol:"XMR",cgId:"monero",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"chainlink",name:"Chainlink",symbol:"LINK",cgId:"chainlink",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"stellar",name:"Stellar",symbol:"XLM",cgId:"stellar",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"sui",name:"Sui",symbol:"SUI",cgId:"sui",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"hbar",name:"Hedera",symbol:"HBAR",cgId:"hedera-hashgraph",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"aave",name:"Aave",symbol:"AAVE",cgId:"aave",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"bittensor",name:"Bittensor",symbol:"TAO",cgId:"bittensor",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"worldcoin",name:"Worldcoin",symbol:"WLD",cgId:"worldcoin-org",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"arbitrum",name:"Arbitrum",symbol:"ARB",cgId:"arbitrum",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"polygon",name:"Polygon",symbol:"POL",cgId:"polygon-ecosystem-token",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"optimism",name:"Optimism",symbol:"OP",cgId:"optimism",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"stacks",name:"Stacks",symbol:"STX",cgId:"blockstack",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"ondo",name:"Ondo",symbol:"ONDO",cgId:"ondo-finance",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"zcash",name:"Zcash",symbol:"ZEC",cgId:"zcash",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"dash",name:"Dash",symbol:"DASH",cgId:"dash",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"filecoin",name:"Filecoin",symbol:"FIL",cgId:"filecoin",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"algorand",name:"Algorand",symbol:"ALGO",cgId:"algorand",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"render",name:"Render",symbol:"RNDR",cgId:"render-token",category:y.CRYPTO_ALTS,icon:"bitcoin"},{id:"fetch-ai",name:"Fetch.ai",symbol:"FET",cgId:"fetch-ai",category:y.CRYPTO_ALTS,icon:"bitcoin"}];async function je(n="EUR"){if(z.data&&Date.now()-z.timestamp<Ge&&z.currency===n)return console.log("[MarketService] Returning cached data"),z.data;const e=U.map(t=>t.cgId).filter(Boolean).join(","),a=`${Fe}/coins/markets?vs_currency=${n.toLowerCase()}&ids=${e}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d,30d,1y`;try{const t=await fetch(a),s=t.ok?await t.json():[],o=U.filter(l=>l.yahooId),i=await He(o),r=U.map(l=>{if(l.cgId){const d=s.find(c=>c.id===l.cgId);if(d)return{...l,price:d.current_price,image:d.image,change24h:d.price_change_percentage_24h_in_currency||d.price_change_percentage_24h||0,change7d:d.price_change_percentage_7d_in_currency||0,change30d:d.price_change_percentage_30d_in_currency||0,change1y:d.price_change_percentage_1y_in_currency||0}}if(l.yahooId&&i[l.yahooId]){const d=i[l.yahooId],c=n==="USD"?1:.92;return{...l,price:d.price*c,change24h:d.change24h,change7d:d.change7d,change30d:d.change30d,change1y:d.change1y}}return{...l,price:null,change24h:null,change7d:null,change30d:null,change1y:null}});return z={data:r,timestamp:Date.now(),currency:n},r}catch(t){return console.error("Market fetch failed",t),U.map(s=>({...s,price:null,change24h:null,change7d:null,change30d:null,change1y:null}))}}async function He(n){const e={};return await Promise.all(n.map(async a=>{try{const t=`https://query1.finance.yahoo.com/v8/finance/chart/${a.yahooId}?interval=1d&range=1y`,s=`https://api.allorigins.win/get?url=${encodeURIComponent(t)}`,i=await(await fetch(s)).json(),r=JSON.parse(i.contents);if(!r.chart||!r.chart.result||!r.chart.result[0])throw new Error("Invalid data");const l=r.chart.result[0],d=l.meta,u=l.indicators.quote[0].close.filter(X=>X!==null);if(u.length===0)throw new Error("No valid price data");const p=d.regularMarketPrice||u[u.length-1],h=d.chartPreviousClose||(u.length>1?u[u.length-2]:p),w=(p-h)/h*100,E=Math.max(0,u.length-6),k=u[E],f=(p-k)/k*100,L=Math.max(0,u.length-22),T=u[L],V=(p-T)/T*100,K=u[0],q=(p-K)/K*100;e[a.yahooId]={price:p,change24h:isNaN(w)?0:w,change7d:isNaN(f)?0:f,change30d:isNaN(V)?0:V,change1y:isNaN(q)?0:q}}catch(t){console.warn(`Failed to fetch ${a.symbol} from Yahoo`,t),e[a.yahooId]=null}})),e}const Ve={passive:{label:"Ingresos Pasivos",storeKey:"passiveAssets",updateMethod:"updatePassiveAsset",deleteMethod:"deletePassiveAsset",fields:["value","monthlyIncome"]},investment:{label:"Activo de Inversión",storeKey:"investmentAssets",updateMethod:"updateInvestmentAsset",deleteMethod:"deleteInvestmentAsset",fields:["value"]},liability:{label:"Pasivo/Deuda",storeKey:"liabilities",updateMethod:"updateLiability",deleteMethod:"deleteLiability",fields:["amount","monthlyPayment"]},activeIncome:{label:"Ingreso Activo",storeKey:"activeIncomes",updateMethod:"updateActiveIncome",deleteMethod:"deleteActiveIncome",fields:["amount"]},livingExpense:{label:"Gasto de Vida",storeKey:"livingExpenses",updateMethod:"updateLivingExpense",deleteMethod:"deleteLivingExpense",fields:["amount"]}};let Y=null,j=null;function xe(n,e){const a=Ve[e];if(!a){console.error("Unknown category:",e);return}const o=m.getState()[a.storeKey].find(r=>r.id===n);if(!o){console.error("Item not found:",n);return}Y=o,j=e;const i=document.createElement("div");i.className="modal-overlay",i.id="edit-modal",i.innerHTML=ze(o,a),document.body.appendChild(i),requestAnimationFrame(()=>{i.classList.add("active")}),Ye(a)}const Ke=[{value:"EUR",label:"Euro (€)"},{value:"USD",label:"Dólar ($)"},{value:"CHF",label:"Franco Suizo (Fr)"},{value:"GBP",label:"Libra (£)"},{value:"AUD",label:"Dólar Aus. (A$)"},{value:"ARS",label:"Peso Arg. ($)"}],qe={passive:[{value:"rental",label:"Inmueble en Renta"},{value:"stocks",label:"Acciones/Dividendos"},{value:"etf",label:"ETF/Fondos"},{value:"bonds",label:"Bonos"},{value:"crypto",label:"Crypto Staking"},{value:"business",label:"Negocio Pasivo"},{value:"royalties",label:"Regalías"},{value:"other",label:"Otro"}],investment:[{value:"property",label:"Inmueble"},{value:"stocks",label:"Acciones"},{value:"etf",label:"ETF/Fondos"},{value:"crypto",label:"Criptomoneda"},{value:"cash",label:"Efectivo/Ahorro"},{value:"vehicle",label:"Vehículo"},{value:"collectibles",label:"Coleccionables"},{value:"other",label:"Otro"}],liability:[{value:"mortgage",label:"Hipoteca"},{value:"loan",label:"Préstamo Personal"},{value:"carloan",label:"Préstamo Auto"},{value:"creditcard",label:"Tarjeta de Crédito"},{value:"studentloan",label:"Préstamo Estudiantil"},{value:"other",label:"Otra Deuda"}],activeIncome:[{value:"salary",label:"Salario"},{value:"freelance",label:"Freelance"},{value:"business",label:"Negocio Activo"},{value:"other",label:"Otro"}],livingExpense:[{value:"rent",label:"Alquiler/Hipoteca"},{value:"utilities",label:"Servicios"},{value:"food",label:"Alimentación"},{value:"transport",label:"Transporte"},{value:"insurance",label:"Seguros"},{value:"health",label:"Salud"},{value:"other",label:"Otro"}]};function ze(n,e){const a=j==="investment"||j==="passive",t=qe[j]||[];let s="";return e.fields.includes("value")&&e.fields.includes("monthlyIncome")?s=`
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor Total</label>
+          <input type="number" class="form-input" id="edit-value" value="${n.value||0}" step="any" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ingreso Mensual</label>
+          <input type="number" class="form-input" id="edit-monthly" value="${n.monthlyIncome||0}" inputmode="numeric">
+        </div>
+      </div>
+    `:e.fields.includes("value")?s=`
+      <div class="form-group">
+        <label class="form-label">Cantidad / Valor</label>
+        <input type="number" class="form-input" id="edit-value" value="${n.value||0}" step="any" inputmode="decimal">
+      </div>
+    `:e.fields.includes("amount")&&e.fields.includes("monthlyPayment")?s=`
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto Total</label>
+          <input type="number" class="form-input" id="edit-amount" value="${n.amount||0}" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pago Mensual</label>
+          <input type="number" class="form-input" id="edit-monthly" value="${n.monthlyPayment||0}" inputmode="numeric">
+        </div>
+      </div>
+    `:e.fields.includes("amount")&&(s=`
+      <div class="form-group">
+        <label class="form-label">${j==="livingExpense"?"Gasto Mensual":"Ingreso Mensual"}</label>
+        <input type="number" class="form-input" id="edit-amount" value="${n.amount||0}" inputmode="numeric">
+      </div>
+    `),`
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">Editar ${e.label}</h2>
+        <button class="modal-close" id="edit-modal-close">
+          ${g("x")}
+        </button>
+      </div>
+
+      <div class="form-row">
+          <div class="form-group" style="flex: 1.5;">
+              <label class="form-label">Tipo</label>
+              <select class="form-input form-select" id="edit-type">
+                  ${t.map(o=>`<option value="${o.value}" ${o.value===n.type?"selected":""}>${o.label}</option>`).join("")}
+              </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+              <label class="form-label">Activo/Moneda</label>
+              <select class="form-input form-select" id="edit-currency">
+                  <optgroup label="Divisas">
+                      ${Ke.map(o=>`<option value="${o.value}" ${o.value===n.currency?"selected":""}>${o.label}</option>`).join("")}
+                  </optgroup>
+                  ${a?`
+                  <optgroup label="Mercados Reales">
+                      ${U.map(o=>`<option value="${o.symbol}" ${o.symbol===n.currency?"selected":""}>${o.name} (${o.symbol})</option>`).join("")}
+                  </optgroup>
+                  `:""}
+              </select>
+          </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-input" id="edit-name" value="${n.name||""}">
+      </div>
+      
+      ${s}
+      
+      <div class="form-group">
+        <label class="form-label">Detalles (opcional)</label>
+        <input type="text" class="form-input" id="edit-details" value="${n.details||""}" placeholder="Notas adicionales...">
+      </div>
+      
+      <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+        <button class="btn btn-danger" id="btn-delete" style="flex: 0 0 auto; width: auto; padding: 14px 20px;">
+          ${g("trash")}
+        </button>
+        <button class="btn btn-primary" id="btn-update" style="flex: 1;">
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  `}function Ye(n){const e=document.getElementById("edit-modal"),a=document.getElementById("edit-modal-close"),t=document.getElementById("btn-update"),s=document.getElementById("btn-delete");e.addEventListener("click",o=>{o.target===e&&J()}),a.addEventListener("click",J),t.addEventListener("click",()=>We(n)),s.addEventListener("click",()=>Xe(n))}function We(n){var d,c,u,p,h,w,E,k,f;const e=(c=(d=document.getElementById("edit-name"))==null?void 0:d.value)==null?void 0:c.trim(),a=(u=document.getElementById("edit-type"))==null?void 0:u.value,t=(p=document.getElementById("edit-currency"))==null?void 0:p.value,s=(w=(h=document.getElementById("edit-details"))==null?void 0:h.value)==null?void 0:w.trim(),o=parseFloat((E=document.getElementById("edit-value"))==null?void 0:E.value)||0,i=parseFloat((k=document.getElementById("edit-amount"))==null?void 0:k.value)||0,r=parseFloat((f=document.getElementById("edit-monthly"))==null?void 0:f.value)||0;if(!e){v.alert("Requerido","El nombre es obligatorio para guardar los cambios.");return}const l={name:e,type:a,currency:t,details:s};n.fields.includes("value")&&(l.value=o),n.fields.includes("amount")&&(l.amount=i),n.fields.includes("monthlyIncome")&&(l.monthlyIncome=r),n.fields.includes("monthlyPayment")&&(l.monthlyPayment=r),m[n.updateMethod](Y.id,l),J()}function Xe(n){v.confirm("¿Eliminar?",`¿Estás seguro de que quieres borrar "${Y.name}"? Esta acción no se puede deshacer.`).then(e=>{e&&(m[n.deleteMethod](Y.id),v.toast("Eliminado correctamente","info"),J())})}function J(){const n=document.getElementById("edit-modal");n&&(n.classList.remove("active"),setTimeout(()=>n.remove(),300)),Y=null,j=null}function me(){const n=m.getState(),e=n.currencySymbol,a=m.getPassiveIncome(),t=m.getLivingExpenses(),s=m.getNetPassiveIncome(),o=m.getInvestmentAssetsValue(),i=m.getTotalLiabilities(),r=m.getNetWorth(),l=m.getAllIncomes(),d=m.getAllExpenses(),c=m.getNetIncome();return`
+    <div class="finance-page stagger-children" style="padding-bottom: 80px;">
+      <header class="page-header">
+        <h1 class="page-title">Finanzas</h1>
+        <p class="page-subtitle">Tu panorama financiero</p>
+      </header>
+      
+      <div class="finance-top-grid">
+        <!-- PRIMARY METRICS -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Flujo Pasivo Mensual</span>
+            ${g("zap","card-icon")}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">
+              <span class="stat-dot income"></span>
+              Ingresos Pasivos
+            </span>
+            <span class="stat-value positive">${b(a,e)}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">
+              <span class="stat-dot expense"></span>
+              Gastos de Vida
+            </span>
+            <span class="stat-value negative">${b(t,e)}</span>
+          </div>
+        </div>
+        
+        <!-- HIGHLIGHT: NET PASSIVE INCOME -->
+        <div class="card highlight-card ${s<0?"highlight-card-negative":""}">
+          <div class="card-header">
+            <span class="card-title">Ingreso Pasivo Neto</span>
+            ${g("piggyBank","card-icon")}
+          </div>
+          <div class="highlight-value ${s<0?"highlight-value-negative":""}">${b(s,e)}</div>
+          <div class="highlight-label ${s<0?"highlight-label-negative":""}">
+            ${s>=0?"🎉 ¡Libertad financiera alcanzada!":`Faltan ${b(Math.abs(s),e)}/mes`}
+          </div>
+        </div>
+      </div>
+      
+      <!-- BALANCE SHEET -->
+      <div class="section-divider">
+        <span class="section-title">Balance Patrimonial</span>
+      </div>
+      
+      <div class="finance-balance-grid">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-value text-primary-accent">${b(o,e)}</div>
+            <div class="summary-label">Activos</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-value text-warning">${b(i,e)}</div>
+            <div class="summary-label">Pasivos</div>
+          </div>
+        </div>
+        
+        <div class="card net-worth-card">
+          <div class="card-header">
+            <span class="card-title">Patrimonio Neto</span>
+            ${g("scale","card-icon")}
+          </div>
+          <div class="stat-value ${r>=0?"positive":"negative"}" style="font-size: 32px; font-weight: 800; text-align: center; margin-top: var(--spacing-sm);">
+            ${b(r,e)}
+          </div>
+        </div>
+      </div>
+      
+      <!-- CASH FLOW -->
+      <div class="section-divider">
+        <span class="section-title">Flujo de Efectivo Mensual</span>
+      </div>
+      
+      <div class="card">
+        <div class="stat-row">
+          <span class="stat-label">
+            <span class="stat-dot income"></span>
+            Todos los Ingresos
+          </span>
+          <span class="stat-value positive">${b(l,e)}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">
+            <span class="stat-dot expense"></span>
+            Todos los Gastos
+          </span>
+          <span class="stat-value negative">${b(d,e)}</span>
+        </div>
+        <div class="stat-row" style="padding-top: var(--spacing-md); border-top: 1px solid rgba(255,255,255,0.1); margin-top: var(--spacing-sm);">
+          <span class="stat-label" style="font-weight: 600; color: var(--text-primary);">
+            Ingreso Neto
+          </span>
+          <span class="stat-value ${c>=0?"positive":"negative"}" style="font-size: 20px;">
+            ${b(c,e)}
+          </span>
+        </div>
+      </div>
+      
+      <div class="finance-links-grid">
+        <button class="compound-link-btn" id="open-expenses" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); border-color: rgba(239, 68, 68, 0.3);">
+          <div class="compound-link-content">
+            <div class="compound-link-icon" style="background: rgba(239,68,68,0.2); color: var(--accent-danger);">
+              ${g("creditCard")}
+            </div>
+            <div class="compound-link-text">
+              <div class="compound-link-title">Ver Gastos Mensuales</div>
+              <div class="compound-link-subtitle">Detalle de salidas y deudas</div>
+            </div>
+          </div>
+          <div class="compound-link-arrow">
+            ${g("chevronRight")}
+          </div>
+        </button>
+
+        <!-- COMPOUND INTEREST CALCULATOR LINK -->
+        <button class="compound-link-btn" id="open-compound">
+          <div class="compound-link-content">
+            <div class="compound-link-icon">
+              ${g("calculator")}
+            </div>
+            <div class="compound-link-text">
+              <div class="compound-link-title">Calculadora de Interés Compuesto</div>
+              <div class="compound-link-subtitle">Proyecta el crecimiento de tu patrimonio</div>
+            </div>
+          </div>
+          <div class="compound-link-arrow">
+            ${g("chevronRight")}
+          </div>
+        </button>
+      </div>
+
+      <!-- ALLOCATION CHART -->
+      <div class="section-divider">
+        <span class="section-title">Distribución de Activos</span>
+      </div>
+      
+      ${Je(n)}
+
+      <!-- ASSETS LIST -->
+      <div class="section-divider">
+        <span class="section-title">Ingreso Pasivo & Cartera</span>
+      </div>
+      
+      ${Ze(n)}
+
+      <!-- FOOTER BUTTONS & SETTINGS -->
+      <div class="section-divider">
+        <span class="section-title">Opciones y Mercados</span>
+      </div>
+
+      <div class="footer-actions">
+        <button class="btn btn-secondary compound-link-btn" id="open-markets" style="margin-top: 0; background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 212, 170, 0.05) 100%); border: 1px solid rgba(0, 212, 170, 0.3);">
+            <div class="compound-link-content">
+                <div class="compound-link-icon" style="background: rgba(0, 212, 170, 0.3); color: var(--accent-primary);">
+                    ${g("trendingUp")}
+                </div>
+                <div class="compound-link-text">
+                    <div class="compound-link-title">Mercados del Mundo</div>
+                    <div class="compound-link-subtitle">Índices, Stocks y Cripto</div>
+                </div>
+            </div>
+            <div class="compound-link-arrow">
+                ${g("chevronRight")}
+            </div>
+        </button>
+
+        <div class="card" style="margin-top: var(--spacing-md); padding: var(--spacing-md) !important;">
+            <div class="footer-setting-row">
+                <div class="setting-info">
+                    <div class="setting-label">Divisa de Visualización</div>
+                    <div class="setting-desc">Toda la plataforma cambiará a esta moneda</div>
+                </div>
+                <select class="form-select" id="display-currency-select" style="width: auto; padding: 8px 32px 8px 12px; font-size: 14px; background-position: right 8px center;">
+                    <option value="EUR" ${n.currency==="EUR"?"selected":""}>EUR (€)</option>
+                    <option value="USD" ${n.currency==="USD"?"selected":""}>USD ($)</option>
+                    <option value="CHF" ${n.currency==="CHF"?"selected":""}>CHF (Fr)</option>
+                    <option value="GBP" ${n.currency==="GBP"?"selected":""}>GBP (£)</option>
+                    <option value="AUD" ${n.currency==="AUD"?"selected":""}>AUD (A$)</option>
+                    <option value="ARS" ${n.currency==="ARS"?"selected":""}>ARS ($)</option>
+                    <option value="BTC" ${n.currency==="BTC"?"selected":""}>BTC (₿)</option>
+                </select>
+            </div>
+        </div>
+      </div>
+    </div>
+  `}function Je(n){const e=[...n.passiveAssets,...n.investmentAssets],a=n.liabilities;if(e.length===0)return"";const t={Bitcoin:{value:0,color:"#f59e0b"},Altcoins:{value:0,color:"#6366f1"},Inmuebles:{value:0,color:"#a855f7"},Bolsa:{value:0,color:"#00d4aa"},Oro:{value:0,color:"#fbbf24"},"Otros/Efe.":{value:0,color:"#94a3b8"}};e.forEach(c=>{const u=m.convertValue(c.value||0,c.currency||"EUR");c.currency==="BTC"?t.Bitcoin.value+=u:c.currency==="ETH"||c.currency==="XRP"||c.type==="crypto"?t.Altcoins.value+=u:c.type==="property"||c.type==="rental"?t.Inmuebles.value+=u:c.type==="stocks"||c.type==="etf"||c.currency==="SP500"?t.Bolsa.value+=u:c.currency==="GOLD"?t.Oro.value+=u:t["Otros/Efe."].value+=u});const s=a.filter(c=>c.type==="mortgage").reduce((c,u)=>c+m.convertValue(u.amount||0,u.currency||"EUR"),0);t.Inmuebles.value=Math.max(0,t.Inmuebles.value-s),n.hideRealEstate&&(t.Inmuebles.value=0);const o=Object.entries(t).filter(([c,u])=>u.value>0).sort((c,u)=>u[1].value-c[1].value),i=o.reduce((c,[u,p])=>c+p.value,0);if(i===0)return`
+      <div class="card allocation-card" style="text-align: center; padding: var(--spacing-xl) !important;">
+         <div class="toggle-row" style="justify-content: center;">
+            <label class="toggle-label" style="font-size: 13px;">Ocultar Inmuebles</label>
+            <input type="checkbox" id="toggle-real-estate" ${n.hideRealEstate?"checked":""}>
+        </div>
+        <p style="margin-top: var(--spacing-md); color: var(--text-muted); font-size: 14px;">No hay otros activos para mostrar.</p>
+      </div>
+    `;let r=0;const l=o.map(([c,u])=>{const p=u.value/i*100,h=r;return r+=p,{name:c,percentage:p,color:u.color,start:h}}),d=l.map(c=>`${c.color} ${c.start}% ${c.start+c.percentage}%`).join(", ");return`
+    <div class="card allocation-card">
+      <div class="card-header" style="margin-bottom: var(--spacing-lg);">
+        <div class="toggle-row" style="width: 100%; justify-content: space-between;">
+            <label class="toggle-label" style="font-size: 13px; font-weight: 500;">Ocultar Inmuebles (Neto)</label>
+            <input type="checkbox" id="toggle-real-estate" class="apple-switch" ${n.hideRealEstate?"checked":""}>
+        </div>
+      </div>
+      <div class="allocation-container">
+        <div class="pie-chart" style="background: conic-gradient(${d});">
+          <div class="pie-center">
+            <div class="pie-total">${b(i,n.currencySymbol)}</div>
+            <div class="pie-total-label">Total Neto</div>
+          </div>
+        </div>
+        <div class="allocation-legend">
+          ${l.map(c=>`
+            <div class="legend-item">
+              <div class="legend-color" style="background: ${c.color};"></div>
+              <div class="legend-info">
+                <span class="legend-name">${c.name}</span>
+                <span class="legend-pct">${c.percentage.toFixed(1)}%</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `}function Ze(n){const e=[...n.passiveAssets.map(t=>({...t,category:"passive"})),...n.investmentAssets.map(t=>({...t,category:"investment"})),...n.liabilities.map(t=>({...t,category:"liability"}))];if(e.length===0)return`
+      <div class="empty-state">
+        ${g("package","empty-icon")}
+        <div class="empty-title">Sin activos registrados</div>
+        <p class="empty-description">
+          Toca el botón + para agregar tus propiedades, inversiones, deudas y más.
+        </p>
+      </div>
+    `;const a=n.currencySymbol;return`
+    <div class="asset-list">
+      ${e.map(t=>{const s=Qe(t.currency||t.type),o=et(t.currency||t.type),i=t.category==="liability",r=t.value||t.amount||0,l=m.convertValue(r,t.currency||"EUR");let d="";if(t.currency!==n.currency){const u={EUR:"€",USD:"$",BTC:"₿",ETH:"Ξ",XRP:"✕",GOLD:"oz",SP500:"pts",CHF:"Fr",GBP:"£",AUD:"A$",ARS:"$"}[t.currency]||t.currency;d=`<div class="asset-original-value">${r} ${u}</div>`}return`
+          <div class="asset-item" data-id="${t.id}" data-category="${t.category}">
+            <div class="asset-icon-wrapper ${s}">
+              ${g(o,"asset-icon")}
+            </div>
+            <div class="asset-info">
+              <div class="asset-name">${t.name}</div>
+              <div class="asset-details">${t.details||t.type||""}</div>
+              ${d}
+            </div>
+            <div>
+              <div class="asset-value ${i?"text-warning":""}">
+                ${i?"-":""}${b(l,a)}
+              </div>
+              ${t.monthlyIncome?`<div class="asset-yield">+${b(m.convertValue(t.monthlyIncome,t.currency),a)}/mes</div>`:""}
+              ${t.monthlyPayment?`<div class="asset-yield text-negative">-${b(m.convertValue(t.monthlyPayment,t.currency),a)}/mes</div>`:""}
+            </div>
+          </div>
+        `}).join("")}
+    </div>
+  `}function Qe(n){return{property:"property",rental:"property",stocks:"stocks",etf:"stocks",SP500:"stocks",crypto:"crypto",BTC:"crypto",ETH:"crypto",XRP:"crypto",GOLD:"investment",cash:"cash",USD:"cash",EUR:"cash",savings:"cash",vehicle:"vehicle",debt:"debt",loan:"debt",mortgage:"debt",creditcard:"debt"}[n]||"cash"}function et(n){return{property:"building",rental:"building",stocks:"trendingUp",etf:"trendingUp",SP500:"trendingUp",crypto:"bitcoin",BTC:"bitcoin",ETH:"bitcoin",XRP:"bitcoin",GOLD:"package",cash:"dollarSign",USD:"dollarSign",EUR:"dollarSign",savings:"piggyBank",vehicle:"car",debt:"creditCard",loan:"landmark",mortgage:"home",creditcard:"creditCard"}[n]||"dollarSign"}function ve(){document.querySelectorAll(".asset-item").forEach(t=>{t.addEventListener("click",()=>{const s=t.dataset.id,o=t.dataset.category;xe(s,o)})});const e=document.getElementById("toggle-real-estate");e&&e.addEventListener("change",()=>{m.toggleRealEstate()});const a=document.getElementById("display-currency-select");a&&a.addEventListener("change",t=>{m.setCurrency(t.target.value)})}let M=10,O=7,N=null,F=null;function tt(){const e=m.getState().currencySymbol,a=m.getNetWorth(),s=m.getNetIncome()*12,o=N!==null?N:a,i=F!==null?F:s,r=Se(o,i,O,M);return`
+    <div class="compound-page stagger-children" style="padding-bottom: 80px;">
+      <header class="page-header">
+        <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+          <button class="back-btn" id="back-to-finance">
+            ${g("chevronLeft")}
+          </button>
+          <div>
+            <h1 class="page-title">Interés Compuesto</h1>
+            <p class="page-subtitle">Proyección de crecimiento patrimonial</p>
+          </div>
+        </div>
+      </header>
+      
+      <!-- INPUT PARAMETERS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Parámetros</span>
+          ${g("settings","card-icon")}
+        </div>
+        
+        <div class="compound-input-group">
+          <label class="compound-label">Capital Inicial</label>
+          <div class="compound-input-row">
+            <span class="compound-input-prefix">${e}</span>
+            <input type="number" class="compound-number-input" id="principal-input" 
+                   value="${o}" inputmode="numeric" placeholder="0">
+            <button class="compound-reset-btn" id="reset-principal" title="Usar Patrimonio Neto">
+              ${g("home")}
+            </button>
+          </div>
+          <div class="compound-input-hint">Patrimonio actual: ${b(a,e)}</div>
+        </div>
+        
+        <div class="compound-input-group">
+          <label class="compound-label">Aporte Anual</label>
+          <div class="compound-input-row">
+            <span class="compound-input-prefix">${e}</span>
+            <input type="number" class="compound-number-input" id="contribution-input" 
+                   value="${i}" inputmode="numeric" placeholder="0">
+            <button class="compound-reset-btn" id="reset-contribution" title="Usar Ingreso Neto × 12">
+              ${g("zap")}
+            </button>
+          </div>
+          <div class="compound-input-hint">Ingreso neto anual: ${b(s,e)}</div>
+        </div>
+        
+        <div class="compound-input-group">
+          <label class="compound-label">Tasa de Interés Anual</label>
+          <div class="slider-container">
+            <input type="range" class="compound-slider" id="rate-slider" min="1" max="20" value="${O}" step="0.5">
+            <span class="slider-value" id="rate-value">${O}%</span>
+          </div>
+        </div>
+        
+        <div class="compound-input-group">
+          <label class="compound-label">Años de Proyección</label>
+          <div class="slider-container">
+            <input type="range" class="compound-slider" id="years-slider" min="1" max="50" value="${M}">
+            <span class="slider-value" id="years-value">${M} años</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- FINAL RESULT -->
+      <div class="card highlight-card">
+        <div class="card-header">
+          <span class="card-title" id="future-value-title">Valor Futuro en ${M} años</span>
+          ${g("trendingUp","card-icon")}
+        </div>
+        <div class="highlight-value" id="future-value">${b(r.finalValue,e)}</div>
+        <div class="highlight-label" id="growth-label">
+          ${r.totalGrowth>=0?"📈":"📉"} ${r.growthMultiple.toFixed(1)}x tu capital inicial
+        </div>
+      </div>
+      
+      <!-- BREAKDOWN -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Desglose</span>
+          ${g("coins","card-icon")}
+        </div>
+        
+        <div class="stat-row">
+          <span class="stat-label">
+            <span class="stat-dot asset"></span>
+            Capital Inicial
+          </span>
+          <span class="stat-value neutral" id="initial-capital">${b(o,e)}</span>
+        </div>
+        
+        <div class="stat-row">
+          <span class="stat-label">
+            <span class="stat-dot income"></span>
+            Total Aportado
+          </span>
+          <span class="stat-value ${r.totalContributions>=0?"positive":"negative"}" id="total-contributed">${b(r.totalContributions,e)}</span>
+        </div>
+        
+        <div class="stat-row">
+          <span class="stat-label">
+            <span class="stat-dot" style="background: var(--accent-secondary);"></span>
+            Intereses Generados
+          </span>
+          <span class="stat-value" style="color: var(--accent-secondary);" id="total-interest">${b(r.totalInterest,e)}</span>
+        </div>
+        
+        <div class="stat-row" style="padding-top: var(--spacing-md); border-top: 1px solid rgba(255,255,255,0.1); margin-top: var(--spacing-sm);">
+          <span class="stat-label" style="font-weight: 600; color: var(--text-primary);">
+            Valor Final
+          </span>
+          <span class="stat-value positive" style="font-size: 20px;" id="final-value-breakdown">${b(r.finalValue,e)}</span>
+        </div>
+      </div>
+      
+      <!-- YEAR BY YEAR PROJECTION -->
+      <div class="section-divider">
+        <span class="section-title">Proyección Año a Año</span>
+      </div>
+      
+      <div class="projection-chart" id="projection-chart">
+        ${Ie(r.yearlyBreakdown)}
+      </div>
+      
+      <div class="projection-table" id="projection-table">
+        ${$e(r.yearlyBreakdown,e)}
+      </div>
+    </div>
+  `}function Se(n,e,a,t){const s=a/100,o=[];let i=n,r=0,l=0;for(let d=1;d<=t;d++){const c=i,u=i*s;i+=u+e,r+=e,l+=u,o.push({year:d,startBalance:c,contribution:e,interest:u,endBalance:i,totalContributions:r,totalInterest:l})}return{finalValue:i,totalContributions:r,totalInterest:l,totalGrowth:i-n,growthMultiple:n>0?i/n:0,yearlyBreakdown:o}}function Ie(n,e){if(n.length===0)return"";const a=Math.max(...n.map(s=>Math.abs(s.endBalance))),t=n.map((s,o)=>{const i=o/(n.length-1)*100,r=100-s.endBalance/a*100;return`${i},${r}`});return`
+    <div class="line-chart-container" style="height: 200px; width: 100%; position: relative; margin-top: 20px;">
+      <svg viewBox="0 0 100 100" class="projection-line-chart" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
+        <!-- Grid horizontal lines -->
+        <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(255,255,255,0.05)" stroke-width="0.5" />
+        
+        <!-- Area under curve -->
+        <path d="M0,100 L${t.join(" L")} L100,100 Z" fill="url(#chart-gradient)" opacity="0.2" />
+        
+        <!-- Main line -->
+        <path d="M${t.join(" L")}" fill="none" stroke="var(--accent-primary)" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+        
+        <!-- Gradient definition -->
+        <defs>
+          <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent-primary)" />
+            <stop offset="100%" stop-color="transparent" />
+          </linearGradient>
+        </defs>
+      </svg>
+      
+      <!-- Labels -->
+      <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; color: var(--text-muted);">
+        <span>Año 0</span>
+        <span>Año ${Math.floor(n.length/2)}</span>
+        <span>Año ${n.length}</span>
+      </div>
+    </div>
+  `}function $e(n,e){const a=[];for(let t=0;t<n.length;t++){const s=n[t];(t<5||(t+1)%5===0||t===n.length-1)&&a.push(s)}return`
+    <div class="table-container">
+      <table class="projection-data-table">
+        <thead>
+          <tr>
+            <th>Año</th>
+            <th>Balance</th>
+            <th>Interés</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${a.map(t=>`
+            <tr>
+              <td>${t.year}</td>
+              <td class="${t.endBalance>=0?"positive":"negative"}">${b(t.endBalance,e)}</td>
+              <td style="color: var(--accent-secondary);">+${b(t.interest,e)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `}function at(n){const e=document.getElementById("back-to-finance"),a=document.getElementById("rate-slider"),t=document.getElementById("years-slider"),s=document.getElementById("principal-input"),o=document.getElementById("contribution-input"),i=document.getElementById("reset-principal"),r=document.getElementById("reset-contribution");e&&e.addEventListener("click",n),s&&s.addEventListener("input",l=>{N=parseFloat(l.target.value)||0,G()}),o&&o.addEventListener("input",l=>{F=parseFloat(l.target.value)||0,G()}),i&&i.addEventListener("click",()=>{N=null;const l=m.getNetWorth();s.value=l,G()}),r&&r.addEventListener("click",()=>{F=null;const l=m.getNetIncome()*12;o.value=l,G()}),a&&a.addEventListener("input",l=>{O=parseFloat(l.target.value),document.getElementById("rate-value").textContent=`${O}%`,G()}),t&&t.addEventListener("input",l=>{M=parseInt(l.target.value),document.getElementById("years-value").textContent=`${M} años`,G()})}function G(){const e=m.getState().currencySymbol,a=N!==null?N:m.getNetWorth(),t=F!==null?F:m.getNetIncome()*12,s=Se(a,t,O,M),o=document.getElementById("future-value"),i=document.getElementById("future-value-title"),r=document.getElementById("growth-label"),l=document.getElementById("initial-capital"),d=document.getElementById("total-contributed"),c=document.getElementById("total-interest"),u=document.getElementById("final-value-breakdown"),p=document.getElementById("projection-chart"),h=document.getElementById("projection-table");o&&(o.textContent=b(s.finalValue,e)),i&&(i.textContent=`Valor Futuro en ${M} años`),r&&(r.innerHTML=`${s.totalGrowth>=0?"📈":"📉"} ${s.growthMultiple.toFixed(1)}x tu capital inicial`),l&&(l.textContent=b(a,e)),d&&(d.textContent=b(s.totalContributions,e),d.className=`stat-value ${s.totalContributions>=0?"positive":"negative"}`),c&&(c.textContent=b(s.totalInterest,e)),u&&(u.textContent=b(s.finalValue,e)),p&&(p.innerHTML=Ie(s.yearlyBreakdown)),h&&(h.innerHTML=$e(s.yearlyBreakdown,e))}function st(){M=10,O=7,N=null,F=null}let W=m.getState().lastMarketData||[],Z=W.length===0,S={key:"price",direction:"desc"};function nt(){const n=m.getState(),e=n.currency||"EUR",a=n.currencySymbol||"€";if(W.length===0)return ae(),`
+            <div class="market-page">
+                <header class="page-header">
+                    <h1 class="page-title">Mercados del Mundo</h1>
+                    <p class="page-subtitle">Precios y tendencias globales</p>
+                </header>
+                <div class="empty-state">
+                    <div class="loading-spinner"></div>
+                    <p class="empty-description">Cargando datos reales de mercado...</p>
+                </div>
+            </div>
+        `;Z||ae();const t=Object.values(y);return`
+        <div class="market-page stagger-children" style="padding-bottom: 80px;">
+            <header class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                        <button class="back-btn" id="market-back">
+                            ${g("chevronLeft")}
+                        </button>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h1 class="page-title">Mercados del Mundo</h1>
+                                ${Z?`
+                                    <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,212,170,0.1); padding: 4px 10px; border-radius: 20px;">
+                                        <div class="loading-spinner-sm" style="width:10px; height:10px; border-width: 1.5px; border-color: var(--accent-primary) transparent var(--accent-primary) transparent;"></div>
+                                        <span style="font-size: 10px; color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Actualizando</span>
+                                    </div>
+                                `:""}
+                            </div>
+                            <p class="page-subtitle">Activos globales en ${e}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="market-currency-toggle" style="background: rgba(255,255,255,0.05); padding: 4px; border-radius: var(--radius-md); display: flex; gap: 4px;">
+                        <button class="btn-toggle ${e==="EUR"?"active":""}" data-curr="EUR" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${e==="EUR"?"var(--accent-primary)":"transparent"}; color: ${e==="EUR"?"var(--bg-primary)":"var(--text-secondary)"}; font-weight: 600;">EUR</button>
+                        <button class="btn-toggle ${e==="USD"?"active":""}" data-curr="USD" style="padding: 4px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; background: ${e==="USD"?"var(--accent-primary)":"transparent"}; color: ${e==="USD"?"var(--bg-primary)":"var(--text-secondary)"}; font-weight: 600;">USD</button>
+                    </div>
+                </div>
+            </header>
+
+            ${t.map(s=>{const o=W.filter(i=>i.category===s);return o.length===0?"":it(s,o,a)}).join("")}
+        </div>
+    `}function it(n,e,a){const t=[...e].sort((s,o)=>{let i=s[S.key],r=o[S.key];return typeof i=="string"&&(i=i.toLowerCase()),typeof r=="string"&&(r=r.toLowerCase()),i<r?S.direction==="asc"?-1:1:i>r?S.direction==="asc"?1:-1:0});return`
+        <div class="market-section" style="margin-bottom: var(--spacing-xl);">
+            <h2 class="section-title" style="margin-left: 0; margin-bottom: var(--spacing-md); color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                ${n}
+            </h2>
+            <div class="card market-table-card" style="padding: 0 !important; overflow: hidden; background: rgba(22, 33, 62, 0.4);">
+                <div class="table-container market-table-container">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="name" class="${S.key==="name"?"active "+S.direction:""}" style="padding-left: var(--spacing-md);">Activo</th>
+                                <th data-sort="price" class="${S.key==="price"?"active "+S.direction:""}">Precio</th>
+                                <th data-sort="change24h" class="${S.key==="change24h"?"active "+S.direction:""}">24h</th>
+                                <th data-sort="change30d" class="${S.key==="change30d"?"active "+S.direction:""}" style="padding-right: var(--spacing-md);">30d</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${t.map(s=>`
+                                <tr>
+                                    <td style="min-width: 100px; padding-left: var(--spacing-md);">
+                                        <div class="asset-cell">
+                                            ${s.image?`<img src="${s.image}" alt="${s.symbol}" style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;">`:`<div class="asset-icon-small" style="background: rgba(0, 212, 170, 0.1); color: var(--accent-primary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                    ${g(s.icon||"dollarSign")}
+                                                </div>`}
+                                            <div style="display: flex; flex-direction: column; min-width: 0;">
+                                                <span class="asset-symbol" style="color: var(--text-primary); font-weight: 700; font-size: 13px;">${s.symbol.toUpperCase()}</span>
+                                                <span class="asset-name" style="font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">${s.name}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="font-weight: 600; font-variant-numeric: tabular-nums;">${s.price!==null?b(s.price,a):"-"}</td>
+                                    <td class="${s.change24h>=0?"text-positive":"text-negative"}" style="font-variant-numeric: tabular-nums;">${s.change24h!==null?pe(s.change24h):"-"}</td>
+                                    <td class="${s.change30d>=0?"text-positive":"text-negative"}" style="font-variant-numeric: tabular-nums; padding-right: var(--spacing-md);">${s.change30d!==null?pe(s.change30d):"-"}</td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `}async function ae(){const e=m.getState().currency||"EUR";Z=!0,W=await je(e),m.saveMarketData(W),Z=!1,window.dispatchEvent(new CustomEvent("market-ready"))}function ot(n){const e=document.getElementById("market-back");e&&e.addEventListener("click",n),document.querySelectorAll(".market-table th[data-sort]").forEach(s=>{s.addEventListener("click",()=>{const o=s.dataset.sort;S.key===o?S.direction=S.direction==="asc"?"desc":"asc":(S.key=o,S.direction="desc",o==="name"&&(S.direction="asc")),typeof window.reRender=="function"&&window.reRender()})}),document.querySelectorAll(".market-currency-toggle .btn-toggle").forEach(s=>{s.addEventListener("click",()=>{const o=s.dataset.curr;m.setCurrency(o),ae()})}),window.addEventListener("market-ready",()=>{typeof window.reRender=="function"&&window.reRender()})}class ge{static getApiKey(){return localStorage.getItem("life-dashboard/db_gemini_api_key")}static setApiKey(e){localStorage.setItem("life-dashboard/db_gemini_api_key",e)}static hasKey(){return!!this.getApiKey()}static async analyzeFood(e){var r;const a=this.getApiKey();if(!a)throw new Error("Se requiere una API Key de Gemini en Configuración.");const s=(await this.fileToBase64(e)).split(",")[1],o=e.type,i=`Identify the food in this image. 
+        Provide the name of the dish and the approximate total calories for a standard portion.
+        Return ONLY a JSON object like this: {"name": "Dish Name", "calories": 500}`;try{const l=await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${a}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:i},{inline_data:{mime_type:o,data:s}}]}],generationConfig:{response_mime_type:"application/json"}})});if(!l.ok){const u=await l.json();throw new Error(((r=u.error)==null?void 0:r.message)||"Error al conectar con Gemini AI")}const c=(await l.json()).candidates[0].content.parts[0].text;return JSON.parse(c)}catch(l){throw console.error("[Gemini] Analysis failed:",l),l}}static fileToBase64(e){return new Promise((a,t)=>{const s=new FileReader;s.readAsDataURL(e),s.onload=()=>a(s.result),s.onerror=o=>t(o)})}}function rt(){const n=m.getState(),{health:e}=n;return`
+    <div class="health-page stagger-children" style="padding-bottom: 100px;">
+      <header class="page-header">
+        <h1 class="page-title">Salud y Forma Física</h1>
+        <p class="page-subtitle">Rendimiento, métricas y nutrición</p>
+      </header>
+
+      <!-- FITNESS ROUTINES -->
+      <div class="section-divider">
+        <span class="section-title">Programas de Entrenamiento</span>
+      </div>
+
+      <div class="routines-grid">
+        ${e.routines.map((a,t)=>`
+          <div class="card health-routine-card" style="margin-bottom: var(--spacing-lg);">
+            <header class="routine-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="routine-icon-circle" style="background: rgba(0, 212, 170, 0.1); color: var(--accent-primary); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        ${g("zap")}
+                    </div>
+                    <h3 class="routine-name clickable rename-routine" data-id="${a.id}" data-current="${a.name}">${a.name}</h3>
+                </div>
+                <div class="routine-actions">
+                    <button class="reorder-routine-btn" data-index="${t}" data-dir="up">${g("chevronUp")}</button>
+                    <button class="reorder-routine-btn" data-index="${t}" data-dir="down">${g("chevronDown")}</button>
+                    <button class="delete-routine-btn" data-id="${a.id}">${g("trash")}</button>
+                </div>
+            </header>
+
+            <div class="exercise-list-health">
+                ${a.exercises.map((s,o)=>{const i=m.getExerciseStatus(a.id,o),r=`var(--accent-${i.color})`,l=i.status==="done_today";let d="";return i.lastLog&&i.lastLog.rating&&(d=`<span style="font-size: 10px; color: var(--accent-tertiary);">★ ${i.lastLog.rating}</span>`),`
+                    <div class="exercise-item-health ${l?"exercise-done":""}">
+                        <div class="ex-health-main">
+                            <div class="exercise-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: ${r}; box-shadow: 0 0 6px ${r};"></div>
+                            <div class="ex-health-info">
+                                <div class="ex-health-name-row">
+                                    <span class="ex-health-name clickable rename-exercise" data-routine="${a.id}" data-index="${o}" data-current="${s.name}">${s.name}</span>
+                                    <div class="ex-reorder-btns">
+                                        <button class="reorder-ex-btn" data-routine="${a.id}" data-index="${o}" data-dir="up">${g("chevronUp")}</button>
+                                        <button class="reorder-ex-btn" data-routine="${a.id}" data-index="${o}" data-dir="down">${g("chevronDown")}</button>
+                                    </div>
+                                </div>
+                                <div class="ex-health-stats">
+                                    <span class="ex-clickable-val update-weight" data-routine="${a.id}" data-index="${o}">${s.weight||50}kg</span>
+                                    <span style="opacity: 0.3;">•</span>
+                                    <span class="ex-clickable-val update-reps" data-routine="${a.id}" data-index="${o}">${s.reps||10} reps</span>
+                                    <span style="opacity: 0.3;">•</span>
+                                    <span style="font-size: 11px; font-weight: 500;">4 series</span>
+                                    ${d?`<span style="opacity: 0.3;">•</span> ${d}`:""}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ex-health-actions">
+                            ${l?`
+                                <div class="exercise-done-badge-solid">
+                                    ${g("check","done-icon-solid")}
+                                </div>
+                            `:`
+                                <div class="exercise-log-actions">
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="1" title="Muy Pesado">😰</button>
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="3" title="Bien">💪</button>
+                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="5" title="Fácil">⚡</button>
+                                    <button class="delete-exercise-btn" data-routine="${a.id}" data-index="${o}" style="margin-left:8px; opacity:0.5;">${g("x")}</button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    `}).join("")}
+            </div>
+            <div class="add-ex-row" style="margin-top: var(--spacing-md);">
+                <button class="btn btn-secondary btn-sm add-ex-btn" data-id="${a.id}">
+                    ${g("plus")} Agregar Ejercicio
+                </button>
+            </div>
+          </div>
+        `).join("")}
+        
+        <div class="add-routine-card-placeholder">
+            <button class="btn btn-success add-routine-btn" id="add-routine-btn">
+                ${g("plus")} Nueva Rutina
+            </button>
+        </div>
+      </div>
+
+      <!-- METRICS: WEIGHT & FAT -->
+      <div class="section-divider">
+        <span class="section-title">Métricas de Cuerpo</span>
+      </div>
+
+      <div class="summary-grid" style="margin-bottom: var(--spacing-2xl);">
+        <div class="summary-item card clickable" id="log-weight-btn">
+          <div class="summary-value">${e.weightLogs.length>0?e.weightLogs[e.weightLogs.length-1].weight:"--"} kg</div>
+          <div class="summary-label">Peso Actual</div>
+        </div>
+        <div class="summary-item card clickable" id="log-fat-btn">
+          <div class="summary-value">${e.fatLogs.length>0&&e.fatLogs[e.fatLogs.length-1].fat||"--"} %</div>
+          <div class="summary-label">Grasa Corporal</div>
+        </div>
+        <div class="summary-item card clickable" id="set-weight-goal-btn">
+          <div class="summary-value">${e.weightGoal} kg</div>
+          <div class="summary-label">Objetivo Peso</div>
+        </div>
+        <div class="summary-item card clickable" id="set-fat-goal-btn">
+          <div class="summary-value">${e.fatGoal||"--"} %</div>
+          <div class="summary-label">Objetivo Grasa</div>
+        </div>
+      </div>
+      
+      <div class="card ai-calorie-card" style="margin-bottom: var(--spacing-2xl); display: flex; flex-direction: column; align-items: center;">
+          <div class="summary-value" style="font-size: 28px;">${lt(e)} kcal</div>
+          <div class="summary-label">Calorías Registradas Hoy</div>
+          <button class="btn btn-primary btn-sm" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: auto;">
+             ${g("camera")} Escanear Comida (AI)
+          </button>
+      </div>
+
+    </div>
+    `}function lt(n){const e=new Date().toDateString();return(n.calorieLogs||[]).filter(a=>new Date(a.date).toDateString()===e).reduce((a,t)=>a+(t.calories||0),0)}function ct(){var n,e,a,t,s,o;document.querySelectorAll(".add-ex-btn").forEach(i=>{i.addEventListener("click",async()=>{const r=i.dataset.id,l=await v.prompt("Nuevo Ejercicio","Nombre del ejercicio:");l&&(m.addExerciseToRoutine(r,{name:l}),v.toast("Ejercicio añadido"))})}),document.querySelectorAll(".rename-routine").forEach(i=>{i.addEventListener("click",async()=>{const r=i.dataset.id,l=i.dataset.current,d=await v.prompt("Editar Rutina","Nombre de la rutina:",l);d&&d!==l&&(m.renameRoutine(r,d),v.toast("Rutina renombrada"))})}),document.querySelectorAll(".delete-routine-btn").forEach(i=>{i.addEventListener("click",async()=>{const r=i.dataset.id;await v.confirm("¿Borrar Rutina?","Esta acción no se puede deshacer.","Eliminar","Cancelar")&&(m.deleteRoutine(r),v.toast("Rutina eliminada"))})}),document.querySelectorAll(".rename-exercise").forEach(i=>{i.addEventListener("click",async()=>{const r=i.dataset.routine,l=parseInt(i.dataset.index),d=i.dataset.current,c=await v.prompt("Renombrar Ejercicio","Nuevo nombre:",d);c&&c!==d&&(m.updateExercise(r,l,{name:c}),v.toast("Ejercicio renombrado"))})}),document.querySelectorAll(".delete-exercise-btn").forEach(i=>{i.addEventListener("click",async()=>{const r=i.dataset.routine,l=parseInt(i.dataset.index);await v.confirm("Eliminar Ejercicio","¿Quitar este ejercicio de la rutina?","Eliminar","Cancelar")&&(m.deleteExerciseFromRoutine(r,l),v.toast("Ejercicio eliminado"))})}),document.querySelectorAll(".reorder-routine-btn").forEach(i=>{i.addEventListener("click",r=>{r.stopPropagation();const l=parseInt(i.dataset.index),d=i.dataset.dir;m.reorderRoutine(l,d)})}),document.querySelectorAll(".reorder-ex-btn").forEach(i=>{i.addEventListener("click",r=>{r.stopPropagation();const l=i.dataset.routine,d=parseInt(i.dataset.index),c=i.dataset.dir;m.reorderExercise(l,d,c)})}),document.querySelectorAll(".update-weight").forEach(i=>{i.addEventListener("click",async r=>{r.stopPropagation();const l=i.dataset.routine,d=parseInt(i.dataset.index),c=[];for(let p=10;p<=150;p+=2.5)c.push(`${p}kg`);const u=await v.select("Seleccionar Peso","Elige el peso para este ejercicio:",c,4);if(u){const p=parseFloat(u.replace("kg",""));m.updateExercise(l,d,{weight:p}),v.toast("Peso actualizado")}})}),document.querySelectorAll(".update-reps").forEach(i=>{i.addEventListener("click",async r=>{r.stopPropagation();const l=i.dataset.routine,d=parseInt(i.dataset.index),c=[];for(let p=7;p<=20;p++)c.push(`${p} reps`);const u=await v.select("Seleccionar Reps","Elige las repeticiones objetivo:",c,4);if(u){const p=parseInt(u.replace(" reps",""));m.updateExercise(l,d,{reps:p}),v.toast("Reps actualizadas")}})}),document.querySelectorAll(".log-ex-rating-btn").forEach(i=>{i.addEventListener("click",r=>{r.stopPropagation();const l=i.dataset.rid,d=parseInt(i.dataset.idx),c=parseInt(i.dataset.rating);m.logExercise(l,d,c),v.toast("Registrado","success",800)})}),(n=document.getElementById("log-weight-btn"))==null||n.addEventListener("click",async()=>{const i=await v.prompt("Registrar Peso","Peso actual (kg):");i&&m.addWeightLog(i)}),(e=document.getElementById("log-fat-btn"))==null||e.addEventListener("click",async()=>{const i=await v.prompt("Registrar Grasa","Porcentaje de grasa (%):");i&&m.addFatLog(i)}),(a=document.getElementById("set-weight-goal-btn"))==null||a.addEventListener("click",async()=>{const i=m.getState().health.weightGoal,r=await v.prompt("Objetivo de Peso","Introduce tu peso ideal (kg):",i);r&&m.updateHealthGoal("weightGoal",parseFloat(r))}),(t=document.getElementById("set-fat-goal-btn"))==null||t.addEventListener("click",async()=>{const i=m.getState().health.fatGoal,r=await v.prompt("Objetivo de Grasa","Introduce tu porcentaje ideal (%):",i);r&&m.updateHealthGoal("fatGoal",parseFloat(r))}),(s=document.getElementById("ai-scan-photo"))==null||s.addEventListener("click",()=>{const i=document.createElement("input");i.type="file",i.accept="image/*",i.onchange=async l=>{var c;const d=l.target.files[0];if(d){if(!ge.hasKey()){if(await v.confirm("IA no configurada","Añade tu Gemini API Key en Ajustes.","Configurar","Simulación")){(c=document.querySelector('[data-nav="settings"]'))==null||c.click();return}v.toast("Usando simulación...","info"),r();return}try{v.toast("Analizando con Gemini...","info");const u=await ge.analyzeFood(d);await v.confirm("IA Detectada",`Identificado: "${u.name}" (${u.calories} kcal). ¿Registrar?`)&&(m.addCalorieLog(u.calories,`${u.name} (AI)`),v.toast("Calorías registradas"))}catch(u){v.alert("Error IA",u.message)}}};function r(){setTimeout(async()=>{const l={name:"Bowl Saludable",cals:450};await v.confirm("IA Simulada",`Detectado "${l.name}" con ${l.cals} kcal. ¿Registrar?`)&&(m.addCalorieLog(l.cals,l.name),v.toast("Registrado"))},1e3)}i.click()}),(o=document.getElementById("add-routine-btn"))==null||o.addEventListener("click",async()=>{const i=await v.prompt("Nueva Rutina","Nombre (ej: Pecho y Triceps):","Día X");i&&(m.saveRoutine({name:i,exercises:[]}),v.toast("Rutina creada"))})}const se=["#ffffff","#00D4AA","#7C3AED","#F59E0B","#EF4444","#3B82F6","#EC4899","#10B981","#A855F7","#64748B"];function dt(){const n=m.getState(),{goals:e}=n;return`
+    <div class="goals-page stagger-children" style="padding-bottom: 80px;">
+      <header class="page-header">
+        <h1 class="page-title">Metas y Enfoque</h1>
+        <p class="page-subtitle">Organiza tus prioridades con colores y objetivos dinámicos</p>
+      </header>
+
+      <div class="goals-grid-layout">
+        ${[{id:"day",label:"Hoy",icon:"zap",color:"#FFD700"},{id:"week",label:"Semana",icon:"calendar",color:"#00D4AA"},{id:"year",label:"Año 2026",icon:"target",color:"#7C3AED"},{id:"long",label:"Visión",icon:"trendingUp",color:"#EF4444"}].map(t=>{const s=e.filter(l=>l.timeframe===t.id),o=s.filter(l=>l.completed).length,i=s.length,r=i>0?o/i*100:0;return`
+          <div class="goals-column-premium">
+            <div class="goals-column-header-premium" style="--tf-color: ${t.color}">
+                <div class="column-header-main">
+                    <div class="column-icon" style="background: ${t.color}22; color: ${t.color}">${g(t.icon)}</div>
+                    <div class="column-info">
+                        <span class="column-title">${t.label}</span>
+                        <span class="column-stats">${o}/${i}</span>
+                    </div>
+                </div>
+                <div class="column-progress-bar">
+                    <div class="column-progress-fill" style="width: ${r}%; background: ${t.color}"></div>
+                </div>
+            </div>
+            
+            <div class="goals-scroll-area">
+                <div class="goals-list-premium" data-timeframe="${t.id}">
+                    ${ut(s,t.id)}
+                </div>
+            </div>
+
+            <div class="column-footer">
+                <div class="quick-add-goal-premium">
+                    <button class="quick-add-plus-btn">${g("plus")}</button>
+                    <input type="text" class="quick-add-input-premium" placeholder="Nueva meta..." data-timeframe="${t.id}">
+                </div>
+            </div>
+          </div>
+        `}).join("")}
+      </div>
+
+      <div class="advanced-goals-section" style="margin-top: var(--spacing-2xl); display: flex; justify-content: center;">
+         <div class="card premium-long-term-card" id="add-goal-primary" style="margin: 0;">
+            <div class="premium-card-content">
+                <div class="premium-icon-circle">${g("trendingUp")}</div>
+                <div class="premium-text" style="flex: 1;">
+                    <h3>Visión de Largo Plazo</h3>
+                    <p>Crea hitos estratégicos para tu futuro</p>
+                </div>
+                <button class="btn btn-primary btn-round">${g("plus")}</button>
+            </div>
+         </div>
+      </div>
+    </div>
+  `}function ut(n,e){return n.length===0?`
+            <div class="empty-column-state">
+                <div class="empty-column-icon" style="opacity: 0.2">${g("package")}</div>
+            </div>
+        `:[...n].sort((t,s)=>t.completed!==s.completed?t.completed?1:-1:t.order!==void 0&&s.order!==void 0?t.order-s.order:(s.createdAt||0)-(t.createdAt||0)).map(t=>{const s=t.subGoals&&t.subGoals.length>0,o=s?t.subGoals.filter(r=>r.completed).length/t.subGoals.length*100:0,i=t.color||"#ffffff";return`
+        <div class="goal-card-premium ${t.completed?"is-completed":""}" 
+             data-id="${t.id}" 
+             draggable="true"
+             style="border-left: 4px solid ${i};">
+            <div class="goal-card-body">
+                <div class="goal-checkbox-premium toggle-goal" data-id="${t.id}" style="border-color: ${i}aa; background: ${t.completed?i:"transparent"}">
+                    ${t.completed?g("check","check-icon-white"):""}
+                </div>
+                <div class="goal-main-content">
+                    <div class="goal-title-premium clickable-edit-goal" 
+                         data-id="${t.id}" 
+                         style="color: ${i}; font-weight: 700;">${t.title}</div>
+                    
+                    <div class="goal-header-row" style="margin-top: 8px;">
+                        <button class="action-btn-mini open-color-picker" data-id="${t.id}" style="background: ${i}22; color: ${i}; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; border: none; cursor: pointer;">COLOR</button>
+                        <div class="goal-actions-mini">
+                            <button class="action-btn-mini add-subgoal" data-id="${t.id}" title="Hito">${g("plus")}</button>
+                            <button class="action-btn-mini delete-goal" data-id="${t.id}" title="Borrar">${g("trash")}</button>
+                        </div>
+                    </div>
+                    
+                    ${s?`
+                        <div class="subgoals-list-premium">
+                            ${t.subGoals.map((r,l)=>`
+                                <div class="subgoal-item-premium ${r.completed?"sub-done":""} toggle-subgoal" data-id="${t.id}" data-idx="${l}">
+                                    <div class="sub-check" style="color: ${i}">${g(r.completed?"check":"plus","sub-check-svg")}</div>
+                                    <span class="sub-title" style="color: ${i}ee">${r.title}</span>
+                                </div>
+                            `).join("")}
+                            <div class="sub-progress-mini">
+                                <div class="sub-progress-fill" style="width: ${o}%; background: ${i}"></div>
+                            </div>
+                        </div>
+                    `:""}
+
+                    <div class="goal-color-dots color-selector-overlay hidden" id="colors-${t.id}">
+                        ${se.map(r=>`
+                            <div class="goal-color-dot ${r===i?"active":""} set-goal-color" 
+                                 data-id="${t.id}" 
+                                 data-color="${r}"
+                                 style="background: ${r}"></div>
+                        `).join("")}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `}).join("")}function pt(){var t;document.querySelectorAll(".toggle-goal").forEach(s=>{s.addEventListener("click",o=>{o.stopPropagation();const i=s.dataset.id;m.toggleGoal(i)})}),document.querySelectorAll(".open-color-picker").forEach(s=>{s.addEventListener("click",o=>{o.stopPropagation();const i=s.dataset.id,r=document.getElementById(`colors-${i}`);document.querySelectorAll(".color-selector-overlay").forEach(l=>{l.id!==`colors-${i}`&&l.classList.add("hidden")}),r==null||r.classList.toggle("hidden")})}),document.querySelectorAll(".set-goal-color").forEach(s=>{s.addEventListener("click",o=>{o.stopPropagation();const i=s.dataset.id,r=s.dataset.color;m.updateGoalColor(i,r),v.toast("Color aplicado")})}),document.querySelectorAll(".toggle-subgoal").forEach(s=>{s.addEventListener("click",o=>{o.stopPropagation();const i=s.dataset.id,r=parseInt(s.dataset.idx);m.toggleSubGoal(i,r)})}),document.querySelectorAll(".delete-goal").forEach(s=>{s.addEventListener("click",async o=>{o.stopPropagation(),await v.confirm("Eliminar Meta","¿Estás seguro?","BORRAR")&&(m.deleteGoal(s.dataset.id),v.toast("Meta eliminada"))})}),document.querySelectorAll(".add-subgoal").forEach(s=>{s.addEventListener("click",async o=>{o.stopPropagation();const i=s.dataset.id,r=await v.prompt("Nuevo Hito","¿Qué paso necesitas completar?");if(r){const d=[...m.getState().goals.find(c=>c.id===i).subGoals||[],{title:r,completed:!1}];m.updateGoal(i,{subGoals:d}),v.toast("Paso añadido")}})}),document.querySelectorAll(".clickable-edit-goal").forEach(s=>{s.addEventListener("click",async()=>{const o=s.dataset.id,i=s.textContent,r=await v.prompt("Editar Meta","Actualiza el texto:",i);r&&r!==i&&m.updateGoal(o,{title:r})})}),document.querySelectorAll(".quick-add-input-premium").forEach(s=>{s.addEventListener("keypress",o=>{if(o.key==="Enter"&&s.value.trim()){const i=s.dataset.timeframe;m.addGoal({title:s.value.trim(),timeframe:i,color:se[0]}),s.value="",v.toast("Creada")}})});const n=document.querySelectorAll(".goals-list-premium");let e=null;document.querySelectorAll(".goal-card-premium").forEach(s=>{s.addEventListener("dragstart",o=>{e=s.dataset.id,s.classList.add("dragging"),o.dataTransfer.effectAllowed="move"}),s.addEventListener("dragend",()=>{s.classList.remove("dragging"),document.querySelectorAll(".goals-list-premium").forEach(o=>o.classList.remove("drag-over"))})}),n.forEach(s=>{s.addEventListener("dragover",o=>{o.preventDefault(),s.classList.add("drag-over"),o.dataTransfer.dropEffect="move"}),s.addEventListener("dragleave",()=>{s.classList.remove("drag-over")}),s.addEventListener("drop",o=>{o.preventDefault(),s.classList.remove("drag-over");const i=s.dataset.timeframe,r=[...m.getState().goals],l=r.findIndex(p=>p.id===e);if(l===-1)return;const d={...r[l]};d.timeframe!==i&&(d.timeframe=i),r.splice(l,1);const c=a(s,o.clientY);if(c==null)r.push(d);else{const p=c.dataset.id,h=r.findIndex(w=>w.id===p);r.splice(h,0,d)}const u=r.map((p,h)=>({...p,order:h}));m.reorderGoals(u),v.toast("Orden actualizado")})});function a(s,o){return[...s.querySelectorAll(".goal-card-premium:not(.dragging)")].reduce((r,l)=>{const d=l.getBoundingClientRect(),c=o-d.top-d.height/2;return c<0&&c>r.offset?{offset:c,element:l}:r},{offset:Number.NEGATIVE_INFINITY}).element}(t=document.getElementById("add-goal-primary"))==null||t.addEventListener("click",async()=>{const s=await v.prompt("Meta Estratégica","¿Qué quieres lograr?");if(s){const o=[{value:"day",label:"Hoy"},{value:"week",label:"Semana"},{value:"year",label:"Año"},{value:"long",label:"Largo Plazo"}],i=await v.select("Plazo","Selecciona el horizonte:",o,1);i&&(m.addGoal({title:s,timeframe:i,color:se[1]}),v.toast("Meta estratégica guardada","success"))}}),document.querySelectorAll(".quick-add-plus-btn").forEach(s=>{s.addEventListener("click",()=>{const o=s.nextElementSibling;o&&o.focus()})})}let R=new Date;function mt(){const n=m.getState(),{events:e}=n;return`
+    <div class="calendar-page stagger-children" style="padding-bottom: 100px;">
+      <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">Agenda</h1>
+            <p class="page-subtitle">Gestiona tus eventos y recordatorios</p>
+        </div>
+        <button class="btn btn-primary" id="add-event-manual-btn" style="width: auto; padding: 10px 20px;">
+            ${g("plus")} Nuevo Evento
+        </button>
+      </header>
+
+      <div class="calendar-top-layout">
+        <!-- CALENDAR VIEW -->
+        <div class="card calendar-view-card">
+            <div class="calendar-mini-header">
+                <button class="icon-btn-navigation prev-month">${g("chevronLeft")}</button>
+                <span class="current-month">${gt()}</span>
+                <button class="icon-btn-navigation next-month">${g("chevronRight")}</button>
+            </div>
+            <div class="calendar-grid">
+                ${vt(e)}
+            </div>
+        </div>
+
+        <div class="events-list-container" style="margin-top: var(--spacing-xl);">
+            <div class="section-divider">
+                <span class="section-title">Próximos Eventos</span>
+            </div>
+            <div class="events-list">
+                ${e.length===0?`
+                    <div class="empty-state">
+                        ${g("calendar","empty-icon")}
+                        <p class="empty-description">No tienes eventos programados aún.</p>
+                    </div>
+                `:e.filter(a=>{const t=new Date(a.date);return t.getMonth()===R.getMonth()&&t.getFullYear()===R.getFullYear()}).sort((a,t)=>new Date(a.date)-new Date(t.date)).map(a=>`
+                    <div class="card event-card">
+                        <div class="event-icon-wrapper ${a.category||"event"}">
+                            ${g(yt(a.category||"event"))}
+                        </div>
+                        <div class="event-main-col" style="flex: 1;">
+                            <div class="event-title" style="font-weight: 700;">${a.title}</div>
+                            <div class="event-details-row">
+                                <span class="event-date-text">${ht(a.date)}</span>
+                                <span class="event-dot-separator"></span>
+                                <span class="event-time-text">${a.time}</span>
+                                ${a.repeat!=="none"?`<span class="event-repeat-tag">${bt(a.repeat)}</span>`:""}
+                            </div>
+                        </div>
+                        <button class="event-delete-btn" data-id="${a.id}">
+                            ${g("trash")}
+                        </button>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+      </div>
+    </div>
+  `}function vt(n){const e=R.getMonth(),a=R.getFullYear(),t=new Date().getDate(),s=new Date().getMonth()===e&&new Date().getFullYear()===a,o=new Date(a,e+1,0).getDate(),i=new Date(a,e,1).getDay(),r=["D","L","M","M","J","V","S"],l=new Set;n.forEach(c=>{const u=new Date(c.date);u.getMonth()===e&&u.getFullYear()===a&&l.add(u.getDate())});let d=r.map(c=>`<div class="calendar-day-label">${c}</div>`).join("");for(let c=0;c<i;c++)d+='<div class="calendar-day empty"></div>';for(let c=1;c<=o;c++){const u=s&&c===t,p=l.has(c);d+=`
+            <div class="calendar-day ${u?"today":""} ${p?"has-event":""}">
+                ${c}
+                ${p?'<span class="event-dot-indicator"></span>':""}
+            </div>
+        `}return d}function gt(){return`${["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][R.getMonth()]} ${R.getFullYear()}`}function ht(n){const e={day:"numeric",month:"short"};return new Date(n).toLocaleDateString("es-ES",e).toUpperCase()}function yt(n){switch(n){case"reminder":return"bell";case"meeting":return"users";default:return"calendar"}}function bt(n){return{daily:"Diario",weekly:"Semanal",monthly:"Mensual",yearly:"Anual"}[n]||""}function ft(){var n,e,a;(n=document.querySelector(".prev-month"))==null||n.addEventListener("click",()=>{R.setMonth(R.getMonth()-1),typeof window.reRender=="function"&&window.reRender()}),(e=document.querySelector(".next-month"))==null||e.addEventListener("click",()=>{R.setMonth(R.getMonth()+1),typeof window.reRender=="function"&&window.reRender()}),document.querySelectorAll(".event-delete-btn").forEach(t=>{t.addEventListener("click",async()=>{await v.confirm("¿Eliminar evento?","¿Borrar este evento de tu agenda?")&&(m.deleteEvent(t.dataset.id),v.toast("Evento eliminado"))})}),(a=document.getElementById("add-event-manual-btn"))==null||a.addEventListener("click",async()=>{const t=await v.prompt("Nuevo Evento","Título del evento:");if(!t)return;const s=await v.prompt("Fecha","Formato YYYY-MM-DD:",new Date().toISOString().split("T")[0]);if(!s)return;const o=await v.prompt("Hora","Formato HH:MM:","10:00");if(!o)return;const i=[{value:"event",label:"Evento"},{value:"reminder",label:"Recordatorio"},{value:"meeting",label:"Reunión"}],r=await v.select("Categoría","Tipo de evento:",i,0);m.addEvent({title:t,date:s,time:o,category:r||"event",repeat:"none"}),v.toast("Evento agendado","success")})}function wt(){const n=m.getState(),e=n.currencySymbol,a=n.livingExpenses,t=n.otherExpenses||[],s=n.liabilities,o=m.sumItems(a,"amount"),i=m.sumItems(t,"amount"),r=m.sumItems(s,"monthlyPayment"),l=o+i+r,d=[...(a||[]).map(c=>({...c,category:"livingExpense",typeLabel:"Gasto de Vida"})),...(t||[]).map(c=>({...c,category:"otherExpense",typeLabel:"Otro Gasto"})),...(s||[]).filter(c=>c.monthlyPayment>0).map(c=>({...c,amount:c.monthlyPayment,category:"liability",typeLabel:"Deuda / Hipoteca"}))].sort((c,u)=>u.amount-c.amount);return`
+    <div class="expenses-page stagger-children" style="padding-bottom: 80px;">
+      <header class="page-header">
+        <div class="header-row" style="display: flex; align-items: center; gap: var(--spacing-sm);">
+            <button class="back-btn" id="back-to-finance">
+                ${g("chevronLeft")}
+            </button>
+            <h1 class="page-title" style="margin-bottom: 0;">Gastos Mensuales</h1>
+        </div>
+        <p class="page-subtitle" style="margin-left: 40px;">Desglose detallado de tus salidas</p>
+      </header>
+      
+      <!-- PRIMARY METRIC -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Total Mensual</span>
+          ${g("creditCard","card-icon")}
+        </div>
+        <div class="stat-value negative text-center" style="font-size: 32px; margin: var(--spacing-md) 0;">
+            ${b(l,e)}
+        </div>
+        
+        <div class="expense-breakdown-row">
+            <div class="breakdown-item">
+                <div class="breakdown-val">${b(o,e)}</div>
+                <div class="breakdown-lbl">Vida</div>
+            </div>
+            <div class="breakdown-item">
+                <div class="breakdown-val">${b(r,e)}</div>
+                <div class="breakdown-lbl">Deuda</div>
+            </div>
+            <div class="breakdown-item">
+                <div class="breakdown-val">${b(i,e)}</div>
+                <div class="breakdown-lbl">Otros</div>
+            </div>
+        </div>
+      </div>
+
+      <!-- EXPENSES LIST -->
+      <div class="section-divider">
+        <span class="section-title">Detalle de Gastos</span>
+      </div>
+      
+      ${Et(d,n)}
+
+    </div>
+  `}function Et(n,e){if(n.length===0)return`
+            <div class="empty-state">
+                ${g("creditCard","empty-icon")}
+                <div class="empty-title">Sin gastos registrados</div>
+                <p class="empty-description">Tus gastos de vida, deudas y otros pagos aparecerán aquí.</p>
+            </div>
+        `;const a=e.currencySymbol;return`
+        <div class="asset-list">
+            ${n.map(t=>{const s=m.convertValue(t.amount,t.currency||"EUR"),o=kt(t.category);return`
+                <div class="asset-item expense-item" data-id="${t.id}" data-category="${t.category}">
+                    <div class="asset-icon-wrapper expense">
+                        ${g(o,"asset-icon")}
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">${t.name}</div>
+                        <div class="asset-details">${t.typeLabel}</div>
+                    </div>
+                    <div class="asset-value text-negative">
+                        -${b(s,a)}
+                    </div>
+                </div>
+                `}).join("")}
+        </div>
+    `}function kt(n){switch(n){case"liability":return"landmark";case"livingExpense":return"shoppingCart";default:return"creditCard"}}function xt(n){const e=document.getElementById("back-to-finance");e&&e.addEventListener("click",n),document.querySelectorAll(".expense-item").forEach(t=>{t.addEventListener("click",()=>{const s=t.dataset.id,o=t.dataset.category;xe(s,o)})})}const ie={passiveAsset:{label:"Ingresos Pasivos",icon:"building",types:[{value:"rental",label:"Inmueble en Renta"},{value:"stocks",label:"Acciones/Dividendos"},{value:"etf",label:"ETF/Fondos"},{value:"bonds",label:"Bonos"},{value:"crypto",label:"Crypto Staking"},{value:"business",label:"Negocio Pasivo"},{value:"royalties",label:"Regalías"},{value:"other",label:"Otro"}]},activeIncome:{label:"Ingreso Activo",icon:"briefcase",types:[{value:"salary",label:"Salario"},{value:"freelance",label:"Freelance"},{value:"business",label:"Negocio Activo"},{value:"other",label:"Otro"}]},livingExpense:{label:"Gasto de Vida",icon:"receipt",types:[{value:"rent",label:"Alquiler/Hipoteca"},{value:"utilities",label:"Servicios"},{value:"food",label:"Alimentación"},{value:"transport",label:"Transporte"},{value:"insurance",label:"Seguros"},{value:"health",label:"Salud"},{value:"other",label:"Otro"}]},investmentAsset:{label:"Activo de Inversión",icon:"trendingUp",types:[{value:"property",label:"Inmueble"},{value:"stocks",label:"Acciones"},{value:"etf",label:"ETF/Fondos"},{value:"crypto",label:"Criptomoneda"},{value:"cash",label:"Efectivo/Ahorro"},{value:"vehicle",label:"Vehículo"},{value:"collectibles",label:"Coleccionables"},{value:"other",label:"Otro"}]},liability:{label:"Pasivo/Deuda",icon:"creditCard",types:[{value:"mortgage",label:"Hipoteca"},{value:"loan",label:"Préstamo Personal"},{value:"carloan",label:"Préstamo Auto"},{value:"creditcard",label:"Tarjeta de Crédito"},{value:"studentloan",label:"Préstamo Estudiantil"},{value:"other",label:"Otra Deuda"}]},event:{label:"Evento/Cita",icon:"calendar",types:[{value:"event",label:"Evento Puntual"},{value:"reminder",label:"Recordatorio"},{value:"meeting",label:"Reunión"},{value:"other",label:"Otro"}]}},he=[{value:"EUR",label:"Euro (€)"},{value:"USD",label:"Dólar ($)"},{value:"CHF",label:"Franco Suizo (Fr)"},{value:"GBP",label:"Libra (£)"},{value:"AUD",label:"Dólar Aus. (A$)"},{value:"ARS",label:"Peso Arg. ($)"}];let $="passiveAsset";function ye(n="passiveAsset"){var a,t;$=n,(t=(a=ie[$])==null?void 0:a.types[0])!=null&&t.value;const e=document.createElement("div");e.className="modal-overlay",e.id="add-modal",e.innerHTML=St(),document.body.appendChild(e),requestAnimationFrame(()=>{e.classList.add("active")}),It()}function St(){return`
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2 class="modal-title">${$==="event"?"Agregar Evento":"Agregar Elemento"}</h2>
+        <button class="modal-close" id="modal-close">
+          ${g("x")}
+        </button>
+      </div>
+      
+      <!-- Category Selector (Only shown for non-event items) -->
+      ${$!=="event"?`
+      <div class="form-label" style="margin-top: var(--spacing-sm);">Categoría</div>
+      <div class="type-selector category-selector">
+        ${Object.entries(ie).map(([e,a])=>`
+          <div class="type-option ${e===$?"active":""}" data-category="${e}">
+            <div class="type-option-icon-wrapper">
+                ${g(a.icon)}
+            </div>
+            <div class="type-option-label">${a.label.split("/")[0]}</div>
+          </div>
+        `).join("")}
+      </div>`:""}
+      
+      <!-- Dynamic Form -->
+      <div id="form-container" style="margin-top: var(--spacing-lg);">
+        ${Ae()}
+      </div>
+    </div>
+  `}function Ae(){const n=ie[$],e=$==="investmentAsset"||$==="passiveAsset";if(e){const t=U.map(s=>({value:s.symbol,label:`${s.name} (${s.symbol})`}));[...he,...t]}let a="";return $==="passiveAsset"||$==="investmentAsset"?a=`
+      <div class="form-group" style="margin-bottom: var(--spacing-sm);">
+        <div style="display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: var(--radius-md);">
+          <button type="button" class="btn mode-toggle-btn active" id="mode-qty" style="flex: 1; padding: 6px; font-size: 11px; border-radius: 6px; background: var(--accent-primary); color: var(--bg-primary); border: none; font-weight: 600;">CANTIDAD</button>
+          <button type="button" class="btn mode-toggle-btn" id="mode-total" style="flex: 1; padding: 6px; font-size: 11px; border-radius: 6px; background: transparent; color: var(--text-secondary); border: none; font-weight: 600;">VALOR TOTAL (EUR)</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="label-qty">Cantidad</label>
+          <input type="number" class="form-input" id="input-qty" placeholder="0.00" step="any" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor en EUR</label>
+          <input type="number" class="form-input" id="input-value" placeholder="0.00" step="any" inputmode="decimal">
+        </div>
+      </div>
+      ${$==="passiveAsset"?`
+      <div class="form-group">
+          <label class="form-label">Ingreso Mensual (en EUR)</label>
+          <input type="number" class="form-input" id="input-monthly" placeholder="0" inputmode="numeric">
+      </div>`:""}
+    `:$==="activeIncome"||$==="livingExpense"?a=`
+      <div class="form-group">
+        <label class="form-label">Monto Mensual</label>
+        <input type="number" class="form-input" id="input-amount" placeholder="0" inputmode="numeric">
+      </div>
+    `:$==="liability"?a=`
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto Total</label>
+          <input type="number" class="form-input" id="input-amount" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pago Mensual</label>
+          <input type="number" class="form-input" id="input-monthly" placeholder="0" inputmode="numeric">
+        </div>
+      </div>
+    `:$==="event"&&(a=`
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-input" id="input-date" value="${new Date().toISOString().split("T")[0]}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora</label>
+          <input type="time" class="form-input" id="input-time" value="09:00">
+        </div>
+      </div>
+      <div class="form-group">
+          <label class="form-label">Repetición</label>
+          <select class="form-input form-select" id="input-repeat">
+              <option value="none">No repetir</option>
+              <option value="daily">Cada día</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensual</option>
+              <option value="yearly">Anual</option>
+          </select>
+      </div>
+    `),`
+    <div class="form-row">
+        <div class="form-group" style="flex: 1.5;">
+            <label class="form-label">Tipo</label>
+            <select class="form-input form-select" id="input-type">
+                ${n.types.map(t=>`<option value="${t.value}">${t.label}</option>`).join("")}
+            </select>
+        </div>
+        <div class="form-group" style="flex: 1.5;">
+            <label class="form-label">Activo/Moneda</label>
+            <select class="form-input form-select" id="input-currency">
+                <optgroup label="Divisas">
+                    ${he.map(t=>`<option value="${t.value}">${t.label}</option>`).join("")}
+                </optgroup>
+                ${e?`
+                <optgroup label="Mercados Reales (Auto-Price)">
+                    ${U.map(t=>`<option value="${t.symbol}">${t.name} (${t.symbol})</option>`).join("")}
+                </optgroup>
+                `:""}
+            </select>
+        </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-input" id="input-name" placeholder="Ej: Mi Wallet BTC">
+    </div>
+    
+    ${a}
+    
+    <div class="form-group">
+      <label class="form-label">Detalles (opcional)</label>
+      <input type="text" class="form-input" id="input-details" placeholder="Notas adicionales...">
+    </div>
+    
+    <button class="btn btn-primary" id="btn-save" style="margin-top: var(--spacing-md);">
+      ${g("plus")} Agregar
+    </button>
+  `}function It(){const n=document.getElementById("add-modal"),e=document.getElementById("modal-close");n.addEventListener("click",t=>{t.target===n&&ne()}),e.addEventListener("click",ne);const a=n.querySelectorAll(".category-selector .type-option");a.forEach(t=>{t.addEventListener("click",()=>{$=t.dataset.category,a.forEach(s=>s.classList.remove("active")),t.classList.add("active"),document.getElementById("form-container").innerHTML=Ae(),be()})}),be()}function be(){const n=document.getElementById("btn-save");n&&n.addEventListener("click",$t);const e=document.getElementById("mode-qty"),a=document.getElementById("mode-total"),t=document.getElementById("input-qty"),s=document.getElementById("input-value"),o=document.getElementById("input-currency"),i=document.getElementById("input-name");if(e&&a){const l=d=>{d==="qty"?(e.style.background="var(--accent-primary)",e.style.color="var(--bg-primary)",a.style.background="transparent",a.style.color="var(--text-secondary)",t.focus()):(a.style.background="var(--accent-primary)",a.style.color="var(--bg-primary)",e.style.background="transparent",e.style.color="var(--text-secondary)",s.focus())};e.addEventListener("click",()=>l("qty")),a.addEventListener("click",()=>l("total"))}const r=l=>{const d=m.getState().rates,c=o==null?void 0:o.value,u=d[c]||1;if(l==="qty"){const p=parseFloat(t.value)||0;s.value=(p*u).toFixed(2)}else{const p=parseFloat(s.value)||0;t.value=(p/u).toFixed(6)}};t==null||t.addEventListener("input",()=>r("qty")),s==null||s.addEventListener("input",()=>r("total")),o&&o.addEventListener("change",()=>{if(i&&!i.value){const l=o.options[o.selectedIndex].text;i.value=l.split(" (")[0]}r("qty")})}function $t(){var h,w,E,k,f,L,T,V,K,q,X,oe;const n=(w=(h=document.getElementById("input-name"))==null?void 0:h.value)==null?void 0:w.trim(),e=(E=document.getElementById("input-type"))==null?void 0:E.value,a=(k=document.getElementById("input-currency"))==null?void 0:k.value,t=(L=(f=document.getElementById("input-details"))==null?void 0:f.value)==null?void 0:L.trim(),s=parseFloat((T=document.getElementById("input-value"))==null?void 0:T.value)||0,o=document.getElementById("input-qty"),i=o?parseFloat(o.value)||0:s,r=parseFloat((V=document.getElementById("input-amount"))==null?void 0:V.value)||0,l=parseFloat((K=document.getElementById("input-monthly"))==null?void 0:K.value)||0,d=(q=document.getElementById("input-date"))==null?void 0:q.value,c=(X=document.getElementById("input-time"))==null?void 0:X.value,u=(oe=document.getElementById("input-repeat"))==null?void 0:oe.value;if(!n){v.alert("Campo Obligatorio","Por favor ingresa un nombre para el elemento.");return}const p={name:n,type:e,currency:a,details:t};switch($){case"passiveAsset":m.addPassiveAsset({...p,value:i,monthlyIncome:l});break;case"activeIncome":m.addActiveIncome({...p,amount:r});break;case"livingExpense":m.addLivingExpense({...p,amount:r});break;case"investmentAsset":m.addInvestmentAsset({...p,value:i});break;case"liability":m.addLiability({...p,amount:r,monthlyPayment:l});break;case"event":m.addEvent({title:n,date:d,time:c,repeat:u,category:e});break}ne()}function ne(){const n=document.getElementById("add-modal");n&&(n.classList.remove("active"),setTimeout(()=>n.remove(),300))}function At(){const n=x.isSetup(),e=x.isBioEnabled();return`
+    <div id="auth-shield" class="auth-shield">
+        <div class="auth-card stagger-children">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    ${g("lock","auth-icon")}
+                </div>
+                <h1 class="auth-title">${n?"Bienvenida de nuevo":"Configura tu Bóveda"}</h1>
+                <p class="auth-subtitle">${n?"Introduce tu contraseña para entrar":"Crea una contraseña maestra para proteger tus datos"}</p>
+            </div>
+
+            <div class="auth-form">
+                <div class="input-group">
+                    <input type="password" id="auth-password" class="form-input" placeholder="Contraseña maestra" autofocus>
+                </div>
+                
+                ${n?"":`
+                <div class="input-group">
+                    <input type="password" id="auth-confirm" class="form-input" placeholder="Confirmar contraseña">
+                </div>
+                `}
+
+                <button id="auth-submit-btn" class="btn btn-primary w-full">
+                    ${n?"Desbloquear":"Empezar"}
+                </button>
+
+                ${n&&e?`
+                <button id="auth-bio-btn" class="btn btn-secondary w-full" style="margin-top: var(--spacing-sm);">
+                    ${g("fingerprint")} Usar Huella
+                </button>
+                `:""}
+            </div>
+
+            <div class="auth-footer">
+                <p>Tus datos se encriptan localmente y nunca salen de tu dispositivo sin tu permiso.</p>
+            </div>
+        </div>
+    </div>
+    `}function Ct(n){var o;const e=document.getElementById("auth-submit-btn"),a=document.getElementById("auth-bio-btn"),t=document.getElementById("auth-password"),s=async()=>{const i=t.value,r=document.getElementById("auth-confirm"),l=x.isSetup();try{let d;if(l)d=await x.unlock(i);else{if(!i||i.length<4)throw new Error("Contraseña demasiado corta");if(i!==r.value)throw new Error("Las contraseñas no coinciden");d=await x.setup(i)}await m.loadEncrypted(d),n()}catch(d){v.alert("Error",d.message)}};e==null||e.addEventListener("click",s),t==null||t.addEventListener("keypress",i=>{i.key==="Enter"&&s()}),(o=document.getElementById("auth-confirm"))==null||o.addEventListener("keypress",i=>{i.key==="Enter"&&s()}),a==null||a.addEventListener("click",async()=>{try{const i=await x.unlockWithBiometrics();await m.loadEncrypted(i),n()}catch(i){v.alert("Identificación",i.message)}}),x.isBioEnabled()&&setTimeout(async()=>{try{const i=await x.unlockWithBiometrics();await m.loadEncrypted(i),n()}catch{console.log("Auto-bio failed or cancelled")}},500)}const Lt="modulepreload",Tt=function(n){return"/life-dashboard/"+n},fe={},we=function(e,a,t){let s=Promise.resolve();if(a&&a.length>0){document.getElementsByTagName("link");const i=document.querySelector("meta[property=csp-nonce]"),r=(i==null?void 0:i.nonce)||(i==null?void 0:i.getAttribute("nonce"));s=Promise.allSettled(a.map(l=>{if(l=Tt(l),l in fe)return;fe[l]=!0;const d=l.endsWith(".css"),c=d?'[rel="stylesheet"]':"";if(document.querySelector(`link[href="${l}"]${c}`))return;const u=document.createElement("link");if(u.rel=d?"stylesheet":Lt,d||(u.as="script"),u.crossOrigin="",u.href=l,r&&u.setAttribute("nonce",r),document.head.appendChild(u),d)return new Promise((p,h)=>{u.addEventListener("load",p),u.addEventListener("error",()=>h(new Error(`Unable to preload CSS for ${l}`)))})}))}function o(i){const r=new Event("vite:preloadError",{cancelable:!0});if(r.payload=i,window.dispatchEvent(r),!r.defaultPrevented)throw i}return s.then(i=>{for(const r of i||[])r.status==="rejected"&&o(r.reason);return e().catch(o)})};function Dt(){const n=x.isBioEnabled(),e=C.hasToken();return`
+    <div class="settings-page stagger-children">
+        <header class="page-header">
+            <h1 class="page-title">Configuración</h1>
+            <p class="page-subtitle">Privacidad, Seguridad y Sincronización</p>
+        </header>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${g("shield","section-icon")} Seguridad
+            </h2>
+            
+            <div class="card premium-settings-card">
+                <div class="settings-item-row">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Huella Dactilar / Biometría</div>
+                        <div class="settings-item-desc">Desbloqueo rápido y seguro sin contraseña.</div>
+                    </div>
+                    <label class="switch-premium">
+                        <input type="checkbox" id="toggle-bio" ${n?"checked":""}>
+                        <span class="slider-premium round"></span>
+                    </label>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="change-password-link">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Contraseña Maestra</div>
+                        <div class="settings-item-desc">Cambiar la clave de acceso de tu bóveda local.</div>
+                    </div>
+                    <div class="settings-action-icon">${g("chevronRight")}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${g("cloud","section-icon")} Nube & Sincronización
+            </h2>
+            
+            <div class="card premium-settings-card">
+                <div class="settings-item-row">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Google Drive</div>
+                        <div class="settings-item-desc">${e?'<span class="status-badge connected">Conectado</span>':'<span class="status-badge disconnected">No conectado</span>'} Sincroniza tu bóveda encriptada.</div>
+                    </div>
+                    <button class="btn-settings-action ${e?"active":""}" id="sync-drive-btn">
+                        ${g(e?"refreshCw":"link")}
+                        <span>${e?"Sincronizar":"Conectar"}</span>
+                    </button>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="import-backup-btn">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Importar Backup Manual</div>
+                        <div class="settings-item-desc">Restaurar desde archivo .bin exportado.</div>
+                    </div>
+                    <div class="settings-action-icon">${g("upload")}</div>
+                </div>
+                <input type="file" id="import-backup-input" accept=".bin" style="display: none;">
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="export-data-btn">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Exportar Backup Manual</div>
+                        <div class="settings-item-desc">Descargar archivo encriptado (.bin) para seguridad externa.</div>
+                    </div>
+                    <div class="settings-action-icon">${g("download")}</div>
+                </div>
+            </div>
+
+            <div class="settings-note">
+                ${g("lock","note-icon")} Todos tus datos se encriptan localmente con AES-256-GCM antes de ser enviados a tu Google Drive personal. Nadie más tiene acceso.
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${g("settings","section-icon")} Aplicación
+            </h2>
+            <div class="card premium-settings-card">
+                <div class="settings-item-row clickable" id="btn-logout">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label" style="color: var(--accent-danger);">Cerrar Sesión</div>
+                        <div class="settings-item-desc">Bloquear acceso y limpiar llaves de sesión.</div>
+                    </div>
+                    <div class="settings-action-icon" style="color: var(--accent-danger);">${g("logOut")}</div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="btn-force-update">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Forzar Actualización</div>
+                        <div class="settings-item-desc">Recargar la última versión de la App (limpia caché).</div>
+                    </div>
+                    <div class="settings-action-icon">${g("refreshCw")}</div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row clickable" id="btn-factory-reset">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label" style="color: var(--accent-danger);">Borrar todos los datos</div>
+                        <div class="settings-item-desc">Elimina permanentemente el almacenamiento local y reinicia la App.</div>
+                    </div>
+                    <div class="settings-action-icon" style="color: var(--accent-danger);">${g("trash")}</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2 class="settings-section-title">
+                ${g("zap","section-icon")} Inteligencia Artificial
+            </h2>
+            <div class="card premium-settings-card">
+                <div class="settings-item-row" style="cursor: default;">
+                    <div class="settings-item-info">
+                        <div class="settings-item-label">Gemini API Key</div>
+                        <div class="settings-item-desc">Necesaria para el análisis de comida con IA real.</div>
+                        <div style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-sm);">
+                            <input type="password" id="gemini-api-key" class="form-input" 
+                                placeholder="Tu API Key de Google AI" 
+                                value="${localStorage.getItem("life-dashboard/db_gemini_api_key")||""}"
+                                style="border-radius: var(--radius-sm); font-size: 13px;">
+                            <button class="btn btn-primary" id="btn-save-gemini" style="padding: 0 16px; min-width: auto; height: 38px;">
+                                Guardar
+                            </button>
+                        </div>
+                        <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
+                            Consigue tu llave gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-primary);">Google AI Studio</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="settings-footer">
+            <p>Life Dashboard Pro v1.0.62</p>
+            <p>© 2026 Privacy First Zero-Knowledge System</p>
+        </footer>
+    </div>
+    `}function Rt(){var t,s,o,i,r,l,d;(t=document.getElementById("toggle-bio"))==null||t.addEventListener("change",async c=>{if(c.target.checked){const p=await v.prompt("Activar Biometría","Introduce tu contraseña maestra para confirmar:","Tu contraseña","password");if(p)try{await x.registerBiometrics(p),v.toast("Biometría activada correctamente")}catch(h){await v.alert("Error",h.message),c.target.checked=!1}else c.target.checked=!1}else localStorage.setItem("life-dashboard/db_bio_enabled","false"),v.toast("Biometría desactivada","info")});const n=document.getElementById("btn-install-pwa");n&&setTimeout(()=>{if(window.deferredPrompt){const c=document.getElementById("install-pwa-card");c&&(c.style.display="block"),n.addEventListener("click",async()=>{if(!window.deferredPrompt)return;window.deferredPrompt.prompt();const{outcome:u}=await window.deferredPrompt.userChoice;if(u==="accepted"){v.toast("Instalando aplicación...");const p=document.getElementById("install-pwa-card");p&&(p.style.display="none")}window.deferredPrompt=null})}},1e3),(s=document.getElementById("sync-drive-btn"))==null||s.addEventListener("click",async()=>{const c=document.getElementById("sync-drive-btn"),u=C.hasToken(),p=c.innerHTML;try{if(c.innerHTML='<div class="loading-spinner-sm"></div>',c.style.pointerEvents="none",u){const h=x.getVaultKey();await C.pushData(m.getState(),h),v.toast("Bóveda actualizada en Drive")}else{await C.authenticate();const h=x.getVaultKey(),w=await C.pullData(h).catch(()=>null);if(w&&await v.confirm("Respaldo Encontrado","Hemos detectado una bóveda existente en Google Drive. ¿Qué deseas hacer con tus datos?","Recuperar de la Nube","Sobreescribir Nube")){m.setState(w),await m.saveState(),v.toast("Datos recuperados correctamente"),setTimeout(()=>window.location.reload(),800);return}await C.pushData(m.getState(),h),v.toast("Google Drive conectado y sincronizado")}typeof window.reRender=="function"&&window.reRender()}catch(h){if(console.error(h),h.message&&(h.message.includes("Contraseña incorrecta")||h.message.includes("corruptos"))){if(await v.confirm("Error de Decifrado","La contraseña actual no coincide con la del backup en la nube. ¿Deseas borrar los datos en Drive para empezar de cero?","Borrar Datos Nube","Cancelar"))try{await C.deleteBackup(),v.toast("Datos de Drive borrados");const E=x.getVaultKey();await C.pushData(m.getState(),E),v.toast("Google Drive sincronizado (Nueva Bóveda)")}catch{v.alert("Error","No se pudieron borrar los datos de Drive.")}}else v.alert("Error",h.message||(typeof h=="object"?JSON.stringify(h):"Error al conectar con Google"))}finally{c.innerHTML=p,c.style.pointerEvents="auto"}}),(o=document.getElementById("export-data-btn"))==null||o.addEventListener("click",async()=>{try{v.toast("Preparando archivo encriptado...","info");const c=m.getState(),u=x.getVaultKey(),{SecurityService:p}=await we(async()=>{const{SecurityService:L}=await Promise.resolve().then(()=>re);return{SecurityService:L}},void 0),h=await p.encrypt(c,u),w=new Blob([JSON.stringify(h)],{type:"application/octet-stream"}),E=URL.createObjectURL(w),k=document.createElement("a"),f=new Date().toISOString().split("T")[0];k.href=E,k.download=`life_dashboard_backup_${f}.bin`,document.body.appendChild(k),k.click(),document.body.removeChild(k),URL.revokeObjectURL(E),v.toast("Backup exportado correctamente")}catch(c){console.error("Export error:",c),v.alert("Error de Exportación","No se pudieron encriptar o descargar los datos.")}});const e=document.getElementById("import-backup-btn"),a=document.getElementById("import-backup-input");e==null||e.addEventListener("click",()=>{a==null||a.click()}),a==null||a.addEventListener("change",async c=>{var h;const u=(h=c.target.files)==null?void 0:h[0];if(!u)return;if(!await v.confirm("¿Importar Backup?","Esto sobreescribirá todos tus datos locales con los del archivo. ¿Deseas continuar?")){a.value="";return}try{const w=await u.text(),E=JSON.parse(w),k=x.getVaultKey(),{SecurityService:f}=await we(async()=>{const{SecurityService:T}=await Promise.resolve().then(()=>re);return{SecurityService:T}},void 0),L=await f.decrypt(E,k);if(L)m.setState(L),await m.saveState(),v.toast("Backup importado correctamente"),setTimeout(()=>window.location.reload(),1e3);else throw new Error("No se pudo descifrar el archivo")}catch(w){console.error("Import error:",w),v.alert("Error de Importación","El archivo no es válido o la contraseña no coincide con la usada para el backup.")}finally{a.value=""}}),(i=document.getElementById("btn-logout"))==null||i.addEventListener("click",async()=>{await v.confirm("¿Cerrar sesión?","El acceso quedará bloqueado hasta que introduzcas tu clave.")&&(x.logout(),window.location.reload())}),(r=document.getElementById("btn-force-update"))==null||r.addEventListener("click",async()=>{if(await v.confirm("¿Forzar Actualización?","Esto recargará la página y limpiará la caché para obtener la última versión.")){if(window.caches)try{const u=await caches.keys();for(let p of u)await caches.delete(p)}catch(u){console.error("Error clearing cache",u)}window.location.reload(!0)}}),(l=document.getElementById("btn-save-gemini"))==null||l.addEventListener("click",()=>{var u;const c=(u=document.getElementById("gemini-api-key"))==null?void 0:u.value;c!==void 0&&(localStorage.setItem("life-dashboard/db_gemini_api_key",c.trim()),v.toast("API Key de Gemini guardada"))}),(d=document.getElementById("btn-factory-reset"))==null||d.addEventListener("click",async()=>{if(await v.hardConfirm("Borrar todos los datos","Esta acción eliminará permanentemente todos tus activos, ingresos, agenda y configuraciones de este dispositivo.","BORRAR")){const u="life-dashboard/";if(Object.keys(localStorage).forEach(p=>{p.startsWith(u)&&localStorage.removeItem(p)}),Object.keys(sessionStorage).forEach(p=>{p.startsWith(u)&&sessionStorage.removeItem(p)}),window.indexedDB.databases&&(await window.indexedDB.databases()).forEach(h=>window.indexedDB.deleteDatabase(h.name)),navigator.serviceWorker){const p=await navigator.serviceWorker.getRegistrations();for(let h of p)h.unregister()}v.toast("Aplicación reseteada","info"),setTimeout(()=>{window.location.href=window.location.origin+"?reset="+Date.now()},1e3)}})}let B=localStorage.getItem("life-dashboard/app_current_page")||"finance",I=localStorage.getItem("life-dashboard/app_current_sub_page")||null;I==="null"&&(I=null);async function Ee(){C.init().catch(e=>console.warn("[Drive] Pre-init failed:",e));const n=x.getVaultKey();n?(await m.loadEncrypted(n),Ce()):Bt()}function Bt(){const n=document.getElementById("app");n.innerHTML=At(),Ct(()=>{Ce()})}function Ce(){const n=document.getElementById("app");n.innerHTML=`
+        <main id="main-content"></main>
+        <nav id="bottom-nav"></nav>
+    `,Le(),m.subscribe(()=>{D()}),window.reRender=()=>D(),Pt()}function Pt(){var t,s;const n=localStorage.getItem("life-dashboard/pwa_install_dismissed");if(n&&(Date.now()-parseInt(n))/864e5<7||window.matchMedia("(display-mode: standalone)").matches)return;const e=document.createElement("div");e.className="pwa-install-banner",e.id="pwa-install-banner",e.innerHTML=`
+        <div class="pwa-install-banner-icon">
+            ${g("download")}
+        </div>
+        <div class="pwa-install-banner-text">
+            <div class="pwa-install-banner-title">Instalar Life Dashboard</div>
+            <div class="pwa-install-banner-subtitle">Accede más rápido desde tu pantalla de inicio</div>
+        </div>
+        <button class="pwa-install-btn" id="pwa-banner-install">Instalar</button>
+        <button class="pwa-install-close" id="pwa-banner-close">
+            ${g("x")}
+        </button>
+    `,document.body.appendChild(e);const a=()=>{window.deferredPrompt&&setTimeout(()=>{e.classList.add("visible")},2e3)};a(),window.addEventListener("beforeinstallprompt",a),(t=document.getElementById("pwa-banner-install"))==null||t.addEventListener("click",async()=>{if(!window.deferredPrompt)return;window.deferredPrompt.prompt();const{outcome:o}=await window.deferredPrompt.userChoice;o==="accepted"&&(e.classList.remove("visible"),setTimeout(()=>e.remove(),500)),window.deferredPrompt=null}),(s=document.getElementById("pwa-banner-close"))==null||s.addEventListener("click",()=>{e.classList.remove("visible"),localStorage.setItem("life-dashboard/pwa_install_dismissed",Date.now().toString()),setTimeout(()=>e.remove(),500)})}function Le(){const n=document.getElementById("bottom-nav");n.innerHTML=de(B),ue(e=>{B=e,I=null,localStorage.setItem("life-dashboard/app_current_page",B),localStorage.setItem("life-dashboard/app_current_sub_page",I),_(),D(),n.innerHTML=de(B),ue(a=>{B=a,I=null,localStorage.setItem("life-dashboard/app_current_page",B),localStorage.setItem("life-dashboard/app_current_sub_page",I),_(),D(),Le()})}),Mt(),D()}function D(){const n=document.getElementById("main-content");if(!n)return;const e=n.scrollTop;if(I==="compound"){n.innerHTML=tt(),at(()=>{I=null,st(),_(),D()}),n.scrollTop=e;return}if(I==="expenses"){n.innerHTML=wt(),xt(()=>{I=null,_(),D()}),n.scrollTop=e;return}if(I==="market"){n.innerHTML=nt(),ot(()=>{I=null,_(),D()}),n.scrollTop=e;return}switch(B){case"finance":_(),n.innerHTML=me(),ve(),ke();break;case"goals":_(),n.innerHTML=dt(),pt();break;case"calendar":n.innerHTML=mt(),ft(),H();break;case"health":n.innerHTML=rt(),ct(),H();break;case"settings":n.innerHTML=Dt(),Rt(),H();break;default:_(),n.innerHTML=me(),ve(),ke()}requestAnimationFrame(()=>{n.scrollTop=e})}function ke(){const n=document.getElementById("open-compound");n&&n.addEventListener("click",()=>{I="compound",localStorage.setItem("life-dashboard/app_current_sub_page",I),H(),D()});const e=document.getElementById("open-markets");e&&e.addEventListener("click",()=>{I="market",localStorage.setItem("life-dashboard/app_current_sub_page",I),H(),D()});const a=document.getElementById("open-expenses");a&&a.addEventListener("click",()=>{I="expenses",localStorage.setItem("life-dashboard/app_current_sub_page",I),H(),D()})}function Mt(){const n=document.querySelector(".fab");n&&n.remove();const e=document.createElement("button");e.className="fab",e.id="main-fab",e.innerHTML=g("plus","fab-icon"),e.setAttribute("aria-label","Agregar"),e.addEventListener("click",async()=>{if(B==="calendar")ye("event");else if(B==="health"){const a=await ns.confirm("Registrar Métrica","¿Qué deseas registrar hoy?","Peso","Grasa");if(a===!0){const t=await ns.prompt("Registrar Peso","Ingresa tu peso actual en kg:","","number");t&&m.addWeightLog(t)}else if(a===!1){const t=await ns.prompt("Grasa Corporal","Ingresa tu % de grasa:","","number");t&&m.addFatLog(t)}}else ye()}),document.body.appendChild(e)}function H(){const n=document.getElementById("main-fab");n&&(n.style.display="none")}function _(){const n=document.getElementById("main-fab");n&&(n.style.display="flex")}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",Ee):Ee();window.addEventListener("beforeinstallprompt",n=>{n.preventDefault(),window.deferredPrompt=n,console.log("PWA Install Prompt ready");const e=document.getElementById("install-pwa-card");e&&(e.style.display="block")});
