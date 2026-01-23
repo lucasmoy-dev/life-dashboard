@@ -14,9 +14,9 @@ export default defineConfig({
                 theme_color: '#0f0f23',
                 background_color: '#0f0f23',
                 display: 'standalone',
-                orientation: 'portrait',
-                scope: '/',
-                start_url: '/',
+                orientation: 'any',
+                scope: '/life-dashboard/',
+                start_url: '/life-dashboard/',
                 icons: [
                     {
                         src: 'icons/icon-192.png',
@@ -37,7 +37,37 @@ export default defineConfig({
                 ]
             },
             workbox: {
-                globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}']
+                globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+                runtimeCaching: [
+                    {
+                        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'google-fonts-cache',
+                            expiration: {
+                                maxEntries: 10,
+                                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'gstatic-fonts-cache',
+                            expiration: {
+                                maxEntries: 10,
+                                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+                            },
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            }
+                        }
+                    }
+                ]
             }
         })
     ],
