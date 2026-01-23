@@ -72,35 +72,20 @@ class Store {
     }
 
     loadState() {
-        try {
-            // Priority 1: Check session vault key and encrypted storage
-            const vaultKey = AuthService.getVaultKey();
-            if (vaultKey) {
-                const encrypted = localStorage.getItem(ENCRYPTED_KEY);
-                if (encrypted) {
-                    // Note: We can't await in constructor. 
-                    // Full decryption happens in loadEncrypted() called by Auth process.
-                    return { ...defaultState };
-                }
-            }
-
-            // Priority 2: Standard unencrypted storage
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return { ...defaultState, ...parsed };
-            }
-        } catch (e) {
-            console.error('Failed to load state:', e);
-        }
+        // We only load state in two phases:
+        // 1. Static load of defaults (constructor)
+        // 2. Real load from encrypted storage (after Auth)
         return { ...defaultState };
     }
 
     /**
      * Re-hydrates the state from encrypted storage after authentication
+     * Also handles migration from unencrypted storage
      */
     async loadEncrypted(vaultKey) {
         const encrypted = localStorage.getItem(ENCRYPTED_KEY);
+        const unencrypted = localStorage.getItem(STORAGE_KEY);
+
         if (encrypted) {
             try {
                 const data = JSON.parse(encrypted);
@@ -110,6 +95,25 @@ class Store {
                 return true;
             } catch (e) {
                 console.error('Failed to decrypt state:', e);
+                return false;
+            }
+        } else if (unencrypted) {
+            // MIGRATION: Validated we have a key, so we take plain data, 
+            // encrypt it, save it to the new key, and destroy the old one.
+            try {
+                const parsed = JSON.parse(unencrypted);
+                this.state = { ...defaultState, ...parsed };
+
+                // Save it encrypted immediately
+                await this.saveState();
+
+                // Clean up the security leak
+                localStorage.removeItem(STORAGE_KEY);
+                console.log('Migration to encrypted storage successful');
+                this.notify();
+                return true;
+            } catch (e) {
+                console.error('Migration failed:', e);
                 return false;
             }
         }
@@ -131,8 +135,12 @@ class Store {
             if (vaultKey) {
                 const encrypted = await SecurityService.encrypt(this.state, vaultKey);
                 localStorage.setItem(ENCRYPTED_KEY, JSON.stringify(encrypted));
+                // Ensure plain text key is always gone if we are in encrypted mode
+                localStorage.removeItem(STORAGE_KEY);
             } else {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+                // If no key is present, we DON'T save to STORAGE_KEY anymore.
+                // This prevents "leaking" data in plain text while logged out.
+                console.warn('[Store] Attempted to save without Vault Key. Save skipped.');
             }
         } catch (e) {
             console.error('Failed to save state:', e);
