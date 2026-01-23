@@ -124,9 +124,6 @@ export function renderSettingsPage() {
                     <div class="settings-action-icon" style="color: var(--accent-danger);">${getIcon('trash')}</div>
                 </div>
             </div>
-
-                </div>
-            </div>
         </section>
 
         <section class="settings-section">
@@ -156,7 +153,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.35</p>
+            <p>Life Dashboard Pro v1.0.36</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
