@@ -79,6 +79,15 @@ export function openEditModal(id, category) {
   setupEditModalListeners(config);
 }
 
+const CURRENCIES = [
+  { value: 'EUR', label: 'Euro (€)' },
+  { value: 'USD', label: 'Dólar ($)' },
+  { value: 'CHF', label: 'Franco Suizo (Fr)' },
+  { value: 'GBP', label: 'Libra (£)' },
+  { value: 'AUD', label: 'Dólar Aus. (A$)' },
+  { value: 'ARS', label: 'Peso Arg. ($)' }
+];
+
 const ITEM_TYPES_MAP = {
   passive: [
     { value: 'rental', label: 'Inmueble en Renta' },
