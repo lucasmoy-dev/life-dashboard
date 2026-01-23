@@ -28,42 +28,50 @@ export function renderHealthPage() {
           <div class="summary-value">${health.fatLogs.length > 0 ? health.fatLogs[health.fatLogs.length - 1].fat : '--'} %</div>
           <div class="summary-label">Grasa Corporal</div>
         </div>
-      </div>
-
-      <!-- GOAL PROGRESS (BURNDOWN CHART SIMULATION) -->
-      <div class="card health-goal-card">
-        <div class="card-header">
-          <span class="card-title">Progreso hacia el Objetivo</span>
-          ${getIcon('target', 'card-icon')}
+        <div class="summary-item card">
+          <div class="summary-value">${health.weightGoal} kg</div>
+          <div class="summary-label">Objetivo Peso</div>
         </div>
-        <div class="burndown-container">
-            ${renderBurndownChart(health)}
-        </div>
-        <div class="goal-stats">
-            <div class="goal-stat">
-                <span class="goal-label">Objetivo:</span>
-                <span class="goal-value">${health.weightGoal} kg</span>
-            </div>
-            <div class="goal-stat">
-                <span class="goal-label">Pendiente:</span>
-                <span class="goal-value">${calculateRemainingWeight(health)} kg</span>
-            </div>
+        <div class="summary-item card">
+          <div class="summary-value">${calculateTodayCalories(health)}</div>
+          <div class="summary-label">Kcal Hoy</div>
         </div>
       </div>
 
-      <!-- AI CALORIE TRACKER -->
-      <div class="card ai-calorie-card">
-        <div class="card-header">
-          <span class="card-title">Contador de Calorías IA</span>
-          ${getIcon('zap', 'card-icon', 'style="color: var(--accent-tertiary)"')}
+      <div class="health-top-layout">
+        <!-- GOAL PROGRESS -->
+        <div class="card health-goal-card">
+          <div class="card-header">
+            <span class="card-title">Progreso hacia el Objetivo</span>
+            ${getIcon('target', 'card-icon')}
+          </div>
+          <div class="burndown-container">
+              ${renderBurndownChart(health)}
+          </div>
+          <div class="goal-stats" style="margin-top: var(--spacing-md); border-top: 1px solid rgba(255,255,255,0.05); padding-top: var(--spacing-sm);">
+              <div class="goal-stat">
+                  <span class="goal-label">Pendiente:</span>
+                  <span class="goal-value" style="color: var(--accent-primary); font-weight: 700;">${calculateRemainingWeight(health)} kg</span>
+              </div>
+          </div>
         </div>
-        <p class="card-desc">Sube una foto de tu comida y la IA detectará las calorías automáticamente.</p>
-        <button class="btn btn-primary ai-scan-btn" id="ai-scan-photo">
-            ${getIcon('camera')}
-            Anotar con Foto (IA)
-        </button>
-        <div class="calorie-brief">
-            Hoy: <strong>${calculateTodayCalories(health)}</strong> kcal
+
+        <!-- AI CALORIE TRACKER -->
+        <div class="card ai-calorie-card">
+          <div class="card-header">
+            <span class="card-title">Contador de Calorías IA</span>
+            ${getIcon('zap', 'card-icon', 'style="color: var(--accent-tertiary)"')}
+          </div>
+          <p class="card-desc">Análisis visual instantáneo de platos con IA real.</p>
+          <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; margin: var(--spacing-lg) 0;">
+            <button class="btn btn-primary ai-scan-btn" id="ai-scan-photo" style="width: 100%;">
+                ${getIcon('camera')}
+                Capturar Comida
+            </button>
+          </div>
+          <div class="calorie-brief" style="text-align: center; font-size: 13px; color: var(--text-muted);">
+              Consumo de hoy: <span style="color: var(--text-primary); font-weight: 600;">${calculateTodayCalories(health)} kcal</span>
+          </div>
         </div>
       </div>
 
@@ -96,9 +104,11 @@ export function renderHealthPage() {
           </div>
         `).join('')}
         
-        <button class="btn btn-secondary add-routine-btn" id="add-routine-btn">
-            ${getIcon('plus')} Agregar Nueva Rutina
-        </button>
+        <div class="add-routine-card-placeholder">
+            <button class="btn btn-secondary add-routine-btn" id="add-routine-btn">
+                ${getIcon('plus')} Nueva Rutina
+            </button>
+        </div>
       </div>
     </div>
   `;

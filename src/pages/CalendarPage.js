@@ -16,48 +16,48 @@ export function renderCalendarPage() {
         <p class="page-subtitle">Gestiona tus eventos y recordatorios</p>
       </header>
 
-      <!-- CALENDAR VIEW -->
-      <div class="card calendar-view-card">
-          <div class="calendar-mini-header">
-              <button class="icon-btn-navigation">${getIcon('chevronLeft')}</button>
-              <span class="current-month">${getCurrentMonthName()}</span>
-              <button class="icon-btn-navigation">${getIcon('chevronRight')}</button>
-          </div>
-          <div class="calendar-grid">
-              ${renderCalendarGrid(events)}
-          </div>
-      </div>
-
-      <div class="section-divider">
-        <span class="section-title">Próximos Eventos</span>
-      </div>
-
-      <div class="events-list">
-        ${events.length === 0 ? `
-            <div class="empty-state">
-                ${getIcon('calendar', 'empty-icon')}
-                <p class="empty-description">No tienes eventos programados aún.</p>
-                <p style="font-size: 11px; color: var(--text-muted);">Usa el botón + para agregar uno</p>
+      <div class="calendar-top-layout">
+        <!-- CALENDAR VIEW -->
+        <div class="card calendar-view-card">
+            <div class="calendar-mini-header">
+                <button class="icon-btn-navigation">${getIcon('chevronLeft')}</button>
+                <span class="current-month">${getCurrentMonthName()}</span>
+                <button class="icon-btn-navigation">${getIcon('chevronRight')}</button>
             </div>
-        ` : events.sort((a, b) => new Date(a.date) - new Date(b.date)).map(event => `
-            <div class="card event-card">
-                <div class="event-icon-wrapper ${event.category || 'event'}">
-                    ${getIcon(getEventIcon(event.category || 'event'))}
-                </div>
-                <div class="event-main-col">
-                    <div class="event-title">${event.title}</div>
-                    <div class="event-details-row">
-                        <span class="event-date-text">${formatDate(event.date)}</span>
-                        <span class="event-dot-separator"></span>
-                        <span class="event-time-text">${event.time}</span>
-                        ${event.repeat !== 'none' ? `<span class="event-repeat-tag">${getRepeatLabel(event.repeat)}</span>` : ''}
+            <div class="calendar-grid">
+                ${renderCalendarGrid(events)}
+            </div>
+        </div>
+
+        <div class="events-list-container">
+            <div class="events-list">
+                ${events.length === 0 ? `
+                    <div class="empty-state">
+                        ${getIcon('calendar', 'empty-icon')}
+                        <p class="empty-description">No tienes eventos programados aún.</p>
+                        <p style="font-size: 11px; color: var(--text-muted);">Usa el botón + para agregar uno</p>
                     </div>
-                </div>
-                <button class="event-delete-btn" data-id="${event.id}">
-                    ${getIcon('trash')}
-                </button>
+                ` : events.sort((a, b) => new Date(a.date) - new Date(b.date)).map(event => `
+                    <div class="card event-card">
+                        <div class="event-icon-wrapper ${event.category || 'event'}">
+                            ${getIcon(getEventIcon(event.category || 'event'))}
+                        </div>
+                        <div class="event-main-col">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-details-row">
+                                <span class="event-date-text">${formatDate(event.date)}</span>
+                                <span class="event-dot-separator"></span>
+                                <span class="event-time-text">${event.time}</span>
+                                ${event.repeat !== 'none' ? `<span class="event-repeat-tag">${getRepeatLabel(event.repeat)}</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="event-delete-btn" data-id="${event.id}">
+                            ${getIcon('trash')}
+                        </button>
+                    </div>
+                `).join('')}
             </div>
-        `).join('')}
+        </div>
       </div>
     </div>
   `;

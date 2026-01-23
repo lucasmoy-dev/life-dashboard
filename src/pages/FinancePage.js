@@ -86,7 +86,7 @@ export function renderFinancePage() {
           </div>
         </div>
         
-        <div class="card" style="margin-top: var(--spacing-md);">
+        <div class="card">
           <div class="card-header">
             <span class="card-title">Patrimonio Neto</span>
             ${getIcon('scale', 'card-icon')}

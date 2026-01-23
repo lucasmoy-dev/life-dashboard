@@ -24,25 +24,29 @@ export function renderGoalsPage() {
         <p class="page-subtitle">Organiza tus objetivos y tareas</p>
       </header>
 
-      ${timeframes.map(tf => `
-        <div class="section-divider">
-            <span class="section-title">
-                ${getIcon(tf.icon, 'section-title-icon')} ${tf.label}
-            </span>
-            <button class="add-goal-mini" data-timeframe="${tf.id}">
-                ${getIcon('plus')}
+      <div class="goals-container">
+        ${timeframes.slice(0, 3).map(tf => `
+          <div class="goals-column">
+            <div class="goals-column-header">
+                <div class="goals-column-logo">${getIcon(tf.icon)}</div>
+                <div class="goals-column-title">${tf.label}</div>
+            </div>
+            
+            <div class="goals-list" data-timeframe="${tf.id}">
+                ${renderGoalsForTimeframe(goals, tf.id)}
+            </div>
+
+            <button class="btn btn-secondary add-goal-mini" style="width: 100%; margin-top: var(--spacing-md);" data-timeframe="${tf.id}">
+                ${getIcon('plus')} Agregar meta
             </button>
-        </div>
+          </div>
+        `).join('')}
+      </div>
 
-        <div class="goals-list" data-timeframe="${tf.id}">
-            ${renderGoalsForTimeframe(goals, tf.id)}
-        </div>
-      `).join('')}
-
-      <div class="card add-goal-card-large" id="add-goal-primary">
+      <div class="card add-goal-card-large" id="add-goal-primary" style="margin-top: var(--spacing-2xl);">
           <div class="add-goal-prompt">
               ${getIcon('plus', 'add-icon')}
-              <span>Crear nueva meta estratégica</span>
+              <span>Crear nueva meta estratégica de largo plazo</span>
           </div>
       </div>
     </div>
