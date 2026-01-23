@@ -715,11 +715,17 @@ var Te=Object.defineProperty;var De=(n,e,a)=>e in n?Te(n,e,{enumerable:!0,config
                                 </div>
                             `:`
                                 <div class="exercise-log-actions">
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="1" title="Muy Pesado">😰</button>
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="3" title="Bien">💪</button>
-                                    <button class="btn-rating log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="5" title="Fácil">⚡</button>
-                                    <button class="delete-exercise-btn" data-routine="${a.id}" data-index="${o}" style="margin-left:8px; opacity:0.5;">${g("x")}</button>
+                                    <button class="btn-perf hard log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="1">
+                                        <span>😰</span> DURO
+                                    </button>
+                                    <button class="btn-perf good log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="3">
+                                        <span>💪</span> BIEN
+                                    </button>
+                                    <button class="btn-perf easy log-ex-rating-btn" data-rid="${a.id}" data-idx="${o}" data-rating="5">
+                                        <span>⚡</span> FÁCIL
+                                    </button>
                                 </div>
+                                <button class="delete-exercise-btn ex-delete-mini" data-routine="${a.id}" data-index="${o}" title="Quitar">${g("trash")}</button>
                             `}
                         </div>
                     </div>
@@ -1315,7 +1321,7 @@ var Te=Object.defineProperty;var De=(n,e,a)=>e in n?Te(n,e,{enumerable:!0,config
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.63</p>
+            <p>Life Dashboard Pro v1.0.64</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
