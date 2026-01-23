@@ -128,7 +128,8 @@ function renderModal() {
         </button>
       </div>
       
-      <!-- Category Selector -->
+      <!-- Category Selector (Only shown for non-event items) -->
+      ${currentCategory !== 'event' ? `
       <div class="form-label" style="margin-top: var(--spacing-sm);">Categoría</div>
       <div class="type-selector category-selector">
         ${Object.entries(ITEM_TYPES).map(([key, data]) => `
@@ -139,7 +140,7 @@ function renderModal() {
             <div class="type-option-label">${data.label.split('/')[0]}</div>
           </div>
         `).join('')}
-      </div>
+      </div>` : ''}
       
       <!-- Dynamic Form -->
       <div id="form-container" style="margin-top: var(--spacing-lg);">

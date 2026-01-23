@@ -153,6 +153,11 @@ export class DriveService {
         try {
             if (!this.accessToken) throw new Error('Cloud not connected');
 
+            // Ensure client is initialized before using Drive API
+            if (!gapi.client?.drive) {
+                await this.init();
+            }
+
             console.log('[Drive] Pulling data...');
             const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
             const fileName = 'dashboard_vault_v5.bin';
@@ -171,6 +176,33 @@ export class DriveService {
             return await SecurityService.decrypt(encryptedData, vaultKey);
         } catch (e) {
             console.error('[Drive] Pull failed:', e);
+            throw e;
+        }
+    }
+
+    /**
+     * Deletes the backup file from Google Drive
+     */
+    static async deleteBackup() {
+        try {
+            if (!this.accessToken) throw new Error('Cloud not connected');
+            if (!gapi.client?.drive) await this.init();
+
+            const folderId = await this.getOrCreateFolderPath('/backup/life-dashboard/');
+            const fileName = 'dashboard_vault_v5.bin';
+            const q = `name = '${fileName}' and '${folderId}' in parents and trashed = false`;
+            const listResp = await gapi.client.drive.files.list({ q, fields: 'files(id)' });
+            const existingFiles = listResp.result.files;
+
+            if (existingFiles.length > 0) {
+                const fileId = existingFiles[0].id;
+                await gapi.client.drive.files.delete({ fileId });
+                console.log('[Drive] Backup deleted successfully');
+                return true;
+            }
+            return false;
+        } catch (e) {
+            console.error('[Drive] Deletion failed:', e);
             throw e;
         }
     }

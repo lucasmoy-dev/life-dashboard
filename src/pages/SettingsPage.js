@@ -137,7 +137,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.27</p>
+            <p>Life Dashboard Pro v1.0.28</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -242,7 +242,31 @@ export function setupSettingsListeners() {
             if (typeof window.reRender === 'function') window.reRender();
         } catch (e) {
             console.error(e);
-            ns.alert('Error', e.message || 'Error al conectar con Google');
+
+            // Handle decryption failure specifically
+            if (e.message && (e.message.includes('Contraseña incorrecta') || e.message.includes('corruptos'))) {
+                const deleteRemote = await ns.confirm(
+                    'Error de Decifrado',
+                    'La contraseña actual no coincide con la del backup en la nube. ¿Deseas borrar los datos en Drive para empezar de cero?',
+                    'Borrar Datos Nube',
+                    'Cancelar'
+                );
+
+                if (deleteRemote) {
+                    try {
+                        await DriveService.deleteBackup();
+                        ns.toast('Datos de Drive borrados');
+                        // Retry push
+                        const vaultKey = AuthService.getVaultKey();
+                        await DriveService.pushData(store.getState(), vaultKey);
+                        ns.toast('Google Drive sincronizado (Nueva Bóveda)');
+                    } catch (err) {
+                        ns.alert('Error', 'No se pudieron borrar los datos de Drive.');
+                    }
+                }
+            } else {
+                ns.alert('Error', e.message || 'Error al conectar con Google');
+            }
         } finally {
             btn.innerHTML = originalContent;
             btn.style.pointerEvents = 'auto';
