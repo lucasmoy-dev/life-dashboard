@@ -3863,8 +3863,8 @@ input:checked+.slider-premium:before {
 .goal-card-premium {
     background: rgba(var(--bg-secondary-rgb), 0.4);
     border-radius: var(--radius-md);
-    margin-bottom: var(--spacing-sm);
-    padding: 10px 14px;
+    margin-bottom: 4px;
+    padding: 6px 10px;
     border: 1px solid rgba(255, 255, 255, 0.03);
     transition: all 0.3s ease;
 }
@@ -3880,16 +3880,16 @@ input:checked+.slider-premium:before {
 
 .goal-card-body {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 8px;
 }
 
 .goal-checkbox-premium {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    border-radius: 5px;
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 1px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -3906,8 +3906,8 @@ input:checked+.slider-premium:before {
 }
 
 .check-icon-white {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     color: white;
     stroke-width: 3;
 }
@@ -3926,13 +3926,14 @@ input:checked+.slider-premium:before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 4px;
+    margin-top: 2px;
 }
 
 .goal-title-premium {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
-    line-height: 1.4;
+    color: var(--text-primary);
+    line-height: 1.2;
     cursor: pointer;
     transition: filter 0.2s ease;
 }
@@ -3963,18 +3964,6 @@ input:checked+.slider-premium:before {
 
 .action-btn-mini:hover {
     color: var(--text-primary);
-}
-
-.goal-title-premium {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
-    line-height: 1.4;
-    cursor: pointer;
-}
-
-.is-completed .goal-title-premium {
-    text-decoration: line-through;
 }
 
 .subgoals-list-premium {
@@ -4306,4 +4295,44 @@ input:checked+.slider-premium:before {
     width: 14px;
     height: 14px;
     stroke-width: 3;
+}
+
+/* Health Sub-tabs */
+.health-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.health-tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.health-tab-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.health-tab-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.2);
 }

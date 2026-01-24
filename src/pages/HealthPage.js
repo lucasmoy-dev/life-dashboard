@@ -6,17 +6,40 @@ import { getIcon } from '../utils/icons.js';
 import { ns } from '../utils/notifications.js';
 import { GeminiService } from '../services/GeminiService.js';
 
+// Local state for tabs
+let currentTab = localStorage.getItem('life-dashboard/health_current_tab') || 'exercise';
+
 export function renderHealthPage() {
     const state = store.getState();
     const { health } = state;
 
     return `
-    <div class="health-page stagger-children" style="padding-bottom: 100px;">
+    <div class="health-page stagger-children" style="padding-bottom: 120px;">
       <header class="page-header">
         <h1 class="page-title">Salud y Forma Física</h1>
         <p class="page-subtitle">Rendimiento, métricas y nutrición</p>
       </header>
 
+      <!-- SUB-NAVIGATION TABS -->
+      <div class="health-tabs">
+        <button class="health-tab-btn ${currentTab === 'exercise' ? 'active' : ''}" data-tab="exercise">
+            ${getIcon('zap')} Ejercicio
+        </button>
+        <button class="health-tab-btn ${currentTab === 'diet' ? 'active' : ''}" data-tab="diet">
+            ${getIcon('apple')} Dieta
+        </button>
+      </div>
+
+      <div id="health-tab-content">
+        ${currentTab === 'exercise' ? renderExerciseTab(health) : renderDietTab(health)}
+      </div>
+
+    </div>
+    `;
+}
+
+function renderExerciseTab(health) {
+    return `
       <!-- FITNESS ROUTINES -->
       <div class="section-divider">
         <span class="section-title">Programas de Entrenamiento</span>
@@ -104,7 +127,11 @@ export function renderHealthPage() {
             </button>
         </div>
       </div>
+    `;
+}
 
+function renderDietTab(health) {
+    return `
       <!-- METRICS: WEIGHT & FAT -->
       <div class="section-divider">
         <span class="section-title">Métricas de Cuerpo</span>
@@ -136,8 +163,6 @@ export function renderHealthPage() {
              ${getIcon('camera')} Escanear Comida (AI)
           </button>
       </div>
-
-    </div>
     `;
 }
 
@@ -161,6 +186,25 @@ function calculateTodayCalories(health) {
 }
 
 export function setupHealthPageListeners() {
+    // Tab switching
+    document.querySelectorAll('.health-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            if (tab === currentTab) return;
+            currentTab = tab;
+            localStorage.setItem('life-dashboard/health_current_tab', tab);
+            if (typeof window.reRender === 'function') window.reRender();
+        });
+    });
+
+    if (currentTab === 'exercise') {
+        setupExerciseListeners();
+    } else {
+        setupDietListeners();
+    }
+}
+
+function setupExerciseListeners() {
     // Add Exercise
     document.querySelectorAll('.add-ex-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -371,30 +415,53 @@ export function setupHealthPageListeners() {
         });
     });
 
+    // Add routine
+    document.getElementById('add-routine-btn')?.addEventListener('click', async () => {
+        const name = await ns.prompt('Nueva Rutina', 'Nombre (ej: Pecho y Triceps):', 'Día X');
+        if (name) {
+            store.saveRoutine({ name, exercises: [] });
+            ns.toast('Rutina creada');
+        }
+    });
+}
+
+function setupDietListeners() {
     // Log weight
     document.getElementById('log-weight-btn')?.addEventListener('click', async () => {
         const weight = await ns.prompt('Registrar Peso', 'Peso actual (kg):');
-        if (weight) store.addWeightLog(weight);
+        if (weight) {
+            store.addWeightLog(parseFloat(weight));
+            ns.toast('Peso registrado');
+        }
     });
 
     // Log fat
     document.getElementById('log-fat-btn')?.addEventListener('click', async () => {
         const fat = await ns.prompt('Registrar Grasa', 'Porcentaje de grasa (%):');
-        if (fat) store.addFatLog(fat);
+        if (fat) {
+            store.addFatLog(parseFloat(fat));
+            ns.toast('Grasa registrada');
+        }
     });
 
     // Set weight goal
     document.getElementById('set-weight-goal-btn')?.addEventListener('click', async () => {
         const current = store.getState().health.weightGoal;
         const goal = await ns.prompt('Objetivo de Peso', 'Introduce tu peso ideal (kg):', current);
-        if (goal) store.updateHealthGoal('weightGoal', parseFloat(goal));
+        if (goal) {
+            store.updateHealthGoal('weightGoal', parseFloat(goal));
+            ns.toast('Objetivo actualizado');
+        }
     });
 
     // Set fat goal
     document.getElementById('set-fat-goal-btn')?.addEventListener('click', async () => {
         const current = store.getState().health.fatGoal;
         const goal = await ns.prompt('Objetivo de Grasa', 'Introduce tu porcentaje ideal (%):', current);
-        if (goal) store.updateHealthGoal('fatGoal', parseFloat(goal));
+        if (goal) {
+            store.updateHealthGoal('fatGoal', parseFloat(goal));
+            ns.toast('Objetivo actualizado');
+        }
     });
 
     // AI Scan Tool
@@ -432,23 +499,14 @@ export function setupHealthPageListeners() {
 
         function runSimulation() {
             setTimeout(async () => {
-                const detected = { name: 'Bowl Saludable', cals: 450 };
-                const confirmed = await ns.confirm('IA Simulada', `Detectado "${detected.name}" con ${detected.cals} kcal. ¿Registrar?`);
+                const detected = { name: 'Bowl Saludable', calories: 450 };
+                const confirmed = await ns.confirm('IA Simulada', `Detectado "${detected.name}" con ${detected.calories} kcal. ¿Registrar?`);
                 if (confirmed) {
-                    store.addCalorieLog(detected.cals, detected.name);
+                    store.addCalorieLog(detected.calories, detected.name);
                     ns.toast('Registrado');
                 }
             }, 1000);
         }
         input.click();
-    });
-
-    // Add routine
-    document.getElementById('add-routine-btn')?.addEventListener('click', async () => {
-        const name = await ns.prompt('Nueva Rutina', 'Nombre (ej: Pecho y Triceps):', 'Día X');
-        if (name) {
-            store.saveRoutine({ name, exercises: [] });
-            ns.toast('Rutina creada');
-        }
     });
 }
