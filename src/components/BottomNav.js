@@ -8,8 +8,8 @@ const NAV_ITEMS = [
     { id: 'finance', icon: 'wallet', label: 'Finanzas' },
     { id: 'health', icon: 'heart', label: 'Salud' },
     { id: 'goals', icon: 'target', label: 'Metas' },
-    { id: 'calendar', icon: 'calendar', label: 'Agenda' },
-    { id: 'settings', icon: 'settings', label: 'Ajustes' }
+    { id: 'social', icon: 'users', label: 'Social' },
+    { id: 'menu', icon: 'menu', label: 'Menú' }
 ];
 
 export function renderBottomNav(activeId = 'finance') {

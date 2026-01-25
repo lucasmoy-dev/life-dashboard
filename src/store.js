@@ -57,7 +57,19 @@ const defaultState = {
         { id: '1', title: 'Ejemplo de Meta Diaria', timeframe: 'day', completed: false, category: 'Personal' }
     ],
     // Agenda/Events
+    // Agenda/Events
     events: [],
+    // Social / People (Funnel)
+    social: {
+        people: [],
+        columns: [
+            { id: '1', name: 'Chat', color: '#3b82f6', order: 0 },
+            { id: '2', name: 'Phone', color: '#8b5cf6', order: 1 },
+            { id: '3', name: 'Meeting', color: '#10b981', order: 2 },
+            { id: '4', name: 'Closed', color: '#f59e0b', order: 3 }
+        ],
+        idealLeadProfile: '' // Markdown description of ideal lead
+    },
     // Last fetched market data
     lastMarketData: []
 };
@@ -613,6 +625,92 @@ class Store {
     scheduleNotification(event) {
         if (!("Notification" in window) || Notification.permission !== "granted") return;
         console.log(`Scheduling notification for: ${event.title} at ${event.time}`);
+    }
+
+    // ============================================
+    // SOCIAL METHODS
+    // ============================================
+    addPerson(person) {
+        const newPerson = { id: crypto.randomUUID(), createdAt: Date.now(), ...person };
+        this.setState({
+            social: {
+                ...this.state.social,
+                people: [...this.state.social.people, newPerson]
+            }
+        });
+        return newPerson;
+    }
+
+    updatePerson(id, updates) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                people: this.state.social.people.map(p => p.id === id ? { ...p, ...updates } : p)
+            }
+        });
+    }
+
+    deletePerson(id) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                people: this.state.social.people.filter(p => p.id !== id)
+            }
+        });
+    }
+
+    movePerson(id, newColumnId) {
+        this.updatePerson(id, { columnId: newColumnId });
+    }
+
+    addSocialColumn(column) {
+        const newCol = { id: crypto.randomUUID(), order: this.state.social.columns.length, ...column };
+        this.setState({
+            social: {
+                ...this.state.social,
+                columns: [...this.state.social.columns, newCol]
+            }
+        });
+    }
+
+    updateSocialColumn(id, updates) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                columns: this.state.social.columns.map(c => c.id === id ? { ...c, ...updates } : c)
+            }
+        });
+    }
+
+    deleteSocialColumn(id) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                // Also remove/move people in this column? For now just keep them orphaned or move to first?
+                // Better approach: move to '0' or first available, or just delete.
+                // Let's filter out the column.
+                columns: this.state.social.columns.filter(c => c.id !== id),
+                people: this.state.social.people.filter(p => p.columnId !== id) // Cascade delete or maybe we should move them? Let's cascade delete for now as per "simple" requirement or user logic. safe default.
+            }
+        });
+    }
+
+    reorderSocialColumns(newColumns) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                columns: newColumns
+            }
+        });
+    }
+
+    updateIdealLeadProfile(text) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                idealLeadProfile: text
+            }
+        });
     }
 }
 

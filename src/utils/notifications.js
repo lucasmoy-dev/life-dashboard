@@ -198,9 +198,9 @@ class NotificationService {
      */
     performance(title, message) {
         const options = [
-            { rating: 1, emoji: '😰', label: 'Duro' },
-            { rating: 3, emoji: '😐', label: 'Bien' },
-            { rating: 5, emoji: '😄', label: 'Fácil' }
+            { rating: 1, emoji: '🫣', label: 'Baja' },
+            { rating: 3, emoji: '😐', label: 'Media' },
+            { rating: 5, emoji: '😎', label: 'Alta' }
         ];
 
         return new Promise((resolve) => {
@@ -268,6 +268,24 @@ class NotificationService {
         overlay.offsetHeight;
         overlay.classList.add('active');
 
+        // Focus the last button (default action)
+        setTimeout(() => {
+            const btns = overlay.querySelectorAll('.modal-footer button');
+            if (btns.length > 0) btns[btns.length - 1].focus();
+        }, 100);
+
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                const isDangerous = buttons.some(b => b.type === 'danger');
+                if (!isDangerous) {
+                    overlay.removeEventListener('keydown', handleEscape);
+                    this._closeModal(overlay);
+                }
+            }
+        };
+        overlay.tabIndex = -1;
+        overlay.addEventListener('keydown', handleEscape);
+
         const modalBtnElements = overlay.querySelectorAll('.modal-footer button');
         modalBtnElements.forEach(el => {
             const index = el.dataset.index;
@@ -275,11 +293,16 @@ class NotificationService {
                 const btn = buttons[index];
                 el.addEventListener('click', async (e) => {
                     e.stopPropagation();
+                    if (el.classList.contains('btn-processing')) return;
+                    el.classList.add('btn-processing');
+                    el.style.pointerEvents = 'none';
                     try {
                         if (btn.onClick) await btn.onClick();
                         await this._closeModal(overlay);
                     } catch (err) {
                         console.error('Modal button action failed', err);
+                        el.classList.remove('btn-processing');
+                        el.style.pointerEvents = 'auto';
                     }
                 });
             }

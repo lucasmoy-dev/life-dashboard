@@ -100,14 +100,14 @@ function renderExerciseTab(health) {
                                     ${getIcon('check', 'done-icon-solid')}
                                 </div>
                             ` : `
-                                <button class="btn btn-secondary btn-icon-only log-stars-btn" data-rid="${routine.id}" data-idx="${exIdx}" style="width: 42px; height: 42px; border-radius: 12px;">
-                                    ${getIcon('check')}
+                                <button class="btn btn-secondary btn-icon-only log-stars-btn" data-rid="${routine.id}" data-idx="${exIdx}" title="Marcar como hecho">
+                                    <span style="font-size: 20px;">🏋️‍♂️</span>
                                 </button>
                             `}
                             <button class="icon-btn mobile-only ex-more-btn" data-routine="${routine.id}" data-index="${exIdx}" data-name="${ex.name}">
                                 ${getIcon('moreVertical')}
                             </button>
-                            <button class="delete-exercise-btn ex-delete-mini desktop-only" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar">${getIcon('trash')}</button>
+                            <button class="ex-delete-mini desktop-only" data-routine="${routine.id}" data-index="${exIdx}" title="Eliminar">${getIcon('trash')}</button>
                         </div>
                     </div>
                     `;

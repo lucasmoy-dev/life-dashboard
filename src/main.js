@@ -11,7 +11,10 @@ import { renderHealthPage, setupHealthPageListeners } from './pages/HealthPage.j
 import { renderGoalsPage, setupGoalsPageListeners } from './pages/GoalsPage.js';
 import { renderCalendarPage, setupCalendarPageListeners } from './pages/CalendarPage.js';
 import { renderExpensesPage, setupExpensesPageListeners } from './pages/ExpensesPage.js';
+import { renderMenuPage, setupMenuPageListeners } from './pages/MenuPage.js';
+import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.js';
 import { openAddModal } from './components/AddModal.js';
+import { openAddPersonModal } from './components/AddPersonModal.js';
 import { getIcon } from './utils/icons.js';
 import { DriveService } from './services/DriveService.js';
 
@@ -25,6 +28,16 @@ if (currentSubPage === 'null') currentSubPage = null;
 
 // Initialize app
 async function init() {
+    // Listen for custom modal events
+    window.addEventListener('open-add-modal', (e) => {
+        const type = e.detail?.type;
+        if (type === 'person') {
+            openAddPersonModal(e.detail?.person);
+        } else {
+            openAddModal(type);
+        }
+    });
+
     // Proactive Drive init
     DriveService.init().catch(e => console.warn('[Drive] Pre-init failed:', e));
 
@@ -240,17 +253,36 @@ function renderPage() {
             main.innerHTML = renderGoalsPage();
             setupGoalsPageListeners();
             break;
-        case 'calendar':
-            main.innerHTML = renderCalendarPage();
-            setupCalendarPageListeners();
+        case 'social':
             hideFAB();
+            main.innerHTML = renderSocialPage();
+            setupSocialPageListeners();
             break;
         case 'health':
             main.innerHTML = renderHealthPage();
             setupHealthPageListeners();
             hideFAB();
             break;
+        case 'menu':
+            main.innerHTML = renderMenuPage();
+            setupMenuPageListeners((page) => {
+                // Navigate internally
+                currentPage = page;
+                showFAB();
+                renderPage();
+            });
+            hideFAB();
+            break;
+        case 'calendar':
+            // Internal page from Menu
+            main.innerHTML = renderCalendarPage();
+            setupCalendarPageListeners();
+            showFAB(); // Calendar allows adding items
+
+            // Back button logic for sub-pages could be improved, but for now simple render
+            break;
         case 'settings':
+            // Internal page from Menu
             main.innerHTML = renderSettingsPage();
             setupSettingsListeners();
             hideFAB();
@@ -326,6 +358,8 @@ function addFAB() {
                 const fat = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa:', '', 'number');
                 if (fat) store.addFatLog(fat);
             }
+        } else if (currentPage === 'social') {
+            openAddPersonModal();
         } else {
             openAddModal();
         }
