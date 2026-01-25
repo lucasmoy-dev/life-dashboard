@@ -5,11 +5,11 @@
 import { getIcon } from '../utils/icons.js';
 
 const NAV_ITEMS = [
-    { id: 'finance', icon: 'wallet', label: 'Finanzas' },
-    { id: 'health', icon: 'heart', label: 'Salud' },
-    { id: 'goals', icon: 'target', label: 'Metas' },
-    { id: 'social', icon: 'users', label: 'Social' },
-    { id: 'menu', icon: 'menu', label: 'Menú' }
+    { id: 'finance', icon: 'wallet', label: 'Finance' },
+    { id: 'health', icon: 'heart', label: 'Health' },
+    { id: 'goals', icon: 'target', label: 'Goals' },
+    { id: 'social', icon: 'users', label: 'Connections' },
+    { id: 'menu', icon: 'menu', label: 'Menu' }
 ];
 
 export function renderBottomNav(activeId = 'finance') {

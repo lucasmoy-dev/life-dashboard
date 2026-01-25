@@ -350,12 +350,12 @@ function addFAB() {
             openAddModal('event');
         } else if (currentPage === 'health') {
             // Simplified prompt for health metrics
-            const options = await ns.confirm('Registrar Métrica', '¿Qué deseas registrar hoy?', 'Peso', 'Grasa');
+            const options = await ns.confirm('Log Metric', 'What do you want to record today?', 'Weight', 'Body Fat');
             if (options === true) {
-                const weight = await ns.prompt('Registrar Peso', 'Ingresa tu peso actual en kg:', '', 'number');
+                const weight = await ns.prompt('Log Weight', 'Enter your current weight in kg:', '', 'number');
                 if (weight) store.addWeightLog(weight);
             } else if (options === false) {
-                const fat = await ns.prompt('Grasa Corporal', 'Ingresa tu % de grasa:', '', 'number');
+                const fat = await ns.prompt('Body Fat', 'Enter your body fat %:', '', 'number');
                 if (fat) store.addFatLog(fat);
             }
         } else if (currentPage === 'social') {
@@ -368,12 +368,12 @@ function addFAB() {
     document.body.appendChild(fab);
 }
 
-function hideFAB() {
+export function hideFAB() {
     const fab = document.getElementById('main-fab');
     if (fab) fab.style.display = 'none';
 }
 
-function showFAB() {
+export function showFAB() {
     const fab = document.getElementById('main-fab');
     if (fab) fab.style.display = 'flex';
 }

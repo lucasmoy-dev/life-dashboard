@@ -68,10 +68,14 @@ const defaultState = {
             { id: '3', name: 'Meeting', color: '#10b981', order: 2 },
             { id: '4', name: 'Closed', color: '#f59e0b', order: 3 }
         ],
-        idealLeadProfile: '' // Markdown description of ideal lead
+        communications: [],
+        contactSources: ['Instagram', 'WhatsApp', 'Bumble', 'LinkedIn', 'Evento', 'Amigo', 'Otro'],
+        idealLeadProfile: ''
     },
     // Last fetched market data
-    lastMarketData: []
+    lastMarketData: [],
+    // Market favorites (asset IDs)
+    marketFavorites: []
 };
 
 class Store {
@@ -150,17 +154,17 @@ class Store {
         try {
             const vaultKey = AuthService.getVaultKey();
             if (vaultKey) {
+                console.log('[Store] Saving state to encrypted storage...');
                 const encrypted = await SecurityService.encrypt(this.state, vaultKey);
                 localStorage.setItem(ENCRYPTED_KEY, JSON.stringify(encrypted));
                 // Ensure plain text key is always gone if we are in encrypted mode
                 localStorage.removeItem(STORAGE_KEY);
+                console.log('[Store] State saved successfully.');
             } else {
-                // If no key is present, we DON'T save to STORAGE_KEY anymore.
-                // This prevents "leaking" data in plain text while logged out.
-                console.warn('[Store] Attempted to save without Vault Key. Save skipped.');
+                console.warn('[Store] Attempted to save without Vault Key. Save skipped. Data will be lost on refresh.');
             }
         } catch (e) {
-            console.error('Failed to save state:', e);
+            console.error('[Store] Failed to save state:', e);
         }
     }
 
@@ -253,6 +257,15 @@ class Store {
         } else {
             return this.addInvestmentAsset(asset);
         }
+    }
+
+    toggleMarketFavorite(assetId) {
+        const favorites = this.state.marketFavorites || [];
+        const newFavorites = favorites.includes(assetId)
+            ? favorites.filter(id => id !== assetId)
+            : [...favorites, assetId];
+
+        this.setState({ marketFavorites: newFavorites });
     }
 
     // Convert from ANY currency to display currency
@@ -709,6 +722,90 @@ class Store {
             social: {
                 ...this.state.social,
                 idealLeadProfile: text
+            }
+        });
+    }
+
+    // Communications Management
+    addCommunication(comm) {
+        const newComm = {
+            id: crypto.randomUUID(),
+            order: this.state.social.communications.length,
+            rating: 1,
+            lastUsed: {}, // mapping of personId -> timestamp
+            ...comm
+        };
+        this.setState({
+            social: {
+                ...this.state.social,
+                communications: [...this.state.social.communications, newComm]
+            }
+        });
+    }
+
+    updateCommunication(id, updates) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                communications: this.state.social.communications.map(c => c.id === id ? { ...c, ...updates } : c)
+            }
+        });
+    }
+
+    deleteCommunication(id) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                communications: this.state.social.communications.filter(c => c.id !== id)
+            }
+        });
+    }
+
+    reorderCommunications(newList) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                communications: newList
+            }
+        });
+    }
+
+    // Marks a communication as used for a specific person
+    logCommunicationUsed(commId, personId) {
+        const now = Date.now();
+        // Update the communication's lastUsed map
+        const comms = this.state.social.communications.map(c => {
+            if (c.id === commId) {
+                return {
+                    ...c,
+                    lastUsed: { ...(c.lastUsed || {}), [personId]: now }
+                };
+            }
+            return c;
+        });
+
+        // Also update the person's last contact date
+        const people = this.state.social.people.map(p => {
+            if (p.id === personId) {
+                return { ...p, lastContact: new Date(now).toISOString().split('T')[0] };
+            }
+            return p;
+        });
+
+        this.setState({
+            social: {
+                ...this.state.social,
+                communications: comms,
+                people: people
+            }
+        });
+    }
+
+    updateContactSources(sources) {
+        this.setState({
+            social: {
+                ...this.state.social,
+                contactSources: sources
             }
         });
     }

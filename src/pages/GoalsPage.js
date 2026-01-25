@@ -24,16 +24,16 @@ export function renderGoalsPage() {
     const { goals } = state;
 
     const timeframes = [
-        { id: 'day', label: 'Hoy', icon: 'zap', color: '#FFD700' },
-        { id: 'week', label: 'Semana', icon: 'calendar', color: '#00D4AA' },
-        { id: 'year', label: 'Año 2026', icon: 'target', color: '#7C3AED' },
-        { id: 'long', label: 'Largo Plazo', icon: 'trendingUp', color: '#EF4444' }
+        { id: 'day', label: 'Today', icon: 'zap', color: '#FFD700' },
+        { id: 'week', label: 'This Week', icon: 'calendar', color: '#00D4AA' },
+        { id: 'year', label: 'Year 2026', icon: 'target', color: '#7C3AED' },
+        { id: 'long', label: 'Long Term', icon: 'trendingUp', color: '#EF4444' }
     ];
 
     return `
     <div class="goals-page stagger-children" style="padding-bottom: 80px;">
       <header class="page-header">
-        <h1 class="page-title">Metas y Enfoque</h1>
+        <h1 class="page-title">Goals & Focus</h1>
         <p class="page-subtitle">Organiza tus prioridades con colores y objetivos dinámicos</p>
       </header>
 

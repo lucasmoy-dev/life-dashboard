@@ -6,11 +6,46 @@ import { store } from '../store.js';
 import { formatCurrency } from '../utils/format.js';
 import { getIcon } from '../utils/icons.js';
 import { openEditModal } from '../components/EditModal.js';
+import { renderMarketView, setupMarketViewListeners } from '../components/Finance/MarketView.js';
+import { hideFAB, showFAB } from '../main.js';
+
+let currentTab = 'summary'; // 'summary' | 'markets'
 
 export function renderFinancePage() {
   const state = store.getState();
   const symbol = state.currencySymbol;
 
+  // Handle FAB visibility on render
+  if (currentTab === 'markets') {
+    setTimeout(hideFAB, 0);
+  } else {
+    setTimeout(showFAB, 0);
+  }
+
+  return `
+    <div class="finance-page stagger-children" style="padding-bottom: 80px;">
+      <header class="page-header" style="margin-bottom: var(--spacing-md);">
+        <h1 class="page-title">Finance</h1>
+        <p class="page-subtitle">Tu panorama financiero</p>
+      </header>
+      
+      <!-- Finance Tabs (Segmented Control) -->
+      <div class="segmented-control">
+        <button class="segment-btn ${currentTab === 'summary' ? 'active' : ''}" id="tab-summary">
+            Summary
+        </button>
+        <button class="segment-btn ${currentTab === 'markets' ? 'active' : ''}" id="tab-markets">
+            Markets
+        </button>
+      </div>
+      
+      ${currentTab === 'summary' ? renderSummaryView(state, symbol) : renderMarketView()}
+      
+    </div>
+  `;
+}
+
+function renderSummaryView(state, symbol) {
   // Calculate all values (already converted to display currency by sumItems)
   const passiveIncome = store.getPassiveIncome();
   const livingExpenses = store.getLivingExpenses();
@@ -25,13 +60,7 @@ export function renderFinancePage() {
   const netIncome = store.getNetIncome();
 
   return `
-    <div class="finance-page stagger-children" style="padding-bottom: 80px;">
-      <header class="page-header">
-        <h1 class="page-title">Finanzas</h1>
-        <p class="page-subtitle">Tu panorama financiero</p>
-      </header>
-      
-      <div class="finance-top-grid">
+      <div class="finance-top-grid animate-fade-in">
         <!-- PRIMARY METRICS -->
         <div class="card">
           <div class="card-header">
@@ -176,44 +205,33 @@ export function renderFinancePage() {
 
       <!-- FOOTER BUTTONS & SETTINGS -->
       <div class="section-divider">
-        <span class="section-title">Opciones y Mercados</span>
+        <span class="section-title">Configuración</span>
       </div>
 
       <div class="footer-actions">
-        <button class="btn btn-secondary compound-link-btn" id="open-markets" style="margin-top: 0; background: linear-gradient(135deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 212, 170, 0.05) 100%); border: 1px solid rgba(0, 212, 170, 0.3);">
-            <div class="compound-link-content">
-                <div class="compound-link-icon" style="background: rgba(0, 212, 170, 0.3); color: var(--accent-primary);">
-                    ${getIcon('trendingUp')}
-                </div>
-                <div class="compound-link-text">
-                    <div class="compound-link-title">Mercados del Mundo</div>
-                    <div class="compound-link-subtitle">Índices, Stocks y Cripto</div>
-                </div>
-            </div>
-            <div class="compound-link-arrow">
-                ${getIcon('chevronRight')}
-            </div>
-        </button>
-
         <div class="card" style="margin-top: var(--spacing-md); padding: var(--spacing-md) !important;">
             <div class="footer-setting-row">
                 <div class="setting-info">
                     <div class="setting-label">Divisa de Visualización</div>
                     <div class="setting-desc">Toda la plataforma cambiará a esta moneda</div>
                 </div>
-                <select class="form-select" id="display-currency-select" style="width: auto; padding: 8px 32px 8px 12px; font-size: 14px; background-position: right 8px center;">
-                    <option value="EUR" ${state.currency === 'EUR' ? 'selected' : ''}>EUR (€)</option>
-                    <option value="USD" ${state.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
-                    <option value="CHF" ${state.currency === 'CHF' ? 'selected' : ''}>CHF (Fr)</option>
-                    <option value="GBP" ${state.currency === 'GBP' ? 'selected' : ''}>GBP (£)</option>
-                    <option value="AUD" ${state.currency === 'AUD' ? 'selected' : ''}>AUD (A$)</option>
-                    <option value="ARS" ${state.currency === 'ARS' ? 'selected' : ''}>ARS ($)</option>
-                    <option value="BTC" ${state.currency === 'BTC' ? 'selected' : ''}>BTC (₿)</option>
-                </select>
+                <div class="premium-select-wrapper">
+                    <select class="premium-select" id="display-currency-select">
+                        <option value="EUR" ${state.currency === 'EUR' ? 'selected' : ''}>EUR (€)</option>
+                        <option value="USD" ${state.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
+                        <option value="CHF" ${state.currency === 'CHF' ? 'selected' : ''}>CHF (Fr)</option>
+                        <option value="GBP" ${state.currency === 'GBP' ? 'selected' : ''}>GBP (£)</option>
+                        <option value="AUD" ${state.currency === 'AUD' ? 'selected' : ''}>AUD (A$)</option>
+                        <option value="ARS" ${state.currency === 'ARS' ? 'selected' : ''}>ARS ($)</option>
+                        <option value="BTC" ${state.currency === 'BTC' ? 'selected' : ''}>BTC (₿)</option>
+                    </select>
+                    <div class="premium-select-icon">
+                        ${getIcon('chevronDown', 'tiny-icon')}
+                    </div>
+                </div>
             </div>
         </div>
       </div>
-    </div>
   `;
 }
 
@@ -221,6 +239,7 @@ function renderAllocationChart(state) {
   const allAssets = [...state.passiveAssets, ...state.investmentAssets];
   const allLiabilities = state.liabilities;
   if (allAssets.length === 0) return '';
+
 
   const sectors = {
     'Bitcoin': { value: 0, color: '#f59e0b' },
@@ -439,6 +458,26 @@ function getAssetIcon(typeOrCurrency) {
 
 // Setup event listeners for asset items
 export function setupFinancePageListeners() {
+  // Tab Listeners
+  const tabSummary = document.getElementById('tab-summary');
+  const tabMarkets = document.getElementById('tab-markets');
+
+  if (tabSummary && tabMarkets) {
+    tabSummary.addEventListener('click', () => {
+      currentTab = 'summary';
+      window.reRender?.();
+    });
+    tabMarkets.addEventListener('click', () => {
+      currentTab = 'markets';
+      window.reRender?.();
+    });
+  }
+
+  if (currentTab === 'markets') {
+    setupMarketViewListeners();
+    return;
+  }
+
   const assetItems = document.querySelectorAll('.asset-item');
   assetItems.forEach(item => {
     item.addEventListener('click', () => {

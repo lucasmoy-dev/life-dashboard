@@ -16,7 +16,7 @@ export function renderHealthPage() {
     return `
     <div class="health-page stagger-children" style="padding-bottom: 120px;">
       <header class="page-header">
-        <h1 class="page-title">Salud y Forma Física</h1>
+        <h1 class="page-title">Health & Fitness</h1>
         <p class="page-subtitle">Rendimiento, métricas y nutrición</p>
       </header>
 

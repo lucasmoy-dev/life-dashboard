@@ -16,7 +16,7 @@ const CACHE_DURATION = 5 * 60 * 1000;
 let cache = {
     data: null,
     timestamp: 0,
-    currency: ''
+    currency: 'USD'
 };
 
 export const MARKET_ASSETS = [
@@ -82,14 +82,15 @@ export const MARKET_ASSETS = [
     { id: 'fetch-ai', name: 'Fetch.ai', symbol: 'FET', cgId: 'fetch-ai', category: ASSET_CATEGORIES.CRYPTO_ALTS, icon: 'bitcoin' }
 ];
 
-export async function fetchMarketData(vsCurrency = 'EUR') {
-    if (cache.data && (Date.now() - cache.timestamp < CACHE_DURATION) && cache.currency === vsCurrency) {
-        console.log('[MarketService] Returning cached data');
+export async function fetchMarketData() {
+    const vsCurrency = 'usd';
+
+    if (cache.data && (Date.now() - cache.timestamp < CACHE_DURATION)) {
         return cache.data;
     }
 
     const cgIds = MARKET_ASSETS.map(a => a.cgId).filter(Boolean).join(',');
-    const cgUrl = `${COINGECKO_BASE_URL}/coins/markets?vs_currency=${vsCurrency.toLowerCase()}&ids=${cgIds}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d,30d,1y`;
+    const cgUrl = `${COINGECKO_BASE_URL}/coins/markets?vs_currency=${vsCurrency}&ids=${cgIds}&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d,30d,1y`;
 
     try {
         const cgResponse = await fetch(cgUrl);
@@ -117,11 +118,9 @@ export async function fetchMarketData(vsCurrency = 'EUR') {
 
             if (asset.yahooId && yahooData[asset.yahooId]) {
                 const live = yahooData[asset.yahooId];
-                // Approximate conversion if not in USD
-                const priceFactor = vsCurrency === 'USD' ? 1 : 0.92;
                 return {
                     ...asset,
-                    price: live.price * priceFactor,
+                    price: live.price,
                     change24h: live.change24h,
                     change7d: live.change7d,
                     change30d: live.change30d,
@@ -135,7 +134,7 @@ export async function fetchMarketData(vsCurrency = 'EUR') {
         cache = {
             data: results,
             timestamp: Date.now(),
-            currency: vsCurrency
+            currency: 'USD'
         };
 
         return results;
@@ -149,8 +148,8 @@ async function fetchYahooFinanceDataProxy(assets) {
     const results = {};
     await Promise.all(assets.map(async (asset) => {
         try {
-            // Fetch 1y range to calculate 30d and 1y changes
-            const target = `https://query1.finance.yahoo.com/v8/finance/chart/${asset.yahooId}?interval=1d&range=1y`;
+            // range=1y has fewer points than range=2y, making it faster and more predictable for index mapping
+            const target = `https://query1.finance.yahoo.com/v8/finance/chart/${asset.yahooId}?interval=1d&range=2y`;
             const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
 
             const response = await fetch(proxyUrl);
@@ -162,28 +161,35 @@ async function fetchYahooFinanceDataProxy(assets) {
             const result = data.chart.result[0];
             const meta = result.meta;
             const indicators = result.indicators.quote[0].close;
-            const validPrices = indicators.filter(v => v !== null);
+            // Filter out nulls but keep the order
+            const validPrices = indicators.filter(v => v !== null && v > 0);
 
             if (validPrices.length === 0) throw new Error('No valid price data');
 
             const currentPrice = meta.regularMarketPrice || validPrices[validPrices.length - 1];
 
-            // 24h Change
-            const prevClose = meta.chartPreviousClose || (validPrices.length > 1 ? validPrices[validPrices.length - 2] : currentPrice);
-            const change24h = ((currentPrice - prevClose) / prevClose) * 100;
+            // ROBUST CALCULATION:
+            // We use the prices in the chart array for historical points.
+            // Yahoo v8 interval=1d results:
+            // validPrices[last] is usually the current active session or the last closed session.
+            // validPrices[last-1] is the previous trading session.
+
+            const lastIdx = validPrices.length - 1;
+
+            // 24h Change: (Current - Previous Session) / Previous Session
+            const pricePrev = validPrices[Math.max(0, lastIdx - 1)];
+            const change24h = ((currentPrice - pricePrev) / pricePrev) * 100;
 
             // 7d Change (approx 5 trading days)
-            const idx7d = Math.max(0, validPrices.length - 6);
-            const price7d = validPrices[idx7d];
+            const price7d = validPrices[Math.max(0, lastIdx - 5)];
             const change7d = ((currentPrice - price7d) / price7d) * 100;
 
-            // 30d Change (approx 21 trading days)
-            const idx30d = Math.max(0, validPrices.length - 22);
-            const price30d = validPrices[idx30d];
+            // 30d Change (approx 21-22 trading days)
+            const price30d = validPrices[Math.max(0, lastIdx - 21)];
             const change30d = ((currentPrice - price30d) / price30d) * 100;
 
-            // 1y Change (first valid price in the year chart)
-            const price1y = validPrices[0];
+            // 1y Change (approx 252 trading days)
+            const price1y = validPrices[Math.max(0, lastIdx - 252)];
             const change1y = ((currentPrice - price1y) / price1y) * 100;
 
             results[asset.yahooId] = {

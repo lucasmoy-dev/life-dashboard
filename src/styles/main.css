@@ -4552,12 +4552,26 @@ input:checked+.slider-premium:before {
 }
 
 .person-card {
-    padding: var(--spacing-md);
     background: var(--bg-card);
     border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.05);
     cursor: grab;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--spacing-sm);
+    padding: 0 !important;
+}
+
+.person-color-strip {
+    height: 3px;
+    width: 100%;
+}
+
+.person-card-content {
+    padding: 8px 12px;
 }
 
 .person-card:hover {
@@ -4774,4 +4788,349 @@ input:checked+.slider-premium:before {
 .col-opts-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+}
+
+/* Segmented Control (Tabs) */
+.segmented-control {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    max-width: 500px;
+    margin: 0 auto 20px auto;
+}
+
+.segment-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.segment-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+}
+
+/* Market Table Enhancements */
+.market-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.market-table th,
+.market-table td {
+    padding: 14px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.market-table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.market-table tr:last-child td {
+    border-bottom: none;
+}
+
+.market-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.asset-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.asset-symbol {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.asset-name-tiny {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.btn-favorite {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.btn-favorite svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-favorite.active {
+    color: #fbbf24;
+    transform: scale(1.1);
+}
+
+.btn-favorite.active svg {
+    fill: #fbbf24;
+}
+
+.btn-favorite:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fbbf24;
+}
+
+.market-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 12px;
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.market-controls-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.market-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.filter-chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-chip.active {
+    background: rgba(0, 212, 170, 0.1);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.market-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.market-status-fresh {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.market-status-cached {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+/* Capsule Toggle (USD/EUR) */
+.capsule-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.capsule-btn {
+    padding: 5px 14px;
+    border-radius: 30px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    letter-spacing: 0.5px;
+}
+
+.capsule-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* Finance Footer Settings */
+.footer-setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.setting-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.premium-select-wrapper {
+    position: relative;
+    min-width: 120px;
+}
+
+.premium-select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 16px;
+    padding-right: 40px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.premium-select:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.premium-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+}
+
+.premium-select-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .segmented-control {
+        max-width: 100%;
+    }
+
+    .market-controls-row {
+        padding: 6px 8px;
+        gap: 8px;
+        scrollbar-width: none;
+    }
+
+    .market-controls-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Mobile Full Screen Modals */
+    .modal-overlay.active .modal {
+        width: 100% !important;
+        height: 100dvh !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 20px !important;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding-top: env(safe-area-inset-top, 10px);
+    }
+}
+
+/* Social CRM Styles */
+.social-header-actions .btn {
+    width: auto;
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: 30px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.kanban-container {
+    display: flex;
+    overflow-x: auto;
+    gap: var(--spacing-lg);
+    padding-bottom: var(--spacing-xl);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kanban-column {
+    min-width: 280px;
+    width: 280px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+}
+
+.color-picker-input {
+    width: 100%;
+    height: 48px;
+    padding: 4px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
 }

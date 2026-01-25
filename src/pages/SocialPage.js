@@ -10,18 +10,24 @@ export function renderSocialPage() {
     <div class="social-page stagger-children">
         <header class="page-header" style="margin-bottom: var(--spacing-sm);">
             <div class="header-content">
-                <h1 class="page-title">Social CRM</h1>
+                <h1 class="page-title">Connections</h1>
                 <p class="page-subtitle">Gestiona tus relaciones y conexiones</p>
                 
                 <div class="social-header-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn-action-primary" id="add-person-btn">
-                        ${getIcon('users')} Nuevo Lead
+                    <button class="btn btn-primary" id="add-person-btn">
+                        ${getIcon('plus')} Lead
                     </button>
-                    <button class="btn-action-secondary" id="add-social-col-btn">
+                    <button class="btn btn-primary" id="add-social-col-btn" style="filter: hue-rotate(45deg);">
                         ${getIcon('plus')} Etapa
                     </button>
-                    <button class="btn-action-outline" id="ideal-lead-btn">
+                    <button class="btn btn-secondary" id="ideal-lead-btn">
                         ${getIcon('target')} Lead Ideal
+                    </button>
+                    <button class="btn btn-secondary" id="communications-mgr-btn">
+                        ${getIcon('messageSquare')} Comunicaciones
+                    </button>
+                    <button class="btn btn-secondary" id="contact-sources-btn">
+                        ${getIcon('users')} Fuentes
                     </button>
                 </div>
             </div>
@@ -52,127 +58,160 @@ export function renderSocialPage() {
 }
 
 function renderPersonCard(person) {
+    const daysSince = person.lastContact ? Math.floor((Date.now() - new Date(person.lastContact).getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const color = person.color || '#3b82f6';
+
     return `
     <div class="person-card glass-panel" draggable="true" data-id="${person.id}">
-        <div class="person-header">
-            <h3 class="person-name">${person.name}</h3>
-            ${person.rating ? `<span class="person-rating">★ ${person.rating}</span>` : ''}
-        </div>
-        ${person.city ? `<div class="person-detail text-muted">${getIcon('map', 'tiny-icon')} ${person.city}</div>` : ''}
-        <div class="person-tags">
-            ${person.source ? `<span class="tag">${person.source}</span>` : ''}
+        <div class="person-color-strip" style="background: ${color};"></div>
+        <div class="person-card-content">
+            <div class="person-header" style="margin-bottom: 2px;">
+                <h3 class="person-name" style="font-size: 14px;">${person.name}</h3>
+                ${person.rating ? `<span class="person-rating" style="font-size: 10px; font-weight: 800; color: var(--accent-tertiary);">★${person.rating}</span>` : ''}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="person-info-left" style="display: flex; align-items: center; gap: 8px;">
+                    <div class="person-detail text-muted" style="font-size: 10px; font-weight: 600;">
+                        ${daysSince !== null ? `${daysSince === 0 ? 'Hoy' : `Hace ${daysSince}d`}` : 'Contactar'}
+                    </div>
+                    ${person.source ? `<span class="tag" style="font-size: 8px; padding: 1px 4px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-muted);">${person.source}</span>` : ''}
+                </div>
+                <button class="icon-btn person-chat-btn" data-id="${person.id}" style="padding: 4px; background: none; color: var(--accent-primary); opacity: 0.7;">
+                    ${getIcon('messageSquare', 'tiny-icon')}
+                </button>
+            </div>
         </div>
     </div>
     `;
 }
 
 export function setupSocialPageListeners() {
-    const container = document.querySelector('.kanban-container');
+    // Only attach global listeners once
+    if (window.socialListenersAttached) return;
+    window.socialListenersAttached = true;
 
-    // Column Options - Event Delegation
-    // Listen on document to catch it even if rendered later or dynamically
+    // Delegate all clicks
     document.addEventListener('click', (e) => {
-        // Find if clicked element is or is inside .col-opts-btn
-        const btn = e.target.closest('.col-opts-btn');
-        if (btn) {
+        // Column Options
+        const optBtn = e.target.closest('.col-opts-btn');
+        if (optBtn) {
             e.preventDefault();
             e.stopPropagation();
-            const colId = btn.dataset.id;
-            console.log('Opening menu for column:', colId);
-            showColumnOptionsMenu(colId, btn);
+            showColumnOptionsMenu(optBtn.dataset.id, optBtn);
+            return;
+        }
+
+        // Add Stage
+        if (e.target.closest('#add-social-col-btn')) {
+            handleAddColumn();
+            return;
+        }
+
+        // Add Person
+        if (e.target.closest('#add-person-btn')) {
+            window.dispatchEvent(new CustomEvent('open-add-modal', { detail: { type: 'person' } }));
+            return;
+        }
+
+        // Ideal Lead
+        if (e.target.closest('#ideal-lead-btn')) {
+            handleIdealLead();
+            return;
+        }
+
+        // Communications Manager
+        if (e.target.closest('#communications-mgr-btn')) {
+            import('../components/CommunicationsModal.js').then(m => m.openCommunicationsModal());
+            return;
+        }
+
+        // Contact Sources Manager
+        if (e.target.closest('#contact-sources-btn')) {
+            handleContactSources();
+            return;
+        }
+
+        // Person Chat Icon (Select communication)
+        const chatBtn = e.target.closest('.person-chat-btn');
+        if (chatBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            import('../components/CommunicationsModal.js').then(m => m.openCommunicationsModal(chatBtn.dataset.id));
+            return;
+        }
+
+        // Person Card
+        const card = e.target.closest('.person-card');
+        if (card) {
+            openPersonDetails(card.dataset.id);
+            return;
         }
     });
 
-    // Add Column
-    document.getElementById('add-social-col-btn')?.addEventListener('click', async () => {
-        const name = await ns.prompt('Nueva Columna', 'Nombre de la etapa:');
-        if (name) {
-            store.addSocialColumn({ name, color: '#94a3b8' });
+    // Drag & Drop Delegation
+    document.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('.person-card');
+        if (card) {
+            e.dataTransfer.setData('text/plain', card.dataset.id);
+            card.classList.add('dragging');
         }
     });
 
-    // Add Person Button
-    document.getElementById('add-person-btn')?.addEventListener('click', () => {
-        window.dispatchEvent(new CustomEvent('open-add-modal', { detail: { type: 'person' } }));
+    document.addEventListener('dragend', (e) => {
+        const card = e.target.closest('.person-card');
+        if (card) card.classList.remove('dragging');
     });
 
-    // Ideal Lead Button
-    document.getElementById('ideal-lead-btn')?.addEventListener('click', async () => {
-        const currentProfile = store.getState().social.idealLeadProfile || '';
-        const newProfile = await openIdealLeadModal(currentProfile);
-        if (newProfile !== null) {
-            store.updateIdealLeadProfile(newProfile);
-            ns.toast('Perfil Ideal actualizado');
+    document.addEventListener('dragover', (e) => {
+        const zone = e.target.closest('.kanban-cards');
+        if (zone) {
+            e.preventDefault();
+            zone.classList.add('drag-over');
         }
     });
 
-    // Person Interactions (Click & Drag)
-    // Re-attaching these is fine as they are specific to the elements
-    // But for robustness, we can use delegation for click at least.
+    document.addEventListener('dragleave', (e) => {
+        const zone = e.target.closest('.kanban-cards');
+        if (zone) zone.classList.remove('drag-over');
+    });
 
-    // Using delegation for person click
-    if (container) {
-        container.addEventListener('click', (e) => {
-            const card = e.target.closest('.person-card');
-            if (card) {
-                // Check if we didn't click a button inside (unlikely but good practice)
-                openPersonDetails(card.dataset.id);
+    document.addEventListener('drop', (e) => {
+        const zone = e.target.closest('.kanban-cards');
+        if (zone) {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const personId = e.dataTransfer.getData('text/plain');
+            const newColId = zone.dataset.colId;
+            if (personId && newColId) {
+                store.movePerson(personId, newColId);
             }
-        });
+        }
+    });
+}
 
-        // For Drag and Drop, we still need direct listeners often, 
-        // but let's try to set them up on the container if possible? 
-        // No, standard API requires draggable elements to have listeners.
-        // So we keep the loop for Drag/Drop setup.
+async function handleAddColumn() {
+    const name = await ns.prompt('Etapa', 'Nombre de la etapa:');
+    if (name) {
+        store.addSocialColumn({ name, color: '#94a3b8' });
+        ns.toast('Etapa agregada correctamente', 'success');
+    }
+}
 
-        const attachDragListeners = () => {
-            document.querySelectorAll('.person-card').forEach(card => {
-                // Avoid double binding if possible, but setupSocialPageListeners is called on full re-render
-                card.draggable = true;
-
-                card.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', card.dataset.id);
-                    card.classList.add('dragging');
-                });
-
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                });
-            });
-
-            document.querySelectorAll('.kanban-cards').forEach(zone => {
-                zone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    zone.classList.add('drag-over');
-                });
-
-                zone.addEventListener('dragleave', () => {
-                    zone.classList.remove('drag-over');
-                });
-
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    zone.classList.remove('drag-over');
-                    const personId = e.dataTransfer.getData('text/plain');
-                    const newColId = zone.dataset.colId;
-                    if (personId && newColId) {
-                        store.movePerson(personId, newColId);
-                    }
-                });
-            });
-        };
-
-        attachDragListeners();
+async function handleIdealLead() {
+    const currentProfile = store.getState().social.idealLeadProfile || '';
+    const newProfile = await openIdealLeadModal(currentProfile);
+    if (newProfile !== null) {
+        store.updateIdealLeadProfile(newProfile);
+        ns.toast('Perfil Ideal actualizado');
     }
 }
 
 function openPersonDetails(personId) {
     const person = store.getState().social.people.find(p => p.id === personId);
     if (!person) return;
-
-    // Dispatch event to open edit modal
     window.dispatchEvent(new CustomEvent('open-add-modal', { detail: { type: 'person', person } }));
 }
+
 function openIdealLeadModal(currentText) {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
@@ -191,109 +230,67 @@ function openIdealLeadModal(currentText) {
                 </div>
             </div>
         `;
-
         document.body.appendChild(overlay);
-
-        const close = () => {
-            overlay.remove();
-            resolve(null);
-        };
-
+        const close = () => { overlay.remove(); resolve(null); };
         overlay.querySelector('.modal-close').addEventListener('click', close);
         overlay.querySelector('#save-ideal-lead').addEventListener('click', () => {
             const val = overlay.querySelector('#ideal-lead-text').value;
             overlay.remove();
             resolve(val);
         });
-
-        // Close on background click
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close();
-        });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     });
 }
 
-// Custom dropdown menu for column options
 function showColumnOptionsMenu(colId, triggerBtn) {
-    // Remove any existing menu
     document.querySelectorAll('.column-options-menu').forEach(m => m.remove());
-
     const col = store.getState().social.columns.find(c => c.id === colId);
     if (!col) return;
 
     const menu = document.createElement('div');
     menu.className = 'column-options-menu';
     menu.innerHTML = `
-        <button class="menu-item" data-action="edit">
-            ${getIcon('edit')} Editar Nombre
-        </button>
-        <button class="menu-item" data-action="color">
-            ${getIcon('palette')} Cambiar Color
-        </button>
+        <button class="menu-item" data-action="edit">${getIcon('edit')} Editar Nombre</button>
+        <button class="menu-item" data-action="color">${getIcon('palette')} Cambiar Color</button>
         <div class="menu-divider"></div>
-        <button class="menu-item" data-action="move_left">
-            ${getIcon('chevronLeft')} Mover Izquierda
-        </button>
-        <button class="menu-item" data-action="move_right">
-            ${getIcon('chevronRight')} Mover Derecha
-        </button>
+        <button class="menu-item" data-action="move_up">${getIcon('chevronUp')} Mover Arriba (Anterior)</button>
+        <button class="menu-item" data-action="move_down">${getIcon('chevronDown')} Mover Abajo (Siguiente)</button>
         <div class="menu-divider"></div>
-        <button class="menu-item menu-item-danger" data-action="delete">
-            ${getIcon('trash')} Eliminar Etapa
-        </button>
+        <button class="menu-item menu-item-danger" data-action="delete">${getIcon('trash')} Eliminar Etapa</button>
     `;
 
-    // Position the menu near the button
     const rect = triggerBtn.getBoundingClientRect();
     menu.style.position = 'fixed';
     menu.style.top = `${rect.bottom + 8}px`;
     menu.style.right = `${window.innerWidth - rect.right}px`;
     menu.style.zIndex = '9999';
-
     document.body.appendChild(menu);
 
-    // Handle menu actions
     menu.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', async () => {
             const action = item.dataset.action;
             menu.remove();
-
             if (action === 'edit') {
-                const newName = await ns.prompt('Nombre de Columna', 'Ingresa el nuevo nombre:', col.name);
-                if (newName && newName.trim()) {
-                    store.updateSocialColumn(colId, { name: newName.trim() });
-                }
+                const newName = await ns.prompt('Nombre de Columna', 'Nuevo nombre:', col.name);
+                if (newName?.trim()) store.updateSocialColumn(colId, { name: newName.trim() });
             } else if (action === 'color') {
-                const newColor = await ns.prompt('Color de Etapa', 'Ingresa un color en formato hex (#rrggbb):', col.color);
-                if (newColor && newColor.startsWith('#')) {
-                    store.updateSocialColumn(colId, { color: newColor });
-                }
+                const newColor = await openColorPickerModal(col.color);
+                if (newColor) store.updateSocialColumn(colId, { color: newColor });
             } else if (action === 'delete') {
-                const confirmed = await ns.confirm('Eliminar Etapa', `¿Eliminar "${col.name}"? Los leads en esta etapa también se eliminarán.`);
-                if (confirmed) {
-                    store.deleteSocialColumn(colId);
-                }
-            } else if (action === 'move_left' || action === 'move_right') {
+                if (await ns.confirm('Eliminar Etapa', `¿Eliminar "${col.name}"?`)) store.deleteSocialColumn(colId);
+            } else if (action === 'move_up' || action === 'move_down') {
                 const columns = [...store.getState().social.columns].sort((a, b) => a.order - b.order);
                 const idx = columns.findIndex(c => c.id === colId);
                 if (idx === -1) return;
-
-                if (action === 'move_left' && idx > 0) {
-                    const temp = columns[idx].order;
-                    columns[idx].order = columns[idx - 1].order;
-                    columns[idx - 1].order = temp;
-                    store.reorderSocialColumns(columns);
-                } else if (action === 'move_right' && idx < columns.length - 1) {
-                    const temp = columns[idx].order;
-                    columns[idx].order = columns[idx + 1].order;
-                    columns[idx + 1].order = temp;
+                const targetIdx = action === 'move_up' ? idx - 1 : idx + 1;
+                if (targetIdx >= 0 && targetIdx < columns.length) {
+                    [columns[idx].order, columns[targetIdx].order] = [columns[targetIdx].order, columns[idx].order];
                     store.reorderSocialColumns(columns);
                 }
             }
         });
     });
 
-    // Close menu when clicking outside
     const closeMenu = (e) => {
         if (!menu.contains(e.target) && e.target !== triggerBtn) {
             menu.remove();
@@ -301,4 +298,82 @@ function showColumnOptionsMenu(colId, triggerBtn) {
         }
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 10);
+}
+
+function openColorPickerModal(currentColor) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.style.zIndex = '99999';
+        overlay.innerHTML = `
+            <div class="modal" style="max-width: 320px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Color de Etapa</h2>
+                    <button class="modal-close">${getIcon('x')}</button>
+                </div>
+                <div style="padding: 20px 0;">
+                    <input type="color" id="stage-color-input" class="color-picker-input" value="${currentColor || '#3b82f6'}">
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 16px;">
+                        ${['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#84cc16', '#64748b', '#000000']
+                .map(c => `<div class="color-swatch" data-color="${c}" style="background:${c}; height:30px; border-radius:6px; cursor:pointer; border:2px solid ${currentColor === c ? 'white' : 'transparent'}"></div>`).join('')}
+                    </div>
+                    <button class="btn btn-primary w-full" id="save-stage-color" style="margin-top: 24px;">Aplicar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const close = () => { overlay.remove(); resolve(null); };
+        overlay.querySelector('.modal-close').addEventListener('click', close);
+        overlay.querySelectorAll('.color-swatch').forEach(s => s.addEventListener('click', () => {
+            overlay.querySelector('#stage-color-input').value = s.dataset.color;
+            overlay.querySelectorAll('.color-swatch').forEach(sw => sw.style.borderColor = 'transparent');
+            s.style.borderColor = 'white';
+        }));
+        overlay.querySelector('#save-stage-color').addEventListener('click', () => {
+            const val = overlay.querySelector('#stage-color-input').value;
+            overlay.remove();
+            resolve(val);
+        });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    });
+}
+
+async function handleContactSources() {
+    const { contactSources } = store.getState().social;
+    const result = await openContactSourcesModal(contactSources);
+    if (result) {
+        store.updateContactSources(result);
+        ns.toast('Fuentes de contacto actualizadas');
+    }
+}
+
+function openContactSourcesModal(currentSources) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay active';
+        overlay.style.zIndex = '9999';
+        overlay.innerHTML = `
+            <div class="modal" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2 class="modal-title">Fuentes de Contacto</h2>
+                    <button class="modal-close">${getIcon('x')}</button>
+                </div>
+                <div style="padding: 20px 0;">
+                    <p style="margin-bottom: 15px; font-size: 13px; color: var(--text-secondary);">Escribe las fuentes separadas por coma:</p>
+                    <textarea id="contact-sources-text" class="form-input" rows="4" placeholder="Ej: Instagram, WhatsApp, Amigo...">${currentSources.join(', ')}</textarea>
+                    <button class="btn btn-primary w-full" id="save-contact-sources" style="margin-top: 20px;">Guardar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const close = () => { overlay.remove(); resolve(null); };
+        overlay.querySelector('.modal-close').addEventListener('click', close);
+        overlay.querySelector('#save-contact-sources').addEventListener('click', () => {
+            const val = overlay.querySelector('#contact-sources-text').value;
+            const sources = val.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            overlay.remove();
+            resolve(sources);
+        });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    });
 }
