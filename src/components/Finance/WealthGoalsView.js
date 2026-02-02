@@ -8,11 +8,8 @@ import { ns } from '../../utils/notifications.js';
 
 export function renderWealthGoalsView() {
     const state = store.getState();
-    const { wealthGoals = [], inflationRate = 3.0, currencySymbol } = state;
+    const { wealthGoals = [], inflationRate = 3.0, projectionYears = 10, currencySymbol } = state;
     const currentExpenses = store.getAllExpenses();
-
-    // Projection years (could be a slider later)
-    const projectionYears = 10;
 
     // Calculate totals
     let totalPassiveIncomeMonthly = 0;
@@ -80,9 +77,15 @@ export function renderWealthGoalsView() {
                 </div>
             </div>
             
-            <div class="inflation-settings">
-                <label>Inflación anual: ${inflationRate}%</label>
-                <input type="range" id="inflation-slider" min="0" max="20" step="0.5" value="${inflationRate}">
+            <div class="projection-settings-row">
+                <div class="setting-item">
+                    <label>Años proyectados: ${projectionYears}</label>
+                    <input type="range" id="years-slider" min="1" max="50" step="1" value="${projectionYears}">
+                </div>
+                <div class="setting-item">
+                    <label>Inflación anual: ${inflationRate}%</label>
+                    <input type="range" id="inflation-slider" min="0" max="20" step="0.5" value="${inflationRate}">
+                </div>
             </div>
         </div>
 
@@ -166,14 +169,23 @@ export function setupWealthGoalsListeners() {
     });
 
     // Inflation slider
-    const slider = document.getElementById('inflation-slider');
-    if (slider) {
-        slider.addEventListener('input', (e) => {
+    const inflationSlider = document.getElementById('inflation-slider');
+    if (inflationSlider) {
+        inflationSlider.addEventListener('input', (e) => {
             store.setInflationRate(e.target.value);
-            // We don't re-render full page on slide to keep it smooth, 
-            // but for simple apps we do. Let's use a debounce or just re-render.
         });
-        slider.addEventListener('change', () => {
+        inflationSlider.addEventListener('change', () => {
+            window.reRender?.();
+        });
+    }
+
+    // Years slider
+    const yearsSlider = document.getElementById('years-slider');
+    if (yearsSlider) {
+        yearsSlider.addEventListener('input', (e) => {
+            store.setProjectionYears(e.target.value);
+        });
+        yearsSlider.addEventListener('change', () => {
             window.reRender?.();
         });
     }

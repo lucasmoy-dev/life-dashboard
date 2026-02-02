@@ -65,15 +65,20 @@ export function renderSettingsPage() {
                     </button>
                     ` : `
                     <div class="sync-actions-split">
-                        <button class="btn-settings-action active" id="upload-drive-btn">
-                            ${getIcon('chevronUp')}
+                        <button class="btn-settings-action" id="upload-drive-btn">
+                            ${getIcon('uploadCloud')}
                             <span>Subir a la Nube</span>
                         </button>
-                        <button class="btn-settings-action active download-btn" id="download-drive-btn">
-                            ${getIcon('chevronDown')}
+                        <button class="btn-settings-action" id="download-drive-btn">
+                            ${getIcon('downloadCloud')}
                             <span>Bajar de la Nube</span>
                         </button>
                     </div>
+                    ${hasCloudSync ? `
+                    <p class="settings-item-desc" style="margin-top: var(--spacing-md); text-align: center; opacity: 0.8; width: 100%;">
+                        Úsalo para mover tus datos entre dispositivos manualmente. 
+                        <strong>No se sincroniza solo.</strong>
+                    </p>` : ''}
                     `}
                 </div>
 
@@ -166,7 +171,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.77</p>
+            <p>Life Dashboard Pro v1.0.78</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -272,16 +277,16 @@ export function setupSettingsListeners() {
             const remoteState = await DriveService.pullData(vaultKey);
 
             if (remoteState) {
-                store.setState(remoteState);
+                store.resetState(remoteState);
                 await store.saveState();
-                ns.toast('Datos descargados correctamente');
-                setTimeout(() => window.location.reload(), 800);
+                ns.toast('Datos descargados correctamente', 'success');
+                setTimeout(() => window.location.reload(), 1000);
             } else {
-                ns.toast('No se encontró respaldo en Drive', 'info');
+                ns.alert('Error', 'No se encontró una bóveda válida en Drive o el descifrado falló (¿Contraseña incorrecta?)');
             }
         } catch (e) {
-            console.error(e);
-            ns.alert('Error al descargar', e.message);
+            console.error('[Settings] Download failed:', e);
+            ns.alert('Error de Descarga', e.message || 'Error desconocido al bajar datos');
         } finally {
             btn.innerHTML = originalContent;
             btn.style.pointerEvents = 'auto';

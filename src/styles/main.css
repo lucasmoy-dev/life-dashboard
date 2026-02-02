@@ -5140,25 +5140,73 @@ input:checked+.slider-premium:before {
    ============================================ */
 .sync-actions-split {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
     width: 100%;
+    margin-top: var(--spacing-sm);
 }
 
 .sync-actions-split .btn-settings-action {
-    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    padding: 12px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg) var(--spacing-md);
+    height: auto;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-normal);
 }
 
-.sync-actions-split .download-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    color: var(--text-primary) !important;
+.sync-actions-split .btn-settings-action svg {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
 }
 
-.sync-actions-split .download-btn:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
+.sync-actions-split .btn-settings-action span {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Upload Style */
+#upload-drive-btn {
+    color: var(--accent-primary);
+    background: linear-gradient(145deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 212, 170, 0.02) 100%);
+    border-color: rgba(0, 212, 170, 0.2);
+}
+
+#upload-drive-btn:hover {
+    background: linear-gradient(145deg, rgba(0, 212, 170, 0.15) 0%, rgba(0, 212, 170, 0.05) 100%);
+    border-color: rgba(0, 212, 170, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.15);
+}
+
+/* Download Style */
+#download-drive-btn {
+    color: var(--accent-secondary);
+    background: linear-gradient(145deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.02) 100%);
+    border-color: rgba(124, 58, 237, 0.2);
+}
+
+#download-drive-btn:hover {
+    background: linear-gradient(145deg, rgba(124, 58, 237, 0.15) 0%, rgba(124, 58, 237, 0.05) 100%);
+    border-color: rgba(124, 58, 237, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.15);
+}
+
+.sync-actions-split .btn-settings-action:active {
+    transform: translateY(0) scale(0.98);
+}
+
+@media (max-width: 400px) {
+    .sync-actions-split {
+        flex-direction: column;
+    }
 }
 
 /* ============================================
@@ -5214,20 +5262,34 @@ input:checked+.slider-premium:before {
     padding-top: var(--spacing-sm);
 }
 
-.inflation-settings {
+.projection-settings-row {
     margin-top: var(--spacing-lg);
     padding-top: var(--spacing-md);
     border-top: 1px dashed rgba(255, 255, 255, 0.1);
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-lg);
 }
 
-.inflation-settings label {
+.setting-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.setting-item label {
     font-size: 13px;
     color: var(--text-secondary);
 }
 
+@media (max-width: 480px) {
+    .projection-settings-row {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+}
+
+#years-slider,
 #inflation-slider {
     width: 100%;
     accent-color: var(--accent-primary);

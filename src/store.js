@@ -7,7 +7,7 @@ import { ns } from './utils/notifications.js';
 const STORAGE_KEY = 'life-dashboard/data'; // Legacy/Migration
 const ENCRYPTED_KEY = 'life-dashboard/secured';
 
-const defaultState = {
+export const defaultState = {
     // Assets that generate passive income
     passiveAssets: [],
     // Regular income sources (salary, freelance, etc.)
@@ -78,7 +78,8 @@ const defaultState = {
     marketFavorites: [],
     // Wealth Goals (Financial targets)
     wealthGoals: [],
-    inflationRate: 3.0 // Default 3% inflation
+    inflationRate: 3.0, // Default 3% inflation
+    projectionYears: 10 // Default 10 years for projections
 };
 
 class Store {
@@ -178,6 +179,15 @@ class Store {
 
     setState(updates) {
         this.state = { ...this.state, ...updates };
+        this.saveState();
+        this.notify();
+    }
+
+    /**
+     * Completely replaces current state with new data, ensuring no orphans
+     */
+    resetState(newState) {
+        this.state = { ...defaultState, ...newState };
         this.saveState();
         this.notify();
     }
@@ -819,6 +829,10 @@ class Store {
 
     setInflationRate(rate) {
         this.setState({ inflationRate: parseFloat(rate) });
+    }
+
+    setProjectionYears(years) {
+        this.setState({ projectionYears: parseInt(years) });
     }
 }
 
