@@ -58,10 +58,23 @@ export function renderSettingsPage() {
                         <div class="settings-item-label">Google Drive</div>
                         <div class="settings-item-desc">${hasCloudSync ? '<span class="status-badge connected">Conectado</span>' : '<span class="status-badge disconnected">No conectado</span>'} Sincroniza tu bóveda encriptada.</div>
                     </div>
-                    <button class="btn-settings-action ${hasCloudSync ? 'active' : ''}" id="sync-drive-btn">
-                        ${hasCloudSync ? getIcon('refreshCw') : getIcon('link')}
-                        <span>${hasCloudSync ? 'Sincronizar' : 'Conectar'}</span>
+                    ${!hasCloudSync ? `
+                    <button class="btn-settings-action" id="connect-drive-btn">
+                        ${getIcon('link')}
+                        <span>Conectar Google Drive</span>
                     </button>
+                    ` : `
+                    <div class="sync-actions-split">
+                        <button class="btn-settings-action active" id="upload-drive-btn">
+                            ${getIcon('chevronUp')}
+                            <span>Subir a la Nube</span>
+                        </button>
+                        <button class="btn-settings-action active download-btn" id="download-drive-btn">
+                            ${getIcon('chevronDown')}
+                            <span>Bajar de la Nube</span>
+                        </button>
+                    </div>
+                    `}
                 </div>
 
                 <div class="settings-divider"></div>
@@ -153,7 +166,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.76</p>
+            <p>Life Dashboard Pro v1.0.77</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -208,81 +221,67 @@ export function setupSettingsListeners() {
         }, 1000);
     }
 
-    // Cloud Sync (Push/Connect)
-    document.getElementById('sync-drive-btn')?.addEventListener('click', async () => {
-        const btn = document.getElementById('sync-drive-btn');
-        const hasToken = DriveService.hasToken();
+    // Connect Google Drive
+    document.getElementById('connect-drive-btn')?.addEventListener('click', async () => {
+        try {
+            await DriveService.authenticate();
+            ns.toast('Google Drive conectado');
+            if (typeof window.reRender === 'function') window.reRender();
+        } catch (e) {
+            ns.alert('Error', e.message || 'Error al conectar');
+        }
+    });
+
+    // Upload to Cloud (Push)
+    document.getElementById('upload-drive-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('upload-drive-btn');
         const originalContent = btn.innerHTML;
 
         try {
+            const confirmed = await ns.confirm('Subir a la Nube', 'Esto reemplazará TODO lo que tengas en Google Drive con tus datos locales. ¿Continuar?');
+            if (!confirmed) return;
+
             btn.innerHTML = `<div class="loading-spinner-sm"></div>`;
             btn.style.pointerEvents = 'none';
 
-            if (!hasToken) {
-                // Initial connection logic
-                await DriveService.authenticate();
-
-                // Check if file exists before pushing
-                const vaultKey = AuthService.getVaultKey();
-                const remoteState = await DriveService.pullData(vaultKey).catch(() => null);
-
-                if (remoteState) {
-                    const choice = await ns.confirm(
-                        'Respaldo Encontrado',
-                        'Hemos detectado una bóveda existente en Google Drive. ¿Qué deseas hacer con tus datos?',
-                        'Recuperar de la Nube',
-                        'Sobreescribir Nube'
-                    );
-
-                    if (choice) {
-                        // User chose "Recuperar de la Nube" (Primary)
-                        store.setState(remoteState);
-                        // Force save before reload
-                        await store.saveState();
-                        ns.toast('Datos recuperados correctamente');
-                        setTimeout(() => window.location.reload(), 800);
-                        return;
-                    }
-                }
-
-                // If they chose to overwrite (choice === false) or no remote found
-                await DriveService.pushData(store.getState(), vaultKey);
-                ns.toast('Google Drive conectado y sincronizado');
-            } else {
-                // Simple manually triggered Sync (Push)
-                const vaultKey = AuthService.getVaultKey();
-                await DriveService.pushData(store.getState(), vaultKey);
-                ns.toast('Bóveda actualizada en Drive');
-            }
-
-            if (typeof window.reRender === 'function') window.reRender();
+            const vaultKey = AuthService.getVaultKey();
+            await DriveService.pushData(store.getState(), vaultKey);
+            ns.toast('Bóveda subida correctamente');
         } catch (e) {
             console.error(e);
+            ns.alert('Error al subir', e.message);
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.style.pointerEvents = 'auto';
+        }
+    });
 
-            // Handle decryption failure specifically
-            if (e.message && (e.message.includes('Contraseña incorrecta') || e.message.includes('corruptos'))) {
-                const deleteRemote = await ns.confirm(
-                    'Error de Decifrado',
-                    'La contraseña actual no coincide con la del backup en la nube. ¿Deseas borrar los datos en Drive para empezar de cero?',
-                    'Borrar Datos Nube',
-                    'Cancelar'
-                );
+    // Download from Cloud (Pull)
+    document.getElementById('download-drive-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('download-drive-btn');
+        const originalContent = btn.innerHTML;
 
-                if (deleteRemote) {
-                    try {
-                        await DriveService.deleteBackup();
-                        ns.toast('Datos de Drive borrados');
-                        // Retry push
-                        const vaultKey = AuthService.getVaultKey();
-                        await DriveService.pushData(store.getState(), vaultKey);
-                        ns.toast('Google Drive sincronizado (Nueva Bóveda)');
-                    } catch (err) {
-                        ns.alert('Error', 'No se pudieron borrar los datos de Drive.');
-                    }
-                }
+        try {
+            const confirmed = await ns.confirm('Descargar de la Nube', 'Esto reemplazará TODOS tus datos locales con los que hay en la nube. Esta acción no se puede deshacer. ¿Continuar?');
+            if (!confirmed) return;
+
+            btn.innerHTML = `<div class="loading-spinner-sm"></div>`;
+            btn.style.pointerEvents = 'none';
+
+            const vaultKey = AuthService.getVaultKey();
+            const remoteState = await DriveService.pullData(vaultKey);
+
+            if (remoteState) {
+                store.setState(remoteState);
+                await store.saveState();
+                ns.toast('Datos descargados correctamente');
+                setTimeout(() => window.location.reload(), 800);
             } else {
-                ns.alert('Error', e.message || (typeof e === 'object' ? JSON.stringify(e) : 'Error al conectar con Google'));
+                ns.toast('No se encontró respaldo en Drive', 'info');
             }
+        } catch (e) {
+            console.error(e);
+            ns.alert('Error al descargar', e.message);
         } finally {
             btn.innerHTML = originalContent;
             btn.style.pointerEvents = 'auto';

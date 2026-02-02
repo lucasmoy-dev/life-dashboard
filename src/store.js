@@ -75,7 +75,10 @@ const defaultState = {
     // Last fetched market data
     lastMarketData: [],
     // Market favorites (asset IDs)
-    marketFavorites: []
+    marketFavorites: [],
+    // Wealth Goals (Financial targets)
+    wealthGoals: [],
+    inflationRate: 3.0 // Default 3% inflation
 };
 
 class Store {
@@ -175,24 +178,7 @@ class Store {
 
     setState(updates) {
         this.state = { ...this.state, ...updates };
-        this.saveState().then(() => {
-            // Background Auto-sync with Debounce (5 seconds)
-            const vaultKey = AuthService.getVaultKey();
-            if (vaultKey && DriveService.hasToken()) {
-                if (this.syncTimeout) clearTimeout(this.syncTimeout);
-
-                this.syncTimeout = setTimeout(() => {
-                    // Filter out non-syncable UI state
-                    const { hideRealEstate, ...syncData } = this.state;
-                    DriveService.pushData(syncData, vaultKey).then(() => {
-                        console.log('[Auto-Sync] Success');
-                        ns.toast('Sincronizado con Drive', 'success', 2000);
-                    }).catch(e => {
-                        console.warn('[Auto-Sync] Failed:', e);
-                    });
-                }, 5000);
-            }
-        });
+        this.saveState();
         this.notify();
     }
 
@@ -808,6 +794,31 @@ class Store {
                 contactSources: sources
             }
         });
+    }
+
+    // ============================================
+    // WEALTH GOALS METHODS
+    // ============================================
+    addWealthGoal(goal) {
+        const newGoal = { id: crypto.randomUUID(), createdAt: Date.now(), ...goal };
+        this.setState({ wealthGoals: [...(this.state.wealthGoals || []), newGoal] });
+        return newGoal;
+    }
+
+    updateWealthGoal(id, updates) {
+        this.setState({
+            wealthGoals: this.state.wealthGoals.map(g => g.id === id ? { ...g, ...updates } : g)
+        });
+    }
+
+    deleteWealthGoal(id) {
+        this.setState({
+            wealthGoals: this.state.wealthGoals.filter(g => g.id !== id)
+        });
+    }
+
+    setInflationRate(rate) {
+        this.setState({ inflationRate: parseFloat(rate) });
     }
 }
 

@@ -7,16 +7,17 @@ import { formatCurrency } from '../utils/format.js';
 import { getIcon } from '../utils/icons.js';
 import { openEditModal } from '../components/EditModal.js';
 import { renderMarketView, setupMarketViewListeners } from '../components/Finance/MarketView.js';
+import { renderWealthGoalsView, setupWealthGoalsListeners } from '../components/Finance/WealthGoalsView.js';
 import { hideFAB, showFAB } from '../main.js';
 
-let currentTab = 'summary'; // 'summary' | 'markets'
+let currentTab = 'summary'; // 'summary' | 'markets' | 'goals'
 
 export function renderFinancePage() {
   const state = store.getState();
   const symbol = state.currencySymbol;
 
   // Handle FAB visibility on render
-  if (currentTab === 'markets') {
+  if (currentTab === 'markets' || currentTab === 'goals') {
     setTimeout(hideFAB, 0);
   } else {
     setTimeout(showFAB, 0);
@@ -37,9 +38,12 @@ export function renderFinancePage() {
         <button class="segment-btn ${currentTab === 'markets' ? 'active' : ''}" id="tab-markets">
             Markets
         </button>
+        <button class="segment-btn ${currentTab === 'goals' ? 'active' : ''}" id="tab-goals">
+            Goals
+        </button>
       </div>
       
-      ${currentTab === 'summary' ? renderSummaryView(state, symbol) : renderMarketView()}
+      ${currentTab === 'summary' ? renderSummaryView(state, symbol) : (currentTab === 'markets' ? renderMarketView() : renderWealthGoalsView())}
       
     </div>
   `;
@@ -461,8 +465,9 @@ export function setupFinancePageListeners() {
   // Tab Listeners
   const tabSummary = document.getElementById('tab-summary');
   const tabMarkets = document.getElementById('tab-markets');
+  const tabGoals = document.getElementById('tab-goals');
 
-  if (tabSummary && tabMarkets) {
+  if (tabSummary && tabMarkets && tabGoals) {
     tabSummary.addEventListener('click', () => {
       currentTab = 'summary';
       window.reRender?.();
@@ -471,10 +476,19 @@ export function setupFinancePageListeners() {
       currentTab = 'markets';
       window.reRender?.();
     });
+    tabGoals.addEventListener('click', () => {
+      currentTab = 'goals';
+      window.reRender?.();
+    });
   }
 
   if (currentTab === 'markets') {
     setupMarketViewListeners();
+    return;
+  }
+
+  if (currentTab === 'goals') {
+    setupWealthGoalsListeners();
     return;
   }
 
