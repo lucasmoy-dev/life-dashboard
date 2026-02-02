@@ -1,4 +1,4 @@
-import{s as d,g as r,n as u}from"./index-NjhpN3jZ.js";function y(t=null){const e=document.createElement("div");e.className="modal-overlay active",e.id="communications-modal",e.style.zIndex="10000";const n=t?d.getState().social.people.find(i=>i.id===t):null;p(e,n),document.body.appendChild(e),m(e,n)}function p(t,e=null){const{communications:n}=d.getState().social,i=[...n].sort((a,o)=>a.order-o.order);t.innerHTML=`
+import{s as d,g as r,n as u}from"./index-BBVtBBfY.js";function y(t=null){const e=document.createElement("div");e.className="modal-overlay active",e.id="communications-modal",e.style.zIndex="10000";const n=t?d.getState().social.people.find(i=>i.id===t):null;p(e,n),document.body.appendChild(e),m(e,n)}function p(t,e=null){const{communications:n}=d.getState().social,i=[...n].sort((a,o)=>a.order-o.order);t.innerHTML=`
         <div class="modal" style="max-width: 500px; height: 80dvh;">
             <div class="modal-header">
                 <div>
