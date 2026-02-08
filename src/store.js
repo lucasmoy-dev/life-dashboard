@@ -96,7 +96,8 @@ export const defaultState = {
         pomodoroTime: 25 // minutes
     },
     scheduledTasks: [],
-    skills: []
+    skills: [],
+    aesthetics: []
 };
 
 class Store {
@@ -720,6 +721,41 @@ class Store {
 
         [skills[index], skills[otherIdx]] = [skills[otherIdx], skills[index]];
         this.setState({ skills });
+    }
+
+    reorderSkillsList(newList) {
+        this.setState({ skills: newList });
+    }
+
+    // ============================================
+    // AESTHETICS MANAGEMENT
+    // ============================================
+    addAesthetic(item) {
+        const newItem = {
+            id: crypto.randomUUID(),
+            name: '',
+            level: 0,
+            category: 'current',
+            ...item,
+            createdAt: Date.now()
+        };
+        this.setState({ aesthetics: [...(this.state.aesthetics || []), newItem] });
+    }
+
+    updateAesthetic(id, updates) {
+        this.setState({
+            aesthetics: this.state.aesthetics.map(i => i.id === id ? { ...i, ...updates } : i)
+        });
+    }
+
+    deleteAesthetic(id) {
+        this.setState({
+            aesthetics: this.state.aesthetics.filter(i => i.id !== id)
+        });
+    }
+
+    reorderAestheticsList(newList) {
+        this.setState({ aesthetics: newList });
     }
 
     deleteCompletedGoals(timeframe) {

@@ -59,21 +59,24 @@ export function renderSkillsPage() {
 
 function renderSkillItem(skill) {
     return `
-    <div class="card skill-card" style="margin-bottom: 8px; padding: 12px 16px !important;">
+    <div class="card skill-card draggable-skill" 
+         data-id="${skill.id}" 
+         data-category="${skill.category}" 
+         draggable="true"
+         style="margin-bottom: 8px; padding: 10px 16px !important; cursor: grab;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <button class="reorder-skill" data-id="${skill.id}" data-dir="up" style="background: none; border: none; color: var(--text-muted); padding: 0; cursor: pointer; height: 12px; display: flex; align-items: center; justify-content: center;">${getIcon('chevronUp')}</button>
-                    <button class="reorder-skill" data-id="${skill.id}" data-dir="down" style="background: none; border: none; color: var(--text-muted); padding: 0; cursor: pointer; height: 12px; display: flex; align-items: center; justify-content: center;">${getIcon('chevronDown')}</button>
+                <div style="color: var(--text-muted); opacity: 0.5; cursor: grab; display: flex; align-items: center;">
+                    ${getIcon('menu')}
                 </div>
                 <div style="font-weight: 700; color: var(--text-primary); font-size: 15px;">${skill.name}</div>
             </div>
             <div style="display: flex; gap: 8px;">
-                <button class="icon-btn edit-skill" data-id="${skill.id}" style="color: white !important; width: 32px; height: 32px; padding: 0;">${getIcon('edit')}</button>
-                <button class="icon-btn delete-skill" data-id="${skill.id}" style="color: var(--accent-danger); width: 32px; height: 32px; padding: 0;">${getIcon('trash')}</button>
+                <button class="icon-btn edit-skill" data-id="${skill.id}" style="color: white !important; width: 30px; height: 30px; padding: 0;">${getIcon('edit')}</button>
+                <button class="icon-btn delete-skill" data-id="${skill.id}" style="color: var(--accent-danger); width: 30px; height: 30px; padding: 0;">${getIcon('trash')}</button>
             </div>
         </div>
-        <div class="skill-progress-container" style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; overflow: hidden; position: relative;">
+        <div class="skill-progress-container" style="background: rgba(255,255,255,0.05); height: 5px; border-radius: 3px; overflow: hidden; position: relative;">
             <div class="skill-progress-fill" style="width: ${skill.level}%; height: 100%; background: var(--accent-primary); border-radius: 3px; transition: width 0.5s ease;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; font-weight: 600; color: var(--text-muted);">
@@ -86,11 +89,14 @@ function renderSkillItem(skill) {
 
 function renderNextSkillItem(skill) {
     return `
-    <div class="card next-skill-card edit-skill" data-id="${skill.id}" style="padding: 10px 12px !important; display: flex; align-items: center; justify-content: space-between; border: 1px dashed rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); height: auto;">
+    <div class="card next-skill-card draggable-skill edit-skill" 
+         data-id="${skill.id}" 
+         data-category="${skill.category}" 
+         draggable="true"
+         style="padding: 10px 12px !important; display: flex; align-items: center; justify-content: space-between; border: 1px dashed rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); height: auto; cursor: grab;">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-                <button class="reorder-skill" data-id="${skill.id}" data-dir="up" style="background: none; border: none; color: var(--text-muted); padding: 0; cursor: pointer; height: 12px; display: flex; align-items: center; justify-content: center;">${getIcon('chevronUp')}</button>
-                <button class="reorder-skill" data-id="${skill.id}" data-dir="down" style="background: none; border: none; color: var(--text-muted); padding: 0; cursor: pointer; height: 12px; display: flex; align-items: center; justify-content: center;">${getIcon('chevronDown')}</button>
+            <div style="color: var(--text-muted); opacity: 0.5; display: flex; align-items: center;">
+                ${getIcon('menu')}
             </div>
             <div style="font-weight: 700; font-size: 13px; color: var(--text-primary); text-align: left;">${skill.name}</div>
         </div>
@@ -138,15 +144,76 @@ export function setupSkillsListeners() {
         });
     });
 
-    // Reorder Skills
-    document.querySelectorAll('.reorder-skill').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            const dir = btn.dataset.dir;
-            store.reorderSkills(id, dir);
+    // Drag and Drop Logic
+    const lists = document.querySelectorAll('.skills-list');
+    let draggedId = null;
+
+    document.querySelectorAll('.draggable-skill').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedId = card.dataset.id;
+            card.classList.add('dragging');
+            card.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            card.style.opacity = '1';
+            document.querySelectorAll('.skills-list').forEach(l => l.classList.remove('drag-over'));
         });
     });
+
+    lists.forEach(list => {
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            list.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        list.addEventListener('dragleave', () => {
+            list.classList.remove('drag-over');
+        });
+
+        list.addEventListener('drop', (e) => {
+            e.preventDefault();
+            list.classList.remove('drag-over');
+
+            const allSkills = [...(store.getState().skills || [])];
+            const draggedSkillIndex = allSkills.findIndex(s => s.id === draggedId);
+            if (draggedSkillIndex === -1) return;
+
+            const draggedSkill = { ...allSkills[draggedSkillIndex] };
+
+            // Remove from original position
+            allSkills.splice(draggedSkillIndex, 1);
+
+            // Find insertion point
+            const afterElement = getDragAfterElement(list, e.clientY);
+            if (afterElement == null) {
+                allSkills.push(draggedSkill);
+            } else {
+                const targetId = afterElement.dataset.id;
+                const targetIdx = allSkills.findIndex(s => s.id === targetId);
+                allSkills.splice(targetIdx, 0, draggedSkill);
+            }
+
+            store.reorderSkillsList(allSkills);
+        });
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable-skill:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
 export function openSkillModal(skill = null, initialCategory = 'current') {

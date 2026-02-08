@@ -16,6 +16,7 @@ import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.j
 import { renderTimeInvestPage, setupTimeInvestListeners } from './pages/TimeInvestPage.js';
 import { renderSchedulePage, setupScheduleListeners } from './pages/SchedulePage.js';
 import { renderSkillsPage, setupSkillsListeners, openSkillModal } from './pages/SkillsPage.js';
+import { renderAestheticsPage, setupAestheticsListeners, openAestheticModal } from './pages/AestheticsPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { openAddPersonModal } from './components/AddPersonModal.js';
 import { getIcon } from './utils/icons.js';
@@ -314,6 +315,12 @@ function renderPage() {
             setupSkillsListeners();
             hideFAB();
             break;
+        case 'aesthetics':
+            // Internal page from Menu
+            main.innerHTML = renderAestheticsPage();
+            setupAestheticsListeners();
+            hideFAB();
+            break;
         case 'settings':
             // Internal page from Menu
             main.innerHTML = renderSettingsPage();
@@ -397,6 +404,8 @@ function addFAB() {
             openAddPersonModal();
         } else if (activePage === 'skills') {
             openSkillModal();
+        } else if (activePage === 'aesthetics') {
+            openAestheticModal();
         } else if (activePage === 'finance' || activePage === 'goals' || !activePage) {
             // Finance/Goals context: hide events as they don't fit here
             openAddModal('passiveAsset', ['event']);

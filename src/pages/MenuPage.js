@@ -38,6 +38,17 @@ export function renderMenuPage() {
                 <div class="menu-arrow">${getIcon('chevronRight')}</div>
             </button>
 
+            <button class="menu-card" id="open-aesthetics">
+                <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                    ${getIcon('sparkles')}
+                </div>
+                <div class="menu-info">
+                    <div class="menu-title">Aesthetics & Appearance</div>
+                    <div class="menu-desc">Optimización física y plan de mejora</div>
+                </div>
+                <div class="menu-arrow">${getIcon('chevronRight')}</div>
+            </button>
+
             <button class="menu-card" id="open-settings">
                 <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);">
                     ${getIcon('settings')}
@@ -95,6 +106,10 @@ export function setupMenuPageListeners(navigateFn) {
 
     document.getElementById('open-skills')?.addEventListener('click', () => {
         navigateFn('skills');
+    });
+
+    document.getElementById('open-aesthetics')?.addEventListener('click', () => {
+        navigateFn('aesthetics');
     });
 
     document.getElementById('open-schedule')?.addEventListener('click', () => {
