@@ -15,7 +15,7 @@ import { renderMenuPage, setupMenuPageListeners } from './pages/MenuPage.js';
 import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.js';
 import { renderTimeInvestPage, setupTimeInvestListeners } from './pages/TimeInvestPage.js';
 import { renderSchedulePage, setupScheduleListeners } from './pages/SchedulePage.js';
-import { renderSkillsPage, setupSkillsListeners } from './pages/SkillsPage.js';
+import { renderSkillsPage, setupSkillsListeners, openAddSkillModal } from './pages/SkillsPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { openAddPersonModal } from './components/AddPersonModal.js';
 import { getIcon } from './utils/icons.js';
@@ -396,20 +396,7 @@ function addFAB() {
         } else if (activePage === 'social') {
             openAddPersonModal();
         } else if (activePage === 'skills') {
-            const options = await ns.confirm('Nueva Skill', '¿Qué tipo de skill quieres añadir?', 'Expertise (Actual)', 'A aprender (Próxima)');
-            if (options !== null) {
-                const category = options === true ? 'current' : 'next';
-                const name = await ns.prompt('Nueva Skill', `¿Qué skill quieres ${category === 'current' ? 'registrar' : 'aprender'}?`);
-                if (name) {
-                    let level = 0;
-                    if (category === 'current') {
-                        const levelStr = await ns.prompt('Nivel de Dominio', 'Del 1 al 100:', '50', 'number');
-                        level = parseInt(levelStr) || 0;
-                    }
-                    store.addSkill({ name, level, category });
-                    ns.toast('Skill añadida');
-                }
-            }
+            openAddSkillModal();
         } else if (activePage === 'finance' || activePage === 'goals' || !activePage) {
             // Finance/Goals context: hide events as they don't fit here
             openAddModal('passiveAsset', ['event']);

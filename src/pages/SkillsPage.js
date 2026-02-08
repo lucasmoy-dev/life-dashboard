@@ -149,3 +149,92 @@ export function setupSkillsListeners() {
         });
     });
 }
+
+export function openAddSkillModal(initialCategory = 'current') {
+    const modalId = `modal-skills-${Date.now()}`;
+
+    ns._showModal({
+        title: 'Gestión de Mastery',
+        message: 'Añade una nueva habilidad a tu ecosistema',
+        centered: true,
+        content: `
+            <div id="${modalId}" style="margin-top: var(--spacing-md);">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">Tipo de Habilidad</label>
+                    <div style="display: flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 12px;">
+                        <button type="button" class="btn cat-btn ${initialCategory === 'current' ? 'active' : ''}" id="cat-current" style="flex: 1; padding: 10px; border-radius: 9px; font-size: 11px; font-weight: 700; background: ${initialCategory === 'current' ? '#7c3aed' : 'transparent'}; color: ${initialCategory === 'current' ? '#fff' : 'var(--text-muted)'}; border: none;">ACTUAL (EXPERTISE)</button>
+                        <button type="button" class="btn cat-btn ${initialCategory === 'next' ? 'active' : ''}" id="cat-next" style="flex: 1; padding: 10px; border-radius: 9px; font-size: 11px; font-weight: 700; background: ${initialCategory === 'next' ? '#7c3aed' : 'transparent'}; color: ${initialCategory === 'next' ? '#fff' : 'var(--text-muted)'}; border: none;">PRÓXIMA (A APRENDER)</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">Nombre de la Skill</label>
+                    <input type="text" id="skill-name" class="form-input" placeholder="Ej: React Native, Python, UI Design..." autofocus>
+                </div>
+
+                <div id="level-container" style="display: ${initialCategory === 'current' ? 'block' : 'none'};">
+                    <div class="form-group">
+                        <label class="form-label">Nivel de Dominio: <span id="level-val" style="color: #7c3aed; font-weight: 800;">50%</span></label>
+                        <input type="range" id="skill-level" min="1" max="100" value="50" style="width: 100%; accent-color: #7c3aed; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+        `,
+        buttons: [
+            { text: 'Cancelar', type: 'secondary', onClick: () => { } },
+            {
+                text: 'Guardar Skill',
+                type: 'primary',
+                style: 'background: #7c3aed; border: none; font-weight: 800;',
+                onClick: () => {
+                    const name = document.getElementById('skill-name').value.trim();
+                    const category = document.getElementById('cat-current').classList.contains('active') ? 'current' : 'next';
+                    const level = parseInt(document.getElementById('skill-level').value);
+
+                    if (!name) {
+                        ns.toast('El nombre es obligatorio', 'error');
+                        return;
+                    }
+
+                    store.addSkill({ name, category, level: category === 'current' ? level : 0 });
+                    ns.toast('Nueva skill añadida al stack');
+                }
+            }
+        ]
+    });
+
+    // Listeners for the custom modal
+    setTimeout(() => {
+        const btnCurrent = document.getElementById('cat-current');
+        const btnNext = document.getElementById('cat-next');
+        const levelContainer = document.getElementById('level-container');
+        const levelRange = document.getElementById('skill-level');
+        const levelVal = document.getElementById('level-val');
+
+        const updateUI = (cat) => {
+            if (cat === 'current') {
+                btnCurrent.style.background = '#7c3aed';
+                btnCurrent.style.color = '#fff';
+                btnCurrent.classList.add('active');
+                btnNext.style.background = 'transparent';
+                btnNext.style.color = 'var(--text-muted)';
+                btnNext.classList.remove('active');
+                levelContainer.style.display = 'block';
+            } else {
+                btnNext.style.background = '#7c3aed';
+                btnNext.style.color = '#fff';
+                btnNext.classList.add('active');
+                btnCurrent.style.background = 'transparent';
+                btnCurrent.style.color = 'var(--text-muted)';
+                btnCurrent.classList.remove('active');
+                levelContainer.style.display = 'none';
+            }
+        };
+
+        btnCurrent.onclick = () => updateUI('current');
+        btnNext.onclick = () => updateUI('next');
+        levelRange.oninput = () => {
+            levelVal.textContent = levelRange.value + '%';
+        };
+    }, 100);
+}

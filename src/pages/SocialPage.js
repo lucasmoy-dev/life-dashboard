@@ -50,11 +50,11 @@ export function renderSocialPage() {
                 <div class="finance-top-grid" style="margin-top: 20px; margin-bottom: 20px;">
                     <div class="card highlight-card" style="background: ${statusBg}; border-color: ${statusColor}; transition: all 0.3s ease;">
                         <div class="card-header">
-                            <span class="card-title" style="color: ${statusColor};">Índice de Éxito</span>
-                            <div style="color: ${statusColor}">${getIcon('target', 'card-icon')}</div>
+                            <span class="card-title" style="color: ${statusColor} !important;">Índice de Éxito</span>
+                            <div style="color: ${statusColor} !important;">${getIcon('target', 'card-icon')}</div>
                         </div>
-                        <div class="highlight-value" style="color: ${statusColor};">${successPct}%</div>
-                        <div class="highlight-label" style="color: ${statusColor}; opacity: 0.9;">
+                        <div class="highlight-value" style="color: ${statusColor} !important;">${successPct}%</div>
+                        <div class="highlight-label" style="color: ${statusColor} !important; opacity: 0.9;">
                             ${successPct >= 60 ? '🎯 ¡Excelente tracción y cierres!' : (successPct >= 25 ? '📈 Pipeline activo y en crecimiento' : '⌛ En busca del primer contacto')}
                         </div>
                     </div>
