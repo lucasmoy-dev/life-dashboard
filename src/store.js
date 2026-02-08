@@ -80,11 +80,16 @@ export const defaultState = {
     wealthGoals: [],
     inflationRate: 3.0, // Default 3% inflation
     projectionYears: 10, // Default 10 years for projections
-    // Time Invest / Tracking
     timeInvest: {
         activities: [
-            { id: '1', name: 'Meditar', icon: 'brain', color: '#8b5cf6' },
-            { id: '2', name: 'Emprender', icon: 'rocket', color: '#f59e0b' }
+            { id: '1', name: 'Meditar', icon: 'brain', color: '#8b5cf6', subActivities: [] },
+            {
+                id: '2', name: 'Emprender', icon: 'rocket', color: '#f59e0b', subActivities: [
+                    { id: 's1', name: 'Marketing' },
+                    { id: 's2', name: 'Desarrollo' },
+                    { id: 's3', name: 'Ventas' }
+                ]
+            }
         ],
         logs: [],
         pomodoroTime: 25 // minutes

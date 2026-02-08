@@ -7,8 +7,10 @@ import { getIcon } from '../utils/icons.js';
 import { ns } from '../utils/notifications.js';
 
 let currentTab = 'tracker'; // 'tracker' | 'stats'
-let activeTimer = null; // { activityId, startTime, elapsedSeconds, interval }
+let activeTimer = null; // { activityId, subActivityId, startTime, elapsedSeconds, interval }
 let showPomodoro = false;
+let selectedActivityId = null; // For sub-activity selection flow
+let selectedSubActivityId = null;
 
 export function renderTimeInvestPage() {
     const state = store.getState();
@@ -30,9 +32,41 @@ export function renderTimeInvestPage() {
             </button>
         </div>
 
-        ${currentTab === 'tracker' ? renderTrackerView(activities) : renderStatsView(activities, logs)}
+        ${currentPageContent(activities, logs)}
 
         ${activeTimer ? renderActiveTimerOverlay(activities) : ''}
+    </div>
+    `;
+}
+
+function currentPageContent(activities, logs) {
+    if (selectedActivityId) {
+        const activity = activities.find(a => a.id === selectedActivityId);
+        if (activity && activity.subActivities?.length > 0) {
+            return renderSubActivitySelector(activity);
+        }
+    }
+    return currentTab === 'tracker' ? renderTrackerView(activities) : renderStatsView(activities, logs);
+}
+
+function renderSubActivitySelector(activity) {
+    return `
+    <div class="sub-activity-selector animate-fade-in">
+        <div class="section-divider">
+            <button class="btn-mini-action" id="btn-back-to-activities">${getIcon('chevronLeft')}</button>
+            <span class="section-title">¿En qué vas a trabajar?</span>
+        </div>
+        
+        <div class="activities-grid">
+            <div class="activity-btn sub-opt" data-sub-id="none" style="--color: ${activity.color}; --color-alpha: ${activity.color}20">
+                 <span class="activity-label">General</span>
+            </div>
+            ${activity.subActivities.map(sub => `
+                <div class="activity-btn sub-opt" data-sub-id="${sub.id}" style="--color: ${activity.color}; --color-alpha: ${activity.color}20">
+                    <span class="activity-label">${sub.name}</span>
+                </div>
+            `).join('')}
+        </div>
     </div>
     `;
 }
@@ -72,61 +106,101 @@ function renderTrackerView(activities) {
 }
 
 function renderStatsView(activities, logs) {
-    // Calculate stats (last 7 days by default)
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // Last 7 days labels
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d.toISOString().split('T')[0]);
+    }
 
-    const stats = activities.map(activity => {
-        const activityLogs = logs.filter(l => l.activityId === activity.id && new Date(l.date) >= sevenDaysAgo);
-        const totalMinutes = activityLogs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
-        const dailyAverage = totalMinutes / 7;
-        return { name: activity.name, totalMinutes, dailyAverage, color: activity.color };
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+    // Group logs by day and activity
+    const dailyData = days.map(day => {
+        const dayLogs = logs.filter(l => l.date.startsWith(day));
+        const totals = {};
+        dayLogs.forEach(l => {
+            totals[l.activityId] = (totals[l.activityId] || 0) + (l.durationMinutes || 0);
+        });
+        return totals;
     });
 
-    const maxVal = Math.max(...stats.map(s => s.totalMinutes), 60);
+    const maxVal = Math.max(...dailyData.flatMap(d => Object.values(d)), 60);
+    const height = 150;
+    const width = 300;
+    const stepX = width / 6;
+
+    const generatePath = (activityId) => {
+        return dailyData.map((data, i) => {
+            const val = data[activityId] || 0;
+            const x = i * stepX;
+            const y = height - (val / maxVal) * height;
+            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+        }).join(' ');
+    };
 
     return `
     <div class="stats-view animate-fade-in">
         <div class="card stats-card">
             <div class="card-header">
-                <span class="card-title">Inversión Semanal (minutos)</span>
-                ${getIcon('barChart2')}
+                <span class="card-title">Inversión 7 días (minutos)</span>
+                ${getIcon('trendingUp')}
             </div>
             
-            <div class="chart-placeholder">
-                ${stats.map(s => `
-                    <div class="chart-bar" style="height: ${(s.totalMinutes / maxVal) * 100}%; background: ${s.color};">
-                        <div class="chart-bar-value">${Math.round(s.totalMinutes)}m</div>
-                    </div>
-                `).join('')}
+            <div class="line-chart-container" style="height: ${height}px; width: 100%; position: relative; margin-top: 20px;">
+                <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
+                    <!-- Grid Lines -->
+                    <line x1="0" y1="0" x2="${width}" y2="0" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1="${height / 2}" x2="${width}" y2="${height / 2}" stroke="rgba(255,255,255,0.05)" />
+                    <line x1="0" y1="${height}" x2="${width}" y2="${height}" stroke="rgba(255,255,255,0.1)" />
+                    
+                    ${activities.map(a => `
+                        <path d="${generatePath(a.id)}" fill="none" stroke="${a.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 4px ${a.color}40)" />
+                        ${dailyData.map((data, i) => {
+        const val = data[a.id] || 0;
+        if (val === 0) return '';
+        const x = i * stepX;
+        const y = height - (val / maxVal) * height;
+        return `<circle cx="${x}" cy="${y}" r="4" fill="${a.color}" />`;
+    }).join('')}
+                    `).join('')}
+                </svg>
+                
+                <div class="chart-labels" style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    ${days.map(d => `<span style="font-size: 10px; color: var(--text-muted);">${dayNames[new Date(d).getUTCDay()]}</span>`).join('')}
+                </div>
             </div>
             
-            <div class="chart-legend" style="margin-top: var(--spacing-md); display: flex; flex-wrap: wrap; gap: var(--spacing-sm);">
-                ${stats.map(s => `
+            <div class="chart-legend" style="margin-top: 24px; display: flex; flex-wrap: wrap; gap: var(--spacing-sm);">
+                ${activities.map(a => `
                     <div class="legend-item" style="display: flex; align-items: center; gap: 4px; font-size: 11px;">
-                        <div style="width: 8px; height: 8px; border-radius: 2px; background: ${s.color};"></div>
-                        <span>${s.name}</span>
+                        <div style="width: 12px; height: 3px; border-radius: 2px; background: ${a.color};"></div>
+                        <span>${a.name}</span>
                     </div>
                 `).join('')}
             </div>
         </div>
 
         <div class="section-divider">
-            <span class="section-title">Promedios de Inversión</span>
+            <span class="section-title">Resumen de Inversión</span>
         </div>
 
         <div class="asset-list">
-            ${stats.map(s => `
+            ${activities.map(a => {
+        const total = logs.filter(l => l.activityId === a.id).reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
+        return `
                 <div class="asset-item">
                     <div class="asset-info">
-                        <div class="asset-name">${s.name}</div>
-                        <div class="asset-details">Promedio diario esta semana</div>
+                        <div class="asset-name">${a.name}</div>
+                        <div class="asset-details">Inversión total acumulada</div>
                     </div>
                     <div class="asset-value">
-                        ${Math.round(s.dailyAverage)}m <span style="font-size: 10px; opacity: 0.6;">/día</span>
+                        ${Math.round(total / 60)}h ${total % 60}m
                     </div>
                 </div>
-            `).join('')}
+                `;
+    }).join('')}
         </div>
     </div>
     `;
@@ -134,12 +208,14 @@ function renderStatsView(activities, logs) {
 
 function renderActiveTimerOverlay(activities) {
     const activity = activities.find(a => a.id === activeTimer.activityId);
+    const subActivity = activity?.subActivities?.find(s => s.id === activeTimer.subActivityId);
     const timeStr = formatTime(activeTimer.elapsedSeconds);
 
     return `
     <div class="timer-overlay animate-fade-in">
         <div class="timer-active-label">Invirtiendo en...</div>
-        <div class="activity-label" style="font-size: 32px; margin-bottom: var(--spacing-xl); color: ${activity?.color}">${activity?.name}</div>
+        <div class="activity-label" style="font-size: 32px; margin-bottom: 4px; color: ${activity?.color}">${activity?.name}</div>
+        ${subActivity ? `<div class="sub-activity-label" style="font-size: 18px; margin-bottom: var(--spacing-xl); opacity: 0.8;">${subActivity.name}</div>` : '<div style="margin-bottom: var(--spacing-xl);"></div>'}
         
         <div class="timer-display">${timeStr}</div>
 
@@ -178,10 +254,32 @@ export function setupTimeInvestListeners() {
 
     // Activity buttons
     document.querySelectorAll('.activity-btn').forEach(btn => {
+        if (btn.classList.contains('sub-opt')) return; // Handle separately
         btn.addEventListener('click', () => {
             const id = btn.dataset.id;
-            startTracking(id);
+            const activity = store.getState().timeInvest.activities.find(a => a.id === id);
+
+            if (activity.subActivities?.length > 0) {
+                selectedActivityId = id;
+                window.reRender?.();
+            } else {
+                startTracking(id);
+            }
         });
+    });
+
+    // Sub-activity buttons
+    document.querySelectorAll('.sub-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const subId = btn.dataset.subId === 'none' ? null : btn.dataset.subId;
+            startTracking(selectedActivityId, subId);
+            selectedActivityId = null;
+        });
+    });
+
+    document.getElementById('btn-back-to-activities')?.addEventListener('click', () => {
+        selectedActivityId = null;
+        window.reRender?.();
     });
 
     // Pomodoro toggle
@@ -347,6 +445,22 @@ function openActivityEditForm(activity = null) {
                         `).join('')}
                     </div>
                 </div>
+
+                <div class="config-group">
+                    <label class="config-title">Sub-actividades</label>
+                    <div id="sub-activities-list">
+                        ${(activity?.subActivities || []).map(sub => `
+                            <div class="activity-edit-item" style="padding: 8px 12px; margin-bottom: 4px;">
+                                <span style="flex: 1; font-size: 13px;">${sub.name}</span>
+                                <button class="btn-mini-action delete-sub" data-sub-name="${sub.name}">${getIcon('trash')}</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <input type="text" id="new-sub-name" class="form-input" placeholder="Nombre sub-tarea" style="height: 38px;">
+                        <button class="btn btn-secondary" id="btn-add-sub" style="min-width: auto; height: 38px;">${getIcon('plus')}</button>
+                    </div>
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -356,6 +470,39 @@ function openActivityEditForm(activity = null) {
     `;
 
     document.body.appendChild(modal);
+
+    const subActivities = [...(activity?.subActivities || [])];
+
+    modal.querySelector('#btn-add-sub').addEventListener('click', () => {
+        const nameInput = modal.querySelector('#new-sub-name');
+        const name = nameInput.value.trim();
+        if (name) {
+            subActivities.push({ id: Date.now().toString(), name });
+            nameInput.value = '';
+            renderSubList();
+        }
+    });
+
+    function renderSubList() {
+        const list = modal.querySelector('#sub-activities-list');
+        list.innerHTML = subActivities.map(sub => `
+            <div class="activity-edit-item" style="padding: 8px 12px; margin-bottom: 4px;">
+                <span style="flex: 1; font-size: 13px;">${sub.name}</span>
+                <button class="btn-mini-action delete-sub" data-sub-id="${sub.id}">${getIcon('trash')}</button>
+            </div>
+        `).join('');
+
+        list.querySelectorAll('.delete-sub').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sid = btn.dataset.subId;
+                const idx = subActivities.findIndex(s => s.id === sid);
+                if (idx !== -1) subActivities.splice(idx, 1);
+                renderSubList();
+            });
+        });
+    }
+
+    renderSubList();
 
     const closeModal = () => {
         modal.classList.remove('active');
@@ -390,7 +537,7 @@ function openActivityEditForm(activity = null) {
             return;
         }
 
-        const data = { name, icon: selectedIcon, color: selectedColor };
+        const data = { name, icon: selectedIcon, color: selectedColor, subActivities };
 
         if (isEdit) {
             store.updateTimeActivity(activity.id, data);
@@ -398,23 +545,18 @@ function openActivityEditForm(activity = null) {
             store.addTimeActivity(data);
         }
 
-        const closeModalDirect = () => {
-            modal.classList.remove('active');
-            setTimeout(() => modal.remove(), 300);
-            window.reRender?.();
-        };
-
         modal.classList.remove('active');
         setTimeout(() => modal.remove(), 300);
         openTimeInvestConfigModal();
     });
 }
 
-function startTracking(activityId) {
+function startTracking(activityId, subActivityId = null) {
     if (activeTimer) return;
 
     activeTimer = {
         activityId,
+        subActivityId,
         startTime: Date.now(),
         elapsedSeconds: 0,
         interval: setInterval(() => {
@@ -451,6 +593,7 @@ function stopTracking(save = false) {
         if (durationMinutes >= 1) {
             store.addTimeLog({
                 activityId: activeTimer.activityId,
+                subActivityId: activeTimer.subActivityId,
                 date: new Date().toISOString(),
                 durationMinutes
             });

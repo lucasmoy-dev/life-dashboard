@@ -5592,6 +5592,17 @@ input:checked+.slider-premium:before {
     padding: var(--spacing-xl);
 }
 
+.sub-activity-label {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.line-chart-container svg path {
+    transition: all 0.5s ease;
+}
+
 .timer-display {
     font-size: 80px;
     font-weight: 800;
