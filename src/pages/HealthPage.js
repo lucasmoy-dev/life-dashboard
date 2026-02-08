@@ -169,13 +169,13 @@ function renderDietTab(health) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center;">
               <!-- WEIGHT SIDE -->
               <div class="clickable" id="log-weight-btn" style="text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
-                  <div class="highlight-value" style="color: ${textColor} !important; font-size: 32px; margin: 0; line-height: 1;">${latestWeight} <span style="font-size: 14px; opacity: 0.6;">kg</span></div>
+                  <div class="highlight-value" style="color: ${textColor} !important; background: none !important; -webkit-text-fill-color: initial !important; font-size: 32px; margin: 0; line-height: 1;">${latestWeight} <span style="font-size: 14px; opacity: 0.6;">kg</span></div>
                   <div class="highlight-label" style="opacity: 0.8; margin-top: 8px; color: ${textColor};">Peso Actual</div>
               </div>
 
               <!-- FAT SIDE -->
               <div class="clickable" id="log-fat-btn" style="text-align: center;">
-                  <div class="highlight-value" style="color: ${textColor} !important; font-size: 32px; margin: 0; line-height: 1;">${latestFat !== null ? latestFat + '%' : '--'}</div>
+                  <div class="highlight-value" style="color: ${textColor} !important; background: none !important; -webkit-text-fill-color: initial !important; font-size: 32px; margin: 0; line-height: 1;">${latestFat !== null ? latestFat + '%' : '--'}</div>
                   <div class="highlight-label" style="color: ${textColor}; opacity: 0.9; margin-top: 8px;">${fatLabel}</div>
               </div>
           </div>

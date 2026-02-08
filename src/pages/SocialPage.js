@@ -53,7 +53,7 @@ export function renderSocialPage() {
                             <span class="card-title" style="color: ${statusColor} !important;">Índice de Éxito</span>
                             <div style="color: ${statusColor} !important;">${getIcon('target', 'card-icon')}</div>
                         </div>
-                        <div class="highlight-value" style="color: ${statusColor} !important;">${successPct}%</div>
+                        <div class="highlight-value" style="color: ${statusColor} !important; background: none !important; -webkit-text-fill-color: initial !important;">${successPct}%</div>
                         <div class="highlight-label" style="color: ${statusColor} !important; opacity: 0.9;">
                             ${successPct >= 60 ? '🎯 ¡Excelente tracción y cierres!' : (successPct >= 25 ? '📈 Pipeline activo y en crecimiento' : '⌛ En busca del primer contacto')}
                         </div>

@@ -703,6 +703,25 @@ class Store {
         });
     }
 
+    reorderSkills(id, direction) {
+        const skills = [...(this.state.skills || [])];
+        const index = skills.findIndex(s => s.id === id);
+        if (index === -1) return;
+
+        const category = skills[index].category;
+        const categorySkills = skills.filter(s => s.category === category);
+        const catIdx = categorySkills.findIndex(s => s.id === id);
+
+        const targetCatIdx = direction === 'up' ? catIdx - 1 : catIdx + 1;
+        if (targetCatIdx < 0 || targetCatIdx >= categorySkills.length) return;
+
+        const otherSkillId = categorySkills[targetCatIdx].id;
+        const otherIdx = skills.findIndex(s => s.id === otherSkillId);
+
+        [skills[index], skills[otherIdx]] = [skills[otherIdx], skills[index]];
+        this.setState({ skills });
+    }
+
     deleteCompletedGoals(timeframe) {
         this.setState({
             goals: this.state.goals.filter(g => g.timeframe !== timeframe || !g.completed)
