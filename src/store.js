@@ -104,6 +104,7 @@ class Store {
     constructor() {
         this.state = this.loadState();
         this.listeners = new Set();
+        this.isHydrated = false;
 
         // Initial price fetch
         this.refreshRates();
@@ -115,16 +116,9 @@ class Store {
     }
 
     loadState() {
-        // We only load state in two phases:
-        // 1. Static load of defaults (constructor)
-        // 2. Real load from encrypted storage (after Auth)
         return { ...defaultState };
     }
 
-    /**
-     * Re-hydrates the state from encrypted storage after authentication
-     * Also handles migration from unencrypted storage
-     */
     async loadEncrypted(vaultKey) {
         const encrypted = localStorage.getItem(ENCRYPTED_KEY);
         const unencrypted = localStorage.getItem(STORAGE_KEY);
@@ -134,6 +128,7 @@ class Store {
                 const data = JSON.parse(encrypted);
                 const decryptedState = await SecurityService.decrypt(data, vaultKey);
                 this.state = { ...defaultState, ...decryptedState };
+                this.isHydrated = true; // Mark as hydrated
                 this.processScheduledTasks();
                 this.notify();
                 return true;
@@ -142,18 +137,12 @@ class Store {
                 return false;
             }
         } else if (unencrypted) {
-            // MIGRATION: Validated we have a key, so we take plain data, 
-            // encrypt it, save it to the new key, and destroy the old one.
             try {
                 const parsed = JSON.parse(unencrypted);
                 this.state = { ...defaultState, ...parsed };
-
-                // Save it encrypted immediately
+                this.isHydrated = true; // Mark as hydrated mid-migration
                 await this.saveState();
-
-                // Clean up the security leak
                 localStorage.removeItem(STORAGE_KEY);
-                console.log('Migration to encrypted storage successful');
                 this.notify();
                 return true;
             } catch (e) {
@@ -161,9 +150,11 @@ class Store {
                 return false;
             }
         }
-        return false;
-    }
 
+        // If neither exists, it's a new user
+        this.isHydrated = true;
+        return true;
+    }
 
     async refreshRates() {
         const rates = await fetchAllPrices();
@@ -174,6 +165,11 @@ class Store {
     }
 
     async saveState() {
+        if (!this.isHydrated) {
+            console.warn('[Store] Blocked save: Store not yet hydrated with persistent data.');
+            return;
+        }
+
         try {
             const vaultKey = AuthService.getVaultKey();
             if (vaultKey) {
