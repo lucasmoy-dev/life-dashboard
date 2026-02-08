@@ -313,7 +313,7 @@ function renderPage() {
             // Internal page from Menu
             main.innerHTML = renderSkillsPage();
             setupSkillsListeners();
-            hideFAB();
+            showFAB();
             break;
         case 'settings':
             // Internal page from Menu
@@ -394,6 +394,21 @@ function addFAB() {
             }
         } else if (currentPage === 'social') {
             openAddPersonModal();
+        } else if (currentPage === 'skills') {
+            const options = await ns.confirm('Nueva Skill', '¿Qué tipo de skill quieres añadir?', 'Expertise (Actual)', 'A aprender (Próxima)');
+            if (options !== null) {
+                const category = options === true ? 'current' : 'next';
+                const name = await ns.prompt('Nueva Skill', `¿Qué skill quieres ${category === 'current' ? 'registrar' : 'aprender'}?`);
+                if (name) {
+                    let level = 0;
+                    if (category === 'current') {
+                        const levelStr = await ns.prompt('Nivel de Dominio', 'Del 0 al 100:', '50', 'number');
+                        level = parseInt(levelStr) || 0;
+                    }
+                    store.addSkill({ name, level, category });
+                    ns.toast('Skill añadida');
+                }
+            }
         } else {
             openAddModal();
         }

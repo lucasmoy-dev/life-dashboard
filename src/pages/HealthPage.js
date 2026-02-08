@@ -134,42 +134,41 @@ function renderDietTab(health) {
     const latestWeight = health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--';
     const latestFat = health.fatLogs.length > 0 ? health.fatLogs[health.fatLogs.length - 1].fat : null;
 
-    let fatColor = 'var(--text-muted)';
+    let currentFatColor = 'var(--text-muted)';
     let fatLabel = 'Sin datos';
     if (latestFat !== null) {
         if (latestFat < 12) {
-            fatColor = 'var(--accent-success)';
+            currentFatColor = 'var(--accent-success)';
             fatLabel = 'Excelente (Atlético)';
         } else if (latestFat <= 18) {
-            fatColor = 'var(--accent-tertiary)';
+            currentFatColor = 'var(--accent-tertiary)';
             fatLabel = 'Bueno (Fitness)';
         } else {
-            fatColor = 'var(--accent-danger)';
+            currentFatColor = 'var(--accent-danger)';
             fatLabel = 'Atención (Reducción)';
         }
     }
 
     return `
-      <!-- BODY HIGHLIGHT METRICS -->
-      <div class="finance-top-grid animate-fade-in" style="margin-bottom: var(--spacing-xl);">
-          <!-- WEIGHT HIGHLIGHT -->
-          <div class="card highlight-card clickable" id="log-weight-btn" style="background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 212, 170, 0.05) 100%); border-color: rgba(0, 212, 170, 0.3);">
-            <div class="card-header">
-                <span class="card-title" style="color: var(--accent-primary);">Peso Actual</span>
-                ${getIcon('trendingDown', 'card-icon')}
-            </div>
-            <div class="highlight-value" style="color: var(--accent-primary);">${latestWeight} <span style="font-size: 16px; opacity: 0.6;">kg</span></div>
-            <div class="highlight-label" style="opacity: 0.8;">Meta: ${health.weightGoal} kg</div>
+      <!-- BODY HIGHLIGHT METRIC (UNIFIED) -->
+      <div class="card highlight-card" style="margin-bottom: var(--spacing-xl); background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 100%); border-color: rgba(255,255,255,0.1); padding: 24px !important;">
+          <div class="card-header" style="margin-bottom: 20px;">
+              <span class="card-title">Resumen Físico Actual</span>
+              ${getIcon('activity', 'card-icon')}
           </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center;">
+              <!-- WEIGHT SIDE -->
+              <div class="clickable" id="log-weight-btn" style="text-align: center; border-right: 1px solid rgba(255,255,255,0.05);">
+                  <div class="highlight-value" style="color: var(--accent-primary); font-size: 32px; margin: 0; line-height: 1;">${latestWeight} <span style="font-size: 14px; opacity: 0.6;">kg</span></div>
+                  <div class="highlight-label" style="opacity: 0.8; margin-top: 8px;">Peso Actual</div>
+              </div>
 
-          <!-- FAT HIGHLIGHT -->
-          <div class="card highlight-card clickable" id="log-fat-btn" style="background: linear-gradient(135deg, ${latestFat !== null ? fatColor + '11' : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0) 100%); border-color: ${latestFat !== null ? fatColor + '44' : 'rgba(255,255,255,0.1)'};">
-            <div class="card-header">
-                <span class="card-title" style="color: ${fatColor};">Grasa Corporal</span>
-                ${getIcon('activity', 'card-icon')}
-            </div>
-            <div class="highlight-value" style="color: ${fatColor};">${latestFat || '--'} <span style="font-size: 16px; opacity: 0.6;">%</span></div>
-            <div class="highlight-label" style="color: ${fatColor}; opacity: 0.9;">${fatLabel}</div>
+              <!-- FAT SIDE -->
+              <div class="clickable" id="log-fat-btn" style="text-align: center;">
+                  <div class="highlight-value" style="color: ${currentFatColor}; font-size: 32px; margin: 0; line-height: 1;">${latestFat || '--'} <span style="font-size: 14px; opacity: 0.6;">%</span></div>
+                  <div class="highlight-label" style="color: ${currentFatColor}; opacity: 0.9; margin-top: 8px;">${fatLabel}</div>
+              </div>
           </div>
       </div>
 

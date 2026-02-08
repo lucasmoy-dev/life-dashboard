@@ -6,10 +6,27 @@ export function renderSocialPage() {
     const { social } = store.getState();
     const { people, columns, idealLeadProfile } = social;
 
+    // Weight the pipeline for the Success Index
+    const totalLeads = people.length;
     const closedColumn = columns.find(c => c.name.toLowerCase().includes('closed') || c.name.toLowerCase().includes('cerrado') || c.name.toLowerCase().includes('exito'));
-    const hasClosed = closedColumn ? people.some(p => p.columnId === closedColumn.id) : false;
-    const hasIdeal = idealLeadProfile && idealLeadProfile.trim().length > 0;
-    const successPct = (hasClosed && hasIdeal) ? 100 : (hasClosed ? 50 : 0);
+
+    let successPct = 0;
+    if (totalLeads > 0) {
+        // Base score for having an Ideal Profile
+        const hasIdeal = idealLeadProfile && idealLeadProfile.trim().length > 0;
+
+        // Count people in each column
+        const closedCount = closedColumn ? people.filter(p => p.columnId === closedColumn.id).length : 0;
+
+        if (closedCount > 0) {
+            successPct = hasIdeal ? 100 : 80;
+        } else {
+            // If no closures yet, calculate based on pipeline activity
+            // Each lead in the pipeline gives some "hope" percentage, capped at 40% if no closures
+            successPct = Math.min(40, totalLeads * 5);
+            if (hasIdeal) successPct += 10;
+        }
+    }
 
     return `
     <div class="social-page stagger-children">
@@ -27,7 +44,7 @@ export function renderSocialPage() {
                         </div>
                         <div class="highlight-value" style="color: var(--accent-primary);">${successPct}%</div>
                         <div class="highlight-label">
-                            ${successPct === 100 ? '🎯 ¡Match ideal encontrado y cerrado!' : (successPct === 50 ? '📈 Tienes cierres logrados' : '⌛ En busca del primer cierre')}
+                            ${successPct >= 80 ? '🎯 ¡Excelente tracción y cierres!' : (successPct > 0 ? '📈 Pipeline activo y en crecimiento' : '⌛ En busca del primer contacto')}
                         </div>
                     </div>
                 </div>
