@@ -4,16 +4,35 @@ import { ns } from '../utils/notifications.js';
 
 export function renderSocialPage() {
     const { social } = store.getState();
-    const { people, columns } = social;
+    const { people, columns, idealLeadProfile } = social;
+
+    const closedColumn = columns.find(c => c.name.toLowerCase().includes('closed') || c.name.toLowerCase().includes('cerrado') || c.name.toLowerCase().includes('exito'));
+    const hasClosed = closedColumn ? people.some(p => p.columnId === closedColumn.id) : false;
+    const hasIdeal = idealLeadProfile && idealLeadProfile.trim().length > 0;
+    const successPct = (hasClosed && hasIdeal) ? 100 : (hasClosed ? 50 : 0);
 
     return `
     <div class="social-page stagger-children">
-        <header class="page-header" style="margin-bottom: var(--spacing-sm);">
+        <header class="page-header" style="margin-bottom: var(--spacing-md);">
             <div class="header-content">
                 <h1 class="page-title">Connections</h1>
-                <p class="page-subtitle">Gestiona tus relaciones y conexiones</p>
+                <p class="page-subtitle">Gestiona tus relaciones y conexiones laborales</p>
                 
-                <div class="social-header-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <!-- SUCCESS INDEX HIGHLIGHT -->
+                <div class="finance-top-grid" style="margin-top: 20px; margin-bottom: 20px;">
+                    <div class="card highlight-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); border-color: rgba(59, 130, 246, 0.3);">
+                        <div class="card-header">
+                            <span class="card-title" style="color: var(--accent-primary);">Índice de Éxito</span>
+                            ${getIcon('target', 'card-icon')}
+                        </div>
+                        <div class="highlight-value" style="color: var(--accent-primary);">${successPct}%</div>
+                        <div class="highlight-label">
+                            ${successPct === 100 ? '🎯 ¡Match ideal encontrado y cerrado!' : (successPct === 50 ? '📈 Tienes cierres logrados' : '⌛ En busca del primer cierre')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-header-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="btn btn-primary" id="add-person-btn">
                         ${getIcon('plus')} Lead
                     </button>

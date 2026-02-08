@@ -65,6 +65,20 @@ function renderSummaryView(state, symbol) {
 
   return `
       <div class="finance-top-grid animate-fade-in">
+        <!-- HIGHLIGHT: NET PASSIVE INCOME -->
+        <div class="card highlight-card ${netPassiveIncome < 0 ? 'highlight-card-negative' : ''}">
+          <div class="card-header">
+            <span class="card-title">Ingreso Pasivo Neto</span>
+            ${getIcon('piggyBank', 'card-icon')}
+          </div>
+          <div class="highlight-value ${netPassiveIncome < 0 ? 'highlight-value-negative' : ''}">${formatCurrency(netPassiveIncome, symbol)}</div>
+          <div class="highlight-label ${netPassiveIncome < 0 ? 'highlight-label-negative' : ''}">
+            ${netPassiveIncome >= 0
+      ? '🎉 ¡Libertad financiera alcanzada!'
+      : `Faltan ${formatCurrency(Math.abs(netPassiveIncome), symbol)}/mes`}
+          </div>
+        </div>
+
         <!-- PRIMARY METRICS -->
         <div class="card">
           <div class="card-header">
@@ -84,20 +98,6 @@ function renderSummaryView(state, symbol) {
               Gastos de Vida
             </span>
             <span class="stat-value negative">${formatCurrency(livingExpenses, symbol)}</span>
-          </div>
-        </div>
-        
-        <!-- HIGHLIGHT: NET PASSIVE INCOME -->
-        <div class="card highlight-card ${netPassiveIncome < 0 ? 'highlight-card-negative' : ''}">
-          <div class="card-header">
-            <span class="card-title">Ingreso Pasivo Neto</span>
-            ${getIcon('piggyBank', 'card-icon')}
-          </div>
-          <div class="highlight-value ${netPassiveIncome < 0 ? 'highlight-value-negative' : ''}">${formatCurrency(netPassiveIncome, symbol)}</div>
-          <div class="highlight-label ${netPassiveIncome < 0 ? 'highlight-label-negative' : ''}">
-            ${netPassiveIncome >= 0
-      ? '🎉 ¡Libertad financiera alcanzada!'
-      : `Faltan ${formatCurrency(Math.abs(netPassiveIncome), symbol)}/mes`}
           </div>
         </div>
       </div>

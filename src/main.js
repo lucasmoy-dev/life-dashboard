@@ -14,6 +14,8 @@ import { renderExpensesPage, setupExpensesPageListeners } from './pages/Expenses
 import { renderMenuPage, setupMenuPageListeners } from './pages/MenuPage.js';
 import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.js';
 import { renderTimeInvestPage, setupTimeInvestListeners } from './pages/TimeInvestPage.js';
+import { renderSchedulePage, setupScheduleListeners } from './pages/SchedulePage.js';
+import { renderSkillsPage, setupSkillsListeners } from './pages/SkillsPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { openAddPersonModal } from './components/AddPersonModal.js';
 import { getIcon } from './utils/icons.js';
@@ -41,6 +43,20 @@ async function init() {
 
     // Proactive Drive init
     DriveService.init().catch(e => console.warn('[Drive] Pre-init failed:', e));
+
+    // Internal navigation listener
+    window.addEventListener('nav-change', (e) => {
+        const pageId = e.detail?.page;
+        if (pageId) {
+            currentPage = pageId;
+            currentSubPage = null;
+            localStorage.setItem('life-dashboard/app_current_page', currentPage);
+            renderPage();
+            // Update bottom nav active state
+            const nav = document.getElementById('bottom-nav');
+            if (nav) nav.innerHTML = renderBottomNav(currentPage);
+        }
+    });
 
     // Check if we have an active vault key
     const vaultKey = AuthService.getVaultKey();
@@ -286,6 +302,18 @@ function renderPage() {
             showFAB(); // Calendar allows adding items
 
             // Back button logic for sub-pages could be improved, but for now simple render
+            break;
+        case 'schedule':
+            // Internal page from Menu
+            main.innerHTML = renderSchedulePage();
+            setupScheduleListeners();
+            hideFAB();
+            break;
+        case 'skills':
+            // Internal page from Menu
+            main.innerHTML = renderSkillsPage();
+            setupSkillsListeners();
+            hideFAB();
             break;
         case 'settings':
             // Internal page from Menu

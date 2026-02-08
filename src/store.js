@@ -94,7 +94,9 @@ export const defaultState = {
         ],
         logs: [],
         pomodoroTime: 25 // minutes
-    }
+    },
+    scheduledTasks: [],
+    skills: []
 };
 
 class Store {
@@ -131,6 +133,7 @@ class Store {
                 const data = JSON.parse(encrypted);
                 const decryptedState = await SecurityService.decrypt(data, vaultKey);
                 this.state = { ...defaultState, ...decryptedState };
+                this.processScheduledTasks();
                 this.notify();
                 return true;
             } catch (e) {
@@ -599,6 +602,105 @@ class Store {
 
     deleteGoal(id) {
         this.setState({ goals: this.state.goals.filter(g => g.id !== id) });
+    }
+
+    // ============================================
+    // SCHEDULED / RECURRING TASKS
+    // ============================================
+    addScheduledTask(task) {
+        const newTask = {
+            id: crypto.randomUUID(),
+            createdAt: Date.now(),
+            lastProcessed: null,
+            active: true,
+            ...task
+        };
+        this.setState({ scheduledTasks: [...this.state.scheduledTasks, newTask] });
+    }
+
+    deleteScheduledTask(id) {
+        this.setState({ scheduledTasks: this.state.scheduledTasks.filter(t => t.id !== id) });
+    }
+
+    updateScheduledTask(id, updates) {
+        this.setState({ scheduledTasks: this.state.scheduledTasks.map(t => t.id === id ? { ...t, ...updates } : t) });
+    }
+
+    processScheduledTasks() {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const dayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday...
+        const dayOfMonth = today.getDate();
+
+        let shouldUpdate = false;
+        const newScheduledTasks = [...this.state.scheduledTasks];
+        const newGoals = [...this.state.goals];
+
+        newScheduledTasks.forEach(task => {
+            if (!task.active) return;
+            if (task.lastProcessed === todayStr) return;
+
+            let match = false;
+            if (task.type === 'weekly' && task.days && task.days.includes(dayOfWeek)) {
+                match = true;
+            } else if (task.type === 'monthly' && task.dayOfMonth == dayOfMonth) {
+                match = true;
+            } else if (task.type === 'fixed' && task.date === todayStr) {
+                match = true;
+            }
+
+            if (match) {
+                // Check if goal already exists for today to avoid duplicates
+                const exists = newGoals.some(g => g.title === task.title && g.timeframe === 'day' && !g.completed);
+                if (!exists) {
+                    newGoals.push({
+                        id: crypto.randomUUID(),
+                        title: task.title,
+                        timeframe: 'day',
+                        completed: false,
+                        color: task.color || '#ffffff',
+                        createdAt: Date.now(),
+                        scheduledTaskId: task.id
+                    });
+                }
+                task.lastProcessed = todayStr;
+                shouldUpdate = true;
+            }
+        });
+
+        if (shouldUpdate) {
+            this.setState({
+                goals: newGoals,
+                scheduledTasks: newScheduledTasks
+            });
+        }
+    }
+
+    // ============================================
+    // SKILLS MANAGEMENT
+    // ============================================
+    addSkill(skill) {
+        const newSkill = {
+            id: crypto.randomUUID(),
+            name: '',
+            level: 0, // 0-100%
+            category: 'current', // 'current' or 'next'
+            ...skill,
+            createdAt: Date.now()
+        };
+        this.setState({ skills: [...(this.state.skills || []), newSkill] });
+    }
+
+    updateSkill(id, updates) {
+        this.setState({
+            skills: this.state.skills.map(s => s.id === id ? { ...s, ...updates } : s)
+        });
+    }
+
+    deleteSkill(id) {
+        this.setState({
+            skills: this.state.skills.filter(s => s.id !== id)
+        });
     }
 
     deleteCompletedGoals(timeframe) {

@@ -131,42 +131,78 @@ function renderExerciseTab(health) {
 }
 
 function renderDietTab(health) {
+    const latestWeight = health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--';
+    const latestFat = health.fatLogs.length > 0 ? health.fatLogs[health.fatLogs.length - 1].fat : null;
+
+    let fatColor = 'var(--text-muted)';
+    let fatLabel = 'Sin datos';
+    if (latestFat !== null) {
+        if (latestFat < 12) {
+            fatColor = 'var(--accent-success)';
+            fatLabel = 'Excelente (Atlético)';
+        } else if (latestFat <= 18) {
+            fatColor = 'var(--accent-tertiary)';
+            fatLabel = 'Bueno (Fitness)';
+        } else {
+            fatColor = 'var(--accent-danger)';
+            fatLabel = 'Atención (Reducción)';
+        }
+    }
+
     return `
-      <!-- METRICS: WEIGHT & FAT -->
-      <div class="section-divider">
-        <span class="section-title">Métricas de Cuerpo</span>
+      <!-- BODY HIGHLIGHT METRICS -->
+      <div class="finance-top-grid animate-fade-in" style="margin-bottom: var(--spacing-xl);">
+          <!-- WEIGHT HIGHLIGHT -->
+          <div class="card highlight-card clickable" id="log-weight-btn" style="background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 212, 170, 0.05) 100%); border-color: rgba(0, 212, 170, 0.3);">
+            <div class="card-header">
+                <span class="card-title" style="color: var(--accent-primary);">Peso Actual</span>
+                ${getIcon('trendingDown', 'card-icon')}
+            </div>
+            <div class="highlight-value" style="color: var(--accent-primary);">${latestWeight} <span style="font-size: 16px; opacity: 0.6;">kg</span></div>
+            <div class="highlight-label" style="opacity: 0.8;">Meta: ${health.weightGoal} kg</div>
+          </div>
+
+          <!-- FAT HIGHLIGHT -->
+          <div class="card highlight-card clickable" id="log-fat-btn" style="background: linear-gradient(135deg, ${latestFat !== null ? fatColor + '11' : 'rgba(255,255,255,0.05)'} 0%, rgba(0,0,0,0) 100%); border-color: ${latestFat !== null ? fatColor + '44' : 'rgba(255,255,255,0.1)'};">
+            <div class="card-header">
+                <span class="card-title" style="color: ${fatColor};">Grasa Corporal</span>
+                ${getIcon('activity', 'card-icon')}
+            </div>
+            <div class="highlight-value" style="color: ${fatColor};">${latestFat || '--'} <span style="font-size: 16px; opacity: 0.6;">%</span></div>
+            <div class="highlight-label" style="color: ${fatColor}; opacity: 0.9;">${fatLabel}</div>
+          </div>
       </div>
 
-      <div class="summary-grid" style="margin-bottom: var(--spacing-2xl);">
-        <div class="summary-item card clickable" id="log-weight-btn">
-          <div class="summary-value">${health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--'} kg</div>
-          <div class="summary-label">Peso Actual</div>
-        </div>
+      <div class="summary-grid" style="margin-bottom: var(--spacing-xl);">
         <div class="summary-item card clickable" id="set-weight-goal-btn">
           <div class="summary-value">${health.weightGoal} kg</div>
-          <div class="summary-label">Objetivo</div>
+          <div class="summary-label">Peso Objetivo</div>
         </div>
         <div class="summary-item card clickable" id="set-weight-date-btn">
           <div class="summary-value" style="font-size: 16px;">${health.weightGoalDate ? new Date(health.weightGoalDate).toLocaleDateString() : '--'}</div>
           <div class="summary-label">Fecha Límite</div>
+        </div>
+        <div class="summary-item card clickable" id="set-fat-goal-btn">
+          <div class="summary-value">${health.fatGoal}%</div>
+          <div class="summary-label">Meta Grasa</div>
         </div>
       </div>
 
       <!-- TEARDOWN CHART -->
       ${renderWeightTeardownChart(health)}
 
-      <div class="ai-calorie-card-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-2xl);">
-          <div class="card ai-calorie-card" style="display: flex; flex-direction: column; align-items: center;">
-              <div class="summary-value" style="font-size: 24px;">${calculateTodayCalories(health)} kcal</div>
-              <div class="summary-label">Calorías Hoy</div>
-              <button class="btn btn-primary" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: 100%; padding: 8px 12px; font-size: 13px;">
-                 ${getIcon('camera')} Escanear Comida
-              </button>
+      <div class="card ai-calorie-card" id="ai-scan-photo" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 20px !important; margin-bottom: var(--spacing-2xl); cursor: pointer; background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);">
+          <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="background: var(--accent-primary); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                ${getIcon('camera')}
+              </div>
+              <div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">${calculateTodayCalories(health)} kcal</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Consumidas hoy</div>
+              </div>
           </div>
-          <div class="summary-item card clickable" id="log-fat-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <div class="summary-value" style="font-size: 24px;">${health.fatLogs.length > 0 ? (health.fatLogs[health.fatLogs.length - 1].fat || '--') : '--'} %</div>
-            <div class="summary-label">Grasa Corporal</div>
-            <div style="font-size: 11px; opacity: 0.6; margin-top: 4px;">Objetivo: ${health.fatGoal}%</div>
+          <div style="background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--accent-primary);">
+            Escanear Comida
           </div>
       </div>
     `;

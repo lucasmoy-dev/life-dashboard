@@ -32,9 +32,14 @@ export function renderGoalsPage() {
 
     return `
     <div class="goals-page stagger-children" style="padding-bottom: 80px;">
-      <header class="page-header">
-        <h1 class="page-title">Goals & Focus</h1>
-        <p class="page-subtitle">Organiza tus prioridades con colores y objetivos dinámicos</p>
+      <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">Goals & Focus</h1>
+            <p class="page-subtitle">Organiza tus prioridades y objetivos dinámicos</p>
+        </div>
+        <button class="icon-btn" id="go-to-schedule" style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; width: 44px; height: 44px; border-radius: 12px;" title="Programación">
+            ${getIcon('calendar')}
+        </button>
       </header>
 
       <div class="goals-grid-layout">
@@ -163,6 +168,14 @@ function renderGoalsForTimeframe(filtered, timeframe) {
 }
 
 export function setupGoalsPageListeners() {
+    // Navigate to Schedule
+    document.getElementById('go-to-schedule')?.addEventListener('click', () => {
+        // Dispatch to main.js as we don't have navigateFn here
+        window.location.hash = '#schedule';
+        // Or cleaner: use a custom event that main.js listens to
+        window.dispatchEvent(new CustomEvent('nav-change', { detail: { page: 'schedule' } }));
+    });
+
     // Clear completed goals
     document.querySelectorAll('.btn-clear-completed').forEach(btn => {
         btn.addEventListener('click', async (e) => {

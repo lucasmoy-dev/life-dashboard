@@ -16,6 +16,17 @@ export function renderMenuPage() {
         </header>
 
         <div class="menu-grid">
+            <button class="menu-card" id="open-skills">
+                <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    ${getIcon('brain')}
+                </div>
+                <div class="menu-info">
+                    <div class="menu-title">Skills & Mastery</div>
+                    <div class="menu-desc">Nivel de expertise y aprendizaje</div>
+                </div>
+                <div class="menu-arrow">${getIcon('chevronRight')}</div>
+            </button>
+
             <button class="menu-card" id="open-calendar">
                 <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">
                     ${getIcon('calendar')}
@@ -23,6 +34,17 @@ export function renderMenuPage() {
                 <div class="menu-info">
                     <div class="menu-title">Agenda</div>
                     <div class="menu-desc">Eventos y recordatorios</div>
+                </div>
+                <div class="menu-arrow">${getIcon('chevronRight')}</div>
+            </button>
+
+            <button class="menu-card" id="open-schedule">
+                <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);">
+                    ${getIcon('calendar')}
+                </div>
+                <div class="menu-info">
+                    <div class="menu-title">Programación</div>
+                    <div class="menu-desc">Tareas y hábitos recurrentes</div>
                 </div>
                 <div class="menu-arrow">${getIcon('chevronRight')}</div>
             </button>
@@ -78,6 +100,14 @@ export function renderMenuPage() {
 export function setupMenuPageListeners(navigateFn) {
     document.getElementById('open-calendar')?.addEventListener('click', () => {
         navigateFn('calendar');
+    });
+
+    document.getElementById('open-skills')?.addEventListener('click', () => {
+        navigateFn('skills');
+    });
+
+    document.getElementById('open-schedule')?.addEventListener('click', () => {
+        navigateFn('schedule');
     });
 
     document.getElementById('open-settings')?.addEventListener('click', () => {
