@@ -1,6 +1,7 @@
 import { getIcon } from '../utils/icons.js';
 import { renderSettingsPage, setupSettingsListeners } from './SettingsPage.js';
 import { renderCalendarPage, setupCalendarPageListeners } from './CalendarPage.js';
+import { ns } from '../utils/notifications.js';
 
 export function renderMenuPage() {
     return `
@@ -31,6 +32,17 @@ export function renderMenuPage() {
                 </div>
                 <div class="menu-arrow">${getIcon('chevronRight')}</div>
             </button>
+
+            <button class="menu-card" id="btn-force-update">
+                <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);">
+                    ${getIcon('refreshCw')}
+                </div>
+                <div class="menu-info">
+                    <div class="menu-title">Forzar Actualización</div>
+                    <div class="menu-desc">Recargar la última versión</div>
+                </div>
+                <div class="menu-arrow">${getIcon('chevronRight')}</div>
+            </button>
         </div>
     </div>
     `;
@@ -43,5 +55,20 @@ export function setupMenuPageListeners(navigateFn) {
 
     document.getElementById('open-settings')?.addEventListener('click', () => {
         navigateFn('settings');
+    });
+
+    document.getElementById('btn-force-update')?.addEventListener('click', async () => {
+        const confirmed = await ns.confirm('¿Forzar Actualización?', 'Esto recargará la página y limpiará la caché para obtener la última versión.');
+        if (confirmed) {
+            if (window.caches) {
+                try {
+                    const names = await caches.keys();
+                    for (let name of names) await caches.delete(name);
+                } catch (e) {
+                    console.error('Error clearing cache', e);
+                }
+            }
+            window.location.reload(true);
+        }
     });
 }

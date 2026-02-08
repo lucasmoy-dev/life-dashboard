@@ -152,15 +152,7 @@ export function renderSettingsPage() {
                     <div class="settings-action-icon" style="color: var(--accent-danger);">${getIcon('logOut')}</div>
                 </div>
 
-                <div class="settings-divider"></div>
 
-                <div class="settings-item-row clickable" id="btn-force-update">
-                    <div class="settings-item-info">
-                        <div class="settings-item-label">Forzar Actualización</div>
-                        <div class="settings-item-desc">Recargar la última versión de la App (limpia caché).</div>
-                    </div>
-                    <div class="settings-action-icon">${getIcon('refreshCw')}</div>
-                </div>
 
                 <div class="settings-divider"></div>
 
@@ -201,7 +193,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.83</p>
+            <p>Life Dashboard Pro v1.0.84</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -407,23 +399,7 @@ export function setupSettingsListeners() {
         }
     });
 
-    // Force Update
-    document.getElementById('btn-force-update')?.addEventListener('click', async () => {
-        const confirmed = await ns.confirm('¿Forzar Actualización?', 'Esto recargará la página y limpiará la caché para obtener la última versión.');
-        if (confirmed) {
-            if (window.caches) {
-                // Try to clear caches
-                try {
-                    const names = await caches.keys();
-                    for (let name of names) await caches.delete(name);
-                } catch (e) {
-                    console.error('Error clearing cache', e);
-                }
-            }
-            // Force reload from server
-            window.location.reload(true);
-        }
-    });
+
 
     // Gemini API Key Save
     document.getElementById('btn-save-gemini')?.addEventListener('click', () => {

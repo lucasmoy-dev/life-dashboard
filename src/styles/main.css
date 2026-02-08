@@ -5205,7 +5205,7 @@ input:checked+.slider-premium:before {
 
 @media (max-width: 400px) {
     .sync-actions-split {
-        flex-direction: column;
+        flex-direction: row;
     }
 }
 
