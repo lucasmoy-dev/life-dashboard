@@ -95,9 +95,11 @@ const CURRENCIES = [
 let currentCategory = 'passiveAsset';
 let currentSubtype = '';
 let modalElement = null;
+let excludedCats = [];
 
-export function openAddModal(initialCategory = 'passiveAsset') {
+export function openAddModal(initialCategory = 'passiveAsset', hideCategories = []) {
   currentCategory = initialCategory;
+  excludedCats = hideCategories;
   currentSubtype = ITEM_TYPES[currentCategory]?.types[0]?.value || '';
 
   const overlay = document.createElement('div');
@@ -132,7 +134,9 @@ function renderModal() {
       ${currentCategory !== 'event' ? `
       <div class="form-label" style="margin-top: var(--spacing-sm);">Categoría</div>
       <div class="type-selector category-selector">
-        ${Object.entries(ITEM_TYPES).map(([key, data]) => `
+        ${Object.entries(ITEM_TYPES)
+        .filter(([key]) => !excludedCats.includes(key))
+        .map(([key, data]) => `
           <div class="type-option ${key === currentCategory ? 'active' : ''}" data-category="${key}">
             <div class="type-option-icon-wrapper">
                 ${getIcon(data.icon)}

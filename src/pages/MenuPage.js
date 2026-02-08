@@ -107,7 +107,7 @@ export function setupMenuPageListeners(navigateFn) {
     });
 
     document.getElementById('open-schedule')?.addEventListener('click', () => {
-        navigateFn('schedule');
+        navigateFn('goals');
     });
 
     document.getElementById('open-settings')?.addEventListener('click', () => {

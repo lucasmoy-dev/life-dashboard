@@ -303,11 +303,10 @@ function renderPage() {
 
             // Back button logic for sub-pages could be improved, but for now simple render
             break;
-        case 'schedule':
-            // Internal page from Menu
-            main.innerHTML = renderSchedulePage();
-            setupScheduleListeners();
+        case 'goals':
             hideFAB();
+            main.innerHTML = renderGoalsPage();
+            setupGoalsPageListeners();
             break;
         case 'skills':
             // Internal page from Menu
@@ -380,10 +379,12 @@ function addFAB() {
     fab.setAttribute('aria-label', 'Agregar');
 
     fab.addEventListener('click', async () => {
-        if (currentPage === 'calendar') {
+        // Use the most up-to-date currentPage state
+        const activePage = localStorage.getItem('life-dashboard/app_current_page') || currentPage;
+
+        if (activePage === 'calendar') {
             openAddModal('event');
-        } else if (currentPage === 'health') {
-            // Simplified prompt for health metrics
+        } else if (activePage === 'health') {
             const options = await ns.confirm('Log Metric', 'What do you want to record today?', 'Weight', 'Body Fat');
             if (options === true) {
                 const weight = await ns.prompt('Log Weight', 'Enter your current weight in kg:', '', 'number');
@@ -392,9 +393,9 @@ function addFAB() {
                 const fat = await ns.prompt('Body Fat', 'Enter your body fat %:', '', 'number');
                 if (fat) store.addFatLog(fat);
             }
-        } else if (currentPage === 'social') {
+        } else if (activePage === 'social') {
             openAddPersonModal();
-        } else if (currentPage === 'skills') {
+        } else if (activePage === 'skills') {
             const options = await ns.confirm('Nueva Skill', '¿Qué tipo de skill quieres añadir?', 'Expertise (Actual)', 'A aprender (Próxima)');
             if (options !== null) {
                 const category = options === true ? 'current' : 'next';
@@ -402,13 +403,16 @@ function addFAB() {
                 if (name) {
                     let level = 0;
                     if (category === 'current') {
-                        const levelStr = await ns.prompt('Nivel de Dominio', 'Del 0 al 100:', '50', 'number');
+                        const levelStr = await ns.prompt('Nivel de Dominio', 'Del 1 al 100:', '50', 'number');
                         level = parseInt(levelStr) || 0;
                     }
                     store.addSkill({ name, level, category });
                     ns.toast('Skill añadida');
                 }
             }
+        } else if (activePage === 'finance' || activePage === 'goals' || !activePage) {
+            // Finance/Goals context: hide events as they don't fit here
+            openAddModal('passiveAsset', ['event']);
         } else {
             openAddModal();
         }

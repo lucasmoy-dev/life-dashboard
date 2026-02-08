@@ -28,6 +28,17 @@ export function renderSocialPage() {
         }
     }
 
+    let statusColor = 'var(--accent-danger)';
+    let statusBg = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)';
+
+    if (successPct >= 60) {
+        statusColor = 'var(--accent-success)';
+        statusBg = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)';
+    } else if (successPct >= 25) {
+        statusColor = 'var(--accent-tertiary)';
+        statusBg = 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)';
+    }
+
     return `
     <div class="social-page stagger-children">
         <header class="page-header" style="margin-bottom: var(--spacing-md);">
@@ -35,16 +46,16 @@ export function renderSocialPage() {
                 <h1 class="page-title">Connections</h1>
                 <p class="page-subtitle">Gestiona tus relaciones y conexiones laborales</p>
                 
-                <!-- SUCCESS INDEX HIGHLIGHT -->
+                <!-- SUCCESS INDEX HIGHLIGHT (FIXED COLORS) -->
                 <div class="finance-top-grid" style="margin-top: 20px; margin-bottom: 20px;">
-                    <div class="card highlight-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); border-color: rgba(59, 130, 246, 0.3);">
+                    <div class="card highlight-card" style="background: ${statusBg}; border-color: ${statusColor}; transition: all 0.3s ease;">
                         <div class="card-header">
-                            <span class="card-title" style="color: var(--accent-primary);">Índice de Éxito</span>
-                            ${getIcon('target', 'card-icon')}
+                            <span class="card-title" style="color: ${statusColor};">Índice de Éxito</span>
+                            <div style="color: ${statusColor}">${getIcon('target', 'card-icon')}</div>
                         </div>
-                        <div class="highlight-value" style="color: var(--accent-primary);">${successPct}%</div>
-                        <div class="highlight-label">
-                            ${successPct >= 80 ? '🎯 ¡Excelente tracción y cierres!' : (successPct > 0 ? '📈 Pipeline activo y en crecimiento' : '⌛ En busca del primer contacto')}
+                        <div class="highlight-value" style="color: ${statusColor};">${successPct}%</div>
+                        <div class="highlight-label" style="color: ${statusColor}; opacity: 0.9;">
+                            ${successPct >= 60 ? '🎯 ¡Excelente tracción y cierres!' : (successPct >= 25 ? '📈 Pipeline activo y en crecimiento' : '⌛ En busca del primer contacto')}
                         </div>
                     </div>
                 </div>

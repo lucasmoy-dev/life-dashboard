@@ -134,40 +134,49 @@ function renderDietTab(health) {
     const latestWeight = health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--';
     const latestFat = health.fatLogs.length > 0 ? health.fatLogs[health.fatLogs.length - 1].fat : null;
 
-    let currentFatColor = 'var(--text-muted)';
+    let statusColor = 'rgba(255,255,255,0.1)';
+    let statusBg = 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 100%)';
+    let textColor = 'var(--text-primary)';
     let fatLabel = 'Sin datos';
+
     if (latestFat !== null) {
         if (latestFat < 12) {
-            currentFatColor = 'var(--accent-success)';
+            statusColor = 'var(--accent-success)';
+            statusBg = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)';
+            textColor = 'var(--accent-success)';
             fatLabel = 'Excelente (Atlético)';
         } else if (latestFat <= 18) {
-            currentFatColor = 'var(--accent-tertiary)';
+            statusColor = 'var(--accent-tertiary)';
+            statusBg = 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)';
+            textColor = 'var(--accent-tertiary)';
             fatLabel = 'Bueno (Fitness)';
         } else {
-            currentFatColor = 'var(--accent-danger)';
+            statusColor = 'var(--accent-danger)';
+            statusBg = 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)';
+            textColor = 'var(--accent-danger)';
             fatLabel = 'Atención (Reducción)';
         }
     }
 
     return `
-      <!-- BODY HIGHLIGHT METRIC (UNIFIED) -->
-      <div class="card highlight-card" style="margin-bottom: var(--spacing-xl); background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 100%); border-color: rgba(255,255,255,0.1); padding: 24px !important;">
+      <!-- BODY HIGHLIGHT METRIC (UNIFIED & DYNAMIC) -->
+      <div class="card highlight-card" style="margin-bottom: var(--spacing-xl); background: ${statusBg}; border-color: ${statusColor}; padding: 24px !important; transition: all 0.3s ease;">
           <div class="card-header" style="margin-bottom: 20px;">
-              <span class="card-title">Resumen Físico Actual</span>
-              ${getIcon('activity', 'card-icon')}
+              <span class="card-title" style="color: ${textColor};">Resumen Físico Actual</span>
+              <div style="color: ${statusColor}">${getIcon('activity', 'card-icon')}</div>
           </div>
           
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center;">
               <!-- WEIGHT SIDE -->
-              <div class="clickable" id="log-weight-btn" style="text-align: center; border-right: 1px solid rgba(255,255,255,0.05);">
-                  <div class="highlight-value" style="color: var(--accent-primary); font-size: 32px; margin: 0; line-height: 1;">${latestWeight} <span style="font-size: 14px; opacity: 0.6;">kg</span></div>
-                  <div class="highlight-label" style="opacity: 0.8; margin-top: 8px;">Peso Actual</div>
+              <div class="clickable" id="log-weight-btn" style="text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
+                  <div class="highlight-value" style="color: ${textColor}; font-size: 32px; margin: 0; line-height: 1;">${latestWeight} <span style="font-size: 14px; opacity: 0.6;">kg</span></div>
+                  <div class="highlight-label" style="opacity: 0.8; margin-top: 8px; color: ${textColor};">Peso Actual</div>
               </div>
 
               <!-- FAT SIDE -->
               <div class="clickable" id="log-fat-btn" style="text-align: center;">
-                  <div class="highlight-value" style="color: ${currentFatColor}; font-size: 32px; margin: 0; line-height: 1;">${latestFat || '--'} <span style="font-size: 14px; opacity: 0.6;">%</span></div>
-                  <div class="highlight-label" style="color: ${currentFatColor}; opacity: 0.9; margin-top: 8px;">${fatLabel}</div>
+                  <div class="highlight-value" style="color: ${textColor}; font-size: 32px; margin: 0; line-height: 1;">${latestFat !== null ? latestFat + '%' : '--'}</div>
+                  <div class="highlight-label" style="color: ${textColor}; opacity: 0.9; margin-top: 8px;">${fatLabel}</div>
               </div>
           </div>
       </div>
