@@ -230,6 +230,10 @@ function renderWeightTeardownChart(health) {
     const diff = latestLog.weight - expectedWeight;
     const isAhead = health.weightGoal < firstLog.weight ? diff < 0 : diff > 0;
 
+    // Weekly average calc
+    const totalWeeks = totalDuration / (1000 * 60 * 60 * 24 * 7);
+    const weeklyAvg = totalWeeks > 0 ? (firstLog.weight - health.weightGoal) / totalWeeks : 0;
+
     return `
     <div class="card chart-card" style="margin-bottom: var(--spacing-lg);">
         <div class="card-header">
@@ -259,9 +263,14 @@ function renderWeightTeardownChart(health) {
             </svg>
         </div>
         
-        <div class="chart-legend" style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted);">
-            <span>Inicio: ${firstLog.weight}kg</span>
-            <span>Objetivo: ${health.weightGoal}kg (${new Date(health.weightGoalDate).toLocaleDateString()})</span>
+        <div class="chart-legend" style="margin-top: 15px; display: flex; flex-direction: column; gap: 4px; font-size: 10px; color: var(--text-muted);">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Inicio: ${firstLog.weight}kg</span>
+                <span>Objetivo: ${health.weightGoal}kg (${new Date(health.weightGoalDate).toLocaleDateString()})</span>
+            </div>
+            <div style="display: flex; justify-content: center; font-weight: 600; color: var(--text-secondary); margin-top: 4px;">
+                <span>Ritmo requerido: ${weeklyAvg.toFixed(2)} kg / semana</span>
+            </div>
         </div>
     </div>
     `;
@@ -529,7 +538,7 @@ function setupExerciseListeners() {
 function setupDietListeners() {
     // Log weight
     document.getElementById('log-weight-btn')?.addEventListener('click', async () => {
-        const weight = await ns.prompt('Registrar Peso', 'Peso actual (kg):');
+        const weight = await ns.prompt('Registrar Peso', 'Peso actual (kg):', '', 'number');
         if (weight) {
             store.addWeightLog(parseFloat(weight));
             ns.toast('Peso registrado');
@@ -538,7 +547,7 @@ function setupDietListeners() {
 
     // Log fat
     document.getElementById('log-fat-btn')?.addEventListener('click', async () => {
-        const fat = await ns.prompt('Registrar Grasa', 'Porcentaje de grasa (%):');
+        const fat = await ns.prompt('Registrar Grasa', 'Porcentaje de grasa (%):', '', 'number');
         if (fat) {
             store.addFatLog(parseFloat(fat));
             ns.toast('Grasa registrada');
@@ -548,7 +557,7 @@ function setupDietListeners() {
     // Set weight goal
     document.getElementById('set-weight-goal-btn')?.addEventListener('click', async () => {
         const current = store.getState().health.weightGoal;
-        const goal = await ns.prompt('Objetivo de Peso', 'Introduce tu peso ideal (kg):', current);
+        const goal = await ns.prompt('Objetivo de Peso', 'Introduce tu peso ideal (kg):', current, 'number');
         if (goal) {
             store.updateHealthGoal('weightGoal', parseFloat(goal));
             ns.toast('Objetivo actualizado');
@@ -558,7 +567,7 @@ function setupDietListeners() {
     // Set weight date goal
     document.getElementById('set-weight-date-btn')?.addEventListener('click', async () => {
         const current = store.getState().health.weightGoalDate || new Date().toISOString().split('T')[0];
-        const date = await ns.prompt('Fecha Objetivo', '¿Cuándo quieres llegar a tu meta? (AAAA-MM-DD):', current);
+        const date = await ns.prompt('Fecha Objetivo', '¿Cuándo quieres llegar a tu meta?', current, 'date');
         if (date) {
             store.updateHealthGoal('weightGoalDate', date);
             ns.toast('Fecha actualizada');
@@ -568,7 +577,7 @@ function setupDietListeners() {
     // Set fat goal
     document.getElementById('set-fat-goal-btn')?.addEventListener('click', async () => {
         const current = store.getState().health.fatGoal;
-        const goal = await ns.prompt('Objetivo de Grasa', 'Introduce tu porcentaje ideal (%):', current);
+        const goal = await ns.prompt('Objetivo de Grasa', 'Introduce tu porcentaje ideal (%):', current, 'number');
         if (goal) {
             store.updateHealthGoal('fatGoal', parseFloat(goal));
             ns.toast('Objetivo actualizado');
