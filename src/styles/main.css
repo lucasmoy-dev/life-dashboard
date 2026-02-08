@@ -5440,3 +5440,66 @@ input:checked+.slider-premium:before {
         font-size: 11px;
     }
 }
+
+/* Advanced Settings & Forms */
+.advanced-settings-group {
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-sm);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.form-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.form-input-container .form-input {
+    flex: 1;
+    height: 42px;
+    padding-right: 80px;
+    /* Space for buttons */
+}
+
+.icon-btn-form {
+    position: absolute;
+    right: 50px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    transition: color 0.2s;
+}
+
+.icon-btn-form:hover {
+    color: var(--text-primary);
+}
+
+.icon-btn-form svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-save-mini {
+    position: absolute;
+    right: 6px;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    min-width: auto !important;
+    border-radius: 8px !important;
+}
+
+.mini-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+}

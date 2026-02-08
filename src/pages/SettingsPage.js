@@ -55,45 +55,60 @@ export function renderSettingsPage() {
             <div class="card premium-settings-card">
                 <div class="settings-item-row" id="drive-sync-row">
                     <div class="settings-item-info">
-                        <div class="settings-item-label">Google Drive</div>
-                        <div class="settings-item-desc">${hasCloudSync ? '<span class="status-badge connected">Conectado</span>' : '<span class="status-badge disconnected">No conectado</span>'}</div>
+                        <div class="settings-item-label">
+                            Google Drive 
+                            ${hasCloudSync
+            ? '<span class="status-badge connected">Conectado</span>'
+            : '<span class="status-badge disconnected">Desconectado</span>'}
+                        </div>
+                        <div class="settings-item-desc">Sincroniza tu bóveda cifrada en la nube.</div>
                     </div>
                     ${!hasCloudSync ? `
-                    <button class="btn-settings-action" id="connect-drive-btn">
-                        ${getIcon('link')}
-                        <span>Conectar</span>
-                    </button>
+                        <button class="btn btn-primary" id="connect-drive-btn" style="width: auto; height: 38px; padding: 0 16px;">
+                            Conectar
+                        </button>
                     ` : `
+                        <button class="btn btn-secondary btn-icon-only" id="connect-drive-btn" title="Reconfigurar">
+                            ${getIcon('refreshCw')}
+                        </button>
+                    `}
+                </div>
+
+                ${hasCloudSync ? `
                     <div class="sync-actions-split">
-                        <button class="btn-settings-action" id="upload-drive-btn" title="Subir">
+                        <button class="btn-settings-action" id="upload-drive-btn">
                             ${getIcon('uploadCloud')}
                             <span>Subir</span>
                         </button>
-                        <button class="btn-settings-action" id="download-drive-btn" title="Bajar">
+                        <button class="btn-settings-action" id="download-drive-btn">
                             ${getIcon('downloadCloud')}
                             <span>Bajar</span>
                         </button>
                     </div>
-                    `}
-                </div>
+                ` : ''}
 
                 <div class="settings-divider"></div>
 
-                <div class="settings-item-row" style="cursor: default; padding-top: 5px;">
+                <div class="advanced-settings-group">
                     <div class="settings-item-info" style="width: 100%;">
-                        <div class="settings-item-label" style="font-size: 13px;">Google Client Secret</div>
-                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                        <div class="settings-item-label" style="font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                            ${getIcon('lock', 'mini-icon')} Google Client Secret
+                        </div>
+                        <div class="settings-item-desc" style="margin-bottom: 8px;">
+                            Si se deja vacío, se usará el valor por defecto.
+                        </div>
+                        <div class="form-input-container">
                             <input type="password" id="drive-client-secret" class="form-input" 
-                                placeholder="Tu Client Secret (pestaña Web)" 
+                                placeholder="••••••••••••••••••••" 
                                 value="${localStorage.getItem('life-dashboard/drive_client_secret') || ''}"
-                                style="border-radius: var(--radius-sm); font-size: 12px; height: 36px; flex: 1;">
-                            <button class="btn btn-primary" id="btn-save-drive-secret" style="padding: 0 12px; min-width: auto; height: 36px; font-size: 12px;">
-                                Guardar
+                                autocomplete="off">
+                            <button class="icon-btn-form" id="toggle-drive-secret">
+                                ${getIcon('eye')}
+                            </button>
+                            <button class="btn btn-primary btn-save-mini" id="btn-save-drive-secret">
+                                ${getIcon('check')}
                             </button>
                         </div>
-                        <p style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
-                            Necesario para sincronización persistente sin logins repetidos.
-                        </p>
                     </div>
                 </div>
 
@@ -186,7 +201,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.80</p>
+            <p>Life Dashboard Pro v1.0.81</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -419,17 +434,30 @@ export function setupSettingsListeners() {
         }
     });
 
-    // Drive Client Secret Save
+    // Save Drive Client Secret
     document.getElementById('btn-save-drive-secret')?.addEventListener('click', () => {
-        const secret = document.getElementById('drive-client-secret')?.value;
-        if (secret !== undefined) {
-            localStorage.setItem('life-dashboard/drive_client_secret', secret.trim());
-            ns.toast('Client Secret de Drive guardado');
-            // Re-initialize drive if connected
-            if (DriveService.hasToken()) {
-                DriveService.init().catch(console.error);
-            }
+        const input = document.getElementById('drive-client-secret');
+        const val = input.value.trim();
+
+        if (val) {
+            localStorage.setItem('life-dashboard/drive_client_secret', val);
+            ns.toast('Secreto guardado correctamente');
+        } else {
+            localStorage.removeItem('life-dashboard/drive_client_secret');
+            ns.toast('Secreto eliminado, usando valor por defecto', 'info');
         }
+
+        // Re-initialize drive if connected or to apply new secret
+        DriveService.init().catch(console.error);
+    });
+
+    // Toggle Drive Secret Visibility
+    document.getElementById('toggle-drive-secret')?.addEventListener('click', (e) => {
+        const input = document.getElementById('drive-client-secret');
+        const btn = e.currentTarget;
+        const isPass = input.type === 'password';
+        input.type = isPass ? 'text' : 'password';
+        btn.innerHTML = getIcon(isPass ? 'eyeOff' : 'eye');
     });
 
     // Factory Reset
