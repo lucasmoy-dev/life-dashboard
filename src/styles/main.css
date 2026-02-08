@@ -5393,7 +5393,28 @@ input:checked+.slider-premium:before {
 
 .goal-actions {
     display: flex;
-    gap: var(--spacing-sm);
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.goal-reorder-actions {
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px;
+    border-radius: 8px;
+}
+
+.goal-reorder-actions .icon-btn {
+    width: 28px;
+    height: 28px;
+    opacity: 0.6;
+}
+
+.goal-reorder-actions .icon-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .input-with-currency {
@@ -5792,4 +5813,31 @@ input:checked+.slider-premium:before {
 .btn-mini-action.delete:hover {
     background: var(--accent-danger-alpha);
     color: var(--accent-danger);
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.chart-card {
+    overflow: hidden;
+}
+
+.teardown-chart-container svg {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
 }

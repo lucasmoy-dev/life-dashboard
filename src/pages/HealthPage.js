@@ -7,7 +7,7 @@ import { ns } from '../utils/notifications.js';
 import { GeminiService } from '../services/GeminiService.js';
 
 // Local state for tabs
-let currentTab = localStorage.getItem('life-dashboard/health_current_tab') || 'exercise';
+let currentTab = localStorage.getItem('life-dashboard/health_current_tab') || 'diet';
 
 export function renderHealthPage() {
     const state = store.getState();
@@ -22,16 +22,16 @@ export function renderHealthPage() {
 
       <!-- SUB-NAVIGATION TABS -->
       <div class="health-tabs">
-        <button class="health-tab-btn ${currentTab === 'exercise' ? 'active' : ''}" data-tab="exercise">
-            ${getIcon('zap')} Ejercicio
-        </button>
         <button class="health-tab-btn ${currentTab === 'diet' ? 'active' : ''}" data-tab="diet">
             ${getIcon('apple')} Dieta
+        </button>
+        <button class="health-tab-btn ${currentTab === 'exercise' ? 'active' : ''}" data-tab="exercise">
+            ${getIcon('zap')} Ejercicio
         </button>
       </div>
 
       <div id="health-tab-content">
-        ${currentTab === 'exercise' ? renderExerciseTab(health) : renderDietTab(health)}
+        ${currentTab === 'diet' ? renderDietTab(health) : renderExerciseTab(health)}
       </div>
 
     </div>
@@ -142,27 +142,128 @@ function renderDietTab(health) {
           <div class="summary-value">${health.weightLogs.length > 0 ? health.weightLogs[health.weightLogs.length - 1].weight : '--'} kg</div>
           <div class="summary-label">Peso Actual</div>
         </div>
-        <div class="summary-item card clickable" id="log-fat-btn">
-          <div class="summary-value">${health.fatLogs.length > 0 ? (health.fatLogs[health.fatLogs.length - 1].fat || '--') : '--'} %</div>
-          <div class="summary-label">Grasa Corporal</div>
-        </div>
         <div class="summary-item card clickable" id="set-weight-goal-btn">
           <div class="summary-value">${health.weightGoal} kg</div>
-          <div class="summary-label">Objetivo Peso</div>
+          <div class="summary-label">Objetivo</div>
         </div>
-        <div class="summary-item card clickable" id="set-fat-goal-btn">
-          <div class="summary-value">${health.fatGoal || '--'} %</div>
-          <div class="summary-label">Objetivo Grasa</div>
+        <div class="summary-item card clickable" id="set-weight-date-btn">
+          <div class="summary-value" style="font-size: 16px;">${health.weightGoalDate ? new Date(health.weightGoalDate).toLocaleDateString() : '--'}</div>
+          <div class="summary-label">Fecha Límite</div>
         </div>
       </div>
-      
-      <div class="card ai-calorie-card" style="margin-bottom: var(--spacing-2xl); display: flex; flex-direction: column; align-items: center;">
-          <div class="summary-value" style="font-size: 28px;">${calculateTodayCalories(health)} kcal</div>
-          <div class="summary-label">Calorías Registradas Hoy</div>
-          <button class="btn btn-primary" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: auto; padding: 10px 20px;">
-             ${getIcon('camera')} Escanear Comida (AI)
-          </button>
+
+      <!-- TEARDOWN CHART -->
+      ${renderWeightTeardownChart(health)}
+
+      <div class="ai-calorie-card-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-2xl);">
+          <div class="card ai-calorie-card" style="display: flex; flex-direction: column; align-items: center;">
+              <div class="summary-value" style="font-size: 24px;">${calculateTodayCalories(health)} kcal</div>
+              <div class="summary-label">Calorías Hoy</div>
+              <button class="btn btn-primary" id="ai-scan-photo" style="margin-top: var(--spacing-md); width: 100%; padding: 8px 12px; font-size: 13px;">
+                 ${getIcon('camera')} Escanear Comida
+              </button>
+          </div>
+          <div class="summary-item card clickable" id="log-fat-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div class="summary-value" style="font-size: 24px;">${health.fatLogs.length > 0 ? (health.fatLogs[health.fatLogs.length - 1].fat || '--') : '--'} %</div>
+            <div class="summary-label">Grasa Corporal</div>
+            <div style="font-size: 11px; opacity: 0.6; margin-top: 4px;">Objetivo: ${health.fatGoal}%</div>
+          </div>
       </div>
+    `;
+}
+
+function renderWeightTeardownChart(health) {
+    const logs = [...(health.weightLogs || [])].sort((a, b) => a.date - b.date);
+    if (logs.length < 1 || !health.weightGoalDate) {
+        return `
+            <div class="card chart-card">
+                <div class="card-header">
+                    <span class="card-title">Trayectoria de Peso</span>
+                    ${getIcon('trendingDown')}
+                </div>
+                <div class="empty-state" style="padding: var(--spacing-xl); text-align: center; opacity: 0.6;">
+                    <p>Registra tu peso y establece una <br><strong>Fecha Objetivo</strong> para ver el gráfico.</p>
+                </div>
+            </div>
+        `;
+    }
+
+    const firstLog = logs[0];
+    const latestLog = logs[logs.length - 1];
+    const startDate = firstLog.date;
+    const targetDate = new Date(health.weightGoalDate).getTime();
+    const currentDate = Date.now();
+
+    // Time boundaries for chart (from start to target or current, whichever is further)
+    const endTime = Math.max(targetDate, currentDate);
+    const timeSpan = endTime - startDate;
+
+    // Weight boundaries
+    const weights = logs.map(l => l.weight);
+    const minW = Math.min(...weights, health.weightGoal) - 2;
+    const maxW = Math.max(...weights, firstLog.weight) + 2;
+    const weightSpan = maxW - minW;
+
+    const width = 300;
+    const height = 150;
+
+    const getX = (t) => ((t - startDate) / timeSpan) * width;
+    const getY = (w) => height - ((w - minW) / weightSpan) * height;
+
+    // Ideal trajectory path
+    const targetX = getX(targetDate);
+    const targetY = getY(health.weightGoal);
+    const startX = getX(startDate);
+    const startY = getY(firstLog.weight);
+
+    // Current progress line
+    const realPath = logs.map((l, i) => `${i === 0 ? 'M' : 'L'} ${getX(l.date)} ${getY(l.weight)}`).join(' ');
+
+    // Vertical line for TODAY
+    const todayX = getX(currentDate);
+
+    // Calc if above/below
+    const totalDuration = targetDate - startDate;
+    const elapsed = currentDate - startDate;
+    const progressFactor = Math.min(1, elapsed / totalDuration);
+    const expectedWeight = firstLog.weight - (firstLog.weight - health.weightGoal) * progressFactor;
+    const diff = latestLog.weight - expectedWeight;
+    const isAhead = health.weightGoal < firstLog.weight ? diff < 0 : diff > 0;
+
+    return `
+    <div class="card chart-card" style="margin-bottom: var(--spacing-lg);">
+        <div class="card-header">
+            <span class="card-title">Trayectoria de Peso</span>
+            <span class="badge ${isAhead ? 'badge-success' : 'badge-danger'}" style="font-size: 10px;">
+                ${isAhead ? 'Vas bien' : 'Por debajo del ritmo'} (${Math.abs(diff).toFixed(1)}kg)
+            </span>
+        </div>
+        
+        <div class="teardown-chart-container" style="height: ${height}px; width: 100%; margin-top: 20px; position: relative;">
+            <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width: 100%; height: 100%; overflow: visible;">
+                <!-- Grid -->
+                <line x1="0" y1="${getY(health.weightGoal)}" x2="${width}" y2="${getY(health.weightGoal)}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4" />
+                
+                <!-- Target Line (Ideal) -->
+                <line x1="${startX}" y1="${startY}" x2="${targetX}" y2="${targetY}" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-dasharray="5" />
+                
+                <!-- Real Progress -->
+                <path d="${realPath}" fill="none" stroke="var(--accent-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                
+                <!-- Markers -->
+                <circle cx="${targetX}" cy="${targetY}" r="4" fill="var(--accent-primary)" />
+                <circle cx="${getX(latestLog.date)}" cy="${getY(latestLog.weight)}" r="4" fill="var(--accent-primary)" />
+                
+                <!-- Today Marker -->
+                <line x1="${todayX}" y1="0" x2="${todayX}" y2="${height}" stroke="var(--accent-tertiary)" stroke-width="1" opacity="0.5" />
+            </svg>
+        </div>
+        
+        <div class="chart-legend" style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted);">
+            <span>Inicio: ${firstLog.weight}kg</span>
+            <span>Objetivo: ${health.weightGoal}kg (${new Date(health.weightGoalDate).toLocaleDateString()})</span>
+        </div>
+    </div>
     `;
 }
 
@@ -451,6 +552,16 @@ function setupDietListeners() {
         if (goal) {
             store.updateHealthGoal('weightGoal', parseFloat(goal));
             ns.toast('Objetivo actualizado');
+        }
+    });
+
+    // Set weight date goal
+    document.getElementById('set-weight-date-btn')?.addEventListener('click', async () => {
+        const current = store.getState().health.weightGoalDate || new Date().toISOString().split('T')[0];
+        const date = await ns.prompt('Fecha Objetivo', '¿Cuándo quieres llegar a tu meta? (AAAA-MM-DD):', current);
+        if (date) {
+            store.updateHealthGoal('weightGoalDate', date);
+            ns.toast('Fecha actualizada');
         }
     });
 

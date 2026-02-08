@@ -43,6 +43,7 @@ export const defaultState = {
     health: {
         weightLogs: [],
         weightGoal: 70,
+        weightGoalDate: null,
         fatLogs: [],
         fatGoal: 15,
         exerciseLogs: [],
@@ -839,6 +840,18 @@ class Store {
         this.setState({
             wealthGoals: this.state.wealthGoals.filter(g => g.id !== id)
         });
+    }
+
+    reorderWealthGoals(id, direction) {
+        const goals = [...this.state.wealthGoals];
+        const index = goals.findIndex(g => g.id === id);
+        if (index === -1) return;
+
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= goals.length) return;
+
+        [goals[index], goals[newIndex]] = [goals[newIndex], goals[index]];
+        this.setState({ wealthGoals: goals });
     }
 
     setInflationRate(rate) {

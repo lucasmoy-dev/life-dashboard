@@ -131,6 +131,11 @@ function renderGoalCard(goal, state) {
                 <span class="detail-value">${goal.annualGrowth}%</span>
             </div>
             <div class="goal-actions">
+                <div class="goal-reorder-actions">
+                    <button class="icon-btn reorder-wealth-goal" data-id="${goal.id}" data-dir="up">${getIcon('chevronUp')}</button>
+                    <button class="icon-btn reorder-wealth-goal" data-id="${goal.id}" data-dir="down">${getIcon('chevronDown')}</button>
+                </div>
+                <div style="flex: 1;"></div>
                 <button class="icon-btn edit-wealth-goal" data-id="${goal.id}">${getIcon('edit')}</button>
                 <button class="icon-btn delete-wealth-goal" data-id="${goal.id}">${getIcon('trash')}</button>
             </div>
@@ -165,6 +170,17 @@ export function setupWealthGoalsListeners() {
                 store.deleteWealthGoal(id);
                 window.reRender?.();
             }
+        });
+    });
+
+    // Reorder goal
+    document.querySelectorAll('.reorder-wealth-goal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const dir = btn.dataset.dir;
+            store.reorderWealthGoals(id, dir);
+            window.reRender?.();
         });
     });
 
