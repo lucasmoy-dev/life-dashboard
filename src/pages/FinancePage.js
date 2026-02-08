@@ -348,6 +348,7 @@ function renderAllocationChart(state) {
 
 function renderAssetsList(state) {
   const allItems = [
+    ...(state.activeIncomes || []).map(i => ({ ...i, category: 'activeIncome' })),
     ...state.passiveAssets.map(a => ({ ...a, category: 'passive' })),
     ...state.investmentAssets.map(a => ({ ...a, category: 'investment' })),
     ...state.liabilities.map(l => ({ ...l, category: 'liability' }))
@@ -398,7 +399,8 @@ function renderAssetsList(state) {
             </div>
             <div>
               <div class="asset-value ${isLiability ? 'text-warning' : ''}">
-                ${isLiability ? '-' : ''}${formatCurrency(displayValue, baseSymbol)}
+                ${item.category === 'activeIncome' ? '+' : (isLiability ? '-' : '')}${formatCurrency(displayValue, baseSymbol)}
+                ${item.category === 'activeIncome' ? '<span style="font-size: 10px; opacity: 0.7; font-weight: 400;">/mes</span>' : ''}
               </div>
               ${item.monthlyIncome ? `<div class="asset-yield">+${formatCurrency(store.convertValue(item.monthlyIncome, item.currency), baseSymbol)}/mes</div>` : ''}
               ${item.monthlyPayment ? `<div class="asset-yield text-negative">-${formatCurrency(store.convertValue(item.monthlyPayment, item.currency), baseSymbol)}/mes</div>` : ''}
@@ -430,7 +432,10 @@ function getAssetIconClass(typeOrCurrency) {
     'debt': 'debt',
     'loan': 'debt',
     'mortgage': 'debt',
-    'creditcard': 'debt'
+    'creditcard': 'debt',
+    'salary': 'cash',
+    'freelance': 'cash',
+    'business': 'property'
   };
   return map[typeOrCurrency] || 'cash';
 }
@@ -455,7 +460,10 @@ function getAssetIcon(typeOrCurrency) {
     'debt': 'creditCard',
     'loan': 'landmark',
     'mortgage': 'home',
-    'creditcard': 'creditCard'
+    'creditcard': 'creditCard',
+    'salary': 'briefcase',
+    'freelance': 'users',
+    'business': 'building'
   };
   return map[typeOrCurrency] || 'dollarSign';
 }

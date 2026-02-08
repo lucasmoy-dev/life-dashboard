@@ -201,7 +201,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.81</p>
+            <p>Life Dashboard Pro v1.0.82</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
