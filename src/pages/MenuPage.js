@@ -50,25 +50,27 @@ export function renderMenuPage() {
             </button>
 
             ${hasCloudSync ? `
-                <button class="menu-card" id="btn-upload-menu">
-                    <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);">
-                        ${getIcon('uploadCloud')}
-                    </div>
-                    <div class="menu-info">
-                        <div class="menu-title">Subir a la nube</div>
-                        <div class="menu-desc">Sincronizar local → Drive</div>
-                    </div>
-                </button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-column: 1 / -1;">
+                    <button class="menu-card" id="btn-upload-menu" style="flex-direction: column; text-align: center; padding: 20px 10px; align-items: center;">
+                        <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); margin-right: 0; margin-bottom: 12px; width: 44px; height: 44px;">
+                            ${getIcon('uploadCloud')}
+                        </div>
+                        <div class="menu-info">
+                            <div class="menu-title" style="font-size: 14px;">Subir nube</div>
+                            <div class="menu-desc" style="font-size: 10px;">Local → Drive</div>
+                        </div>
+                    </button>
 
-                <button class="menu-card" id="btn-download-menu">
-                    <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);">
-                        ${getIcon('downloadCloud')}
-                    </div>
-                    <div class="menu-info">
-                        <div class="menu-title">Bajar de la nube</div>
-                        <div class="menu-desc">Sincronizar Drive → local</div>
-                    </div>
-                </button>
+                    <button class="menu-card" id="btn-download-menu" style="flex-direction: column; text-align: center; padding: 20px 10px; align-items: center;">
+                        <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%); margin-right: 0; margin-bottom: 12px; width: 44px; height: 44px;">
+                            ${getIcon('downloadCloud')}
+                        </div>
+                        <div class="menu-info">
+                            <div class="menu-title" style="font-size: 14px;">Bajar nube</div>
+                            <div class="menu-desc" style="font-size: 10px;">Drive → Local</div>
+                        </div>
+                    </button>
+                </div>
             ` : ''}
 
             <button class="menu-card" id="btn-force-update">

@@ -312,7 +312,7 @@ function renderPage() {
             // Internal page from Menu
             main.innerHTML = renderSkillsPage();
             setupSkillsListeners();
-            showFAB();
+            hideFAB();
             break;
         case 'settings':
             // Internal page from Menu

@@ -35,7 +35,7 @@ export function renderSkillsPage() {
             <section class="skills-section">
                 <div class="section-divider">
                     <span class="section-title">Nivel de Expertise</span>
-                    <button class="icon-btn add-skill-btn" data-category="current">${getIcon('plus')}</button>
+                    <button class="icon-btn add-skill-btn" data-category="current" style="color: white !important;">${getIcon('plus')}</button>
                 </div>
                 <div class="skills-list">
                     ${currentSkills.length === 0 ? renderEmptySkills('current') : currentSkills.map(s => renderSkillItem(s)).join('')}
@@ -46,7 +46,7 @@ export function renderSkillsPage() {
             <section class="skills-section">
                 <div class="section-divider">
                     <span class="section-title">Próximos Desafíos</span>
-                    <button class="icon-btn add-skill-btn" data-category="next">${getIcon('plus')}</button>
+                    <button class="icon-btn add-skill-btn" data-category="next" style="color: white !important;">${getIcon('plus')}</button>
                 </div>
                 <div class="skills-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                     ${nextSkills.length === 0 ? renderEmptySkills('next') : nextSkills.map(s => renderNextSkillItem(s)).join('')}
@@ -63,7 +63,7 @@ function renderSkillItem(skill) {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div style="font-weight: 700; color: var(--text-primary); font-size: 16px;">${skill.name}</div>
             <div style="display: flex; gap: 8px;">
-                <button class="icon-btn edit-skill" data-id="${skill.id}">${getIcon('edit')}</button>
+                <button class="icon-btn edit-skill" data-id="${skill.id}" style="color: white !important;">${getIcon('edit')}</button>
                 <button class="icon-btn delete-skill" data-id="${skill.id}" style="color: var(--accent-danger);">${getIcon('trash')}</button>
             </div>
         </div>
