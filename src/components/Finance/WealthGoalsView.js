@@ -91,7 +91,7 @@ export function renderWealthGoalsView() {
 
         <div class="section-divider">
             <span class="section-title">Objetivos Patrimoniales</span>
-            <button class="btn-add-goal-inline" id="btn-add-wealth-goal">
+            <button class="btn-add-goal-inline btn-large-inline" id="btn-add-wealth-goal">
                 ${getIcon('plus')} Agregar
             </button>
         </div>
@@ -171,10 +171,8 @@ export function setupWealthGoalsListeners() {
     // Inflation slider
     const inflationSlider = document.getElementById('inflation-slider');
     if (inflationSlider) {
-        inflationSlider.addEventListener('input', (e) => {
+        inflationSlider.addEventListener('change', (e) => {
             store.setInflationRate(e.target.value);
-        });
-        inflationSlider.addEventListener('change', () => {
             window.reRender?.();
         });
     }
@@ -182,10 +180,8 @@ export function setupWealthGoalsListeners() {
     // Years slider
     const yearsSlider = document.getElementById('years-slider');
     if (yearsSlider) {
-        yearsSlider.addEventListener('input', (e) => {
+        yearsSlider.addEventListener('change', (e) => {
             store.setProjectionYears(e.target.value);
-        });
-        yearsSlider.addEventListener('change', () => {
             window.reRender?.();
         });
     }

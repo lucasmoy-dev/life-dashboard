@@ -5,10 +5,11 @@
 import { getIcon } from '../utils/icons.js';
 
 const NAV_ITEMS = [
-    { id: 'finance', icon: 'wallet', label: 'Finance' },
     { id: 'health', icon: 'heart', label: 'Health' },
-    { id: 'goals', icon: 'target', label: 'Goals' },
+    { id: 'finance', icon: 'wallet', label: 'Finance' },
     { id: 'social', icon: 'users', label: 'Connections' },
+    { id: 'time-invest', icon: 'clock', label: 'Time Invest' },
+    { id: 'goals', icon: 'target', label: 'Goals' },
     { id: 'menu', icon: 'menu', label: 'Menu' }
 ];
 

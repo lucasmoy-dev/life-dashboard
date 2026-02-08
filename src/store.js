@@ -79,7 +79,16 @@ export const defaultState = {
     // Wealth Goals (Financial targets)
     wealthGoals: [],
     inflationRate: 3.0, // Default 3% inflation
-    projectionYears: 10 // Default 10 years for projections
+    projectionYears: 10, // Default 10 years for projections
+    // Time Invest / Tracking
+    timeInvest: {
+        activities: [
+            { id: '1', name: 'Meditar', icon: 'brain', color: '#8b5cf6' },
+            { id: '2', name: 'Emprender', icon: 'rocket', color: '#f59e0b' }
+        ],
+        logs: [],
+        pomodoroTime: 25 // minutes
+    }
 };
 
 class Store {
@@ -833,6 +842,55 @@ class Store {
 
     setProjectionYears(years) {
         this.setState({ projectionYears: parseInt(years) });
+    }
+
+    // Time Invest Methods
+    addTimeActivity(activity) {
+        const id = Date.now().toString();
+        this.setState({
+            timeInvest: {
+                ...this.state.timeInvest,
+                activities: [...this.state.timeInvest.activities, { ...activity, id }]
+            }
+        });
+    }
+
+    updateTimeActivity(id, updates) {
+        this.setState({
+            timeInvest: {
+                ...this.state.timeInvest,
+                activities: this.state.timeInvest.activities.map(a => a.id === id ? { ...a, ...updates } : a)
+            }
+        });
+    }
+
+    deleteTimeActivity(id) {
+        this.setState({
+            timeInvest: {
+                ...this.state.timeInvest,
+                activities: this.state.timeInvest.activities.filter(a => a.id !== id),
+                logs: this.state.timeInvest.logs.filter(l => l.activityId !== id)
+            }
+        });
+    }
+
+    addTimeLog(log) {
+        const id = Date.now().toString();
+        this.setState({
+            timeInvest: {
+                ...this.state.timeInvest,
+                logs: [...this.state.timeInvest.logs, { ...log, id }]
+            }
+        });
+    }
+
+    setPomodoroTime(minutes) {
+        this.setState({
+            timeInvest: {
+                ...this.state.timeInvest,
+                pomodoroTime: parseInt(minutes)
+            }
+        });
     }
 }
 

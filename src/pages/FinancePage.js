@@ -35,15 +35,15 @@ export function renderFinancePage() {
         <button class="segment-btn ${currentTab === 'summary' ? 'active' : ''}" id="tab-summary">
             Summary
         </button>
-        <button class="segment-btn ${currentTab === 'markets' ? 'active' : ''}" id="tab-markets">
-            Markets
-        </button>
         <button class="segment-btn ${currentTab === 'goals' ? 'active' : ''}" id="tab-goals">
             Goals
         </button>
+        <button class="segment-btn ${currentTab === 'markets' ? 'active' : ''}" id="tab-markets">
+            Markets
+        </button>
       </div>
       
-      ${currentTab === 'summary' ? renderSummaryView(state, symbol) : (currentTab === 'markets' ? renderMarketView() : renderWealthGoalsView())}
+      ${currentTab === 'summary' ? renderSummaryView(state, symbol) : (currentTab === 'goals' ? renderWealthGoalsView() : renderMarketView())}
       
     </div>
   `;

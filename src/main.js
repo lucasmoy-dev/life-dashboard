@@ -13,6 +13,7 @@ import { renderCalendarPage, setupCalendarPageListeners } from './pages/Calendar
 import { renderExpensesPage, setupExpensesPageListeners } from './pages/ExpensesPage.js';
 import { renderMenuPage, setupMenuPageListeners } from './pages/MenuPage.js';
 import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.js';
+import { renderTimeInvestPage, setupTimeInvestListeners } from './pages/TimeInvestPage.js';
 import { openAddModal } from './components/AddModal.js';
 import { openAddPersonModal } from './components/AddPersonModal.js';
 import { getIcon } from './utils/icons.js';
@@ -252,6 +253,11 @@ function renderPage() {
             hideFAB();
             main.innerHTML = renderGoalsPage();
             setupGoalsPageListeners();
+            break;
+        case 'time-invest':
+            hideFAB();
+            main.innerHTML = renderTimeInvestPage();
+            setupTimeInvestListeners();
             break;
         case 'social':
             hideFAB();

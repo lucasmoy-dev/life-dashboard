@@ -5296,23 +5296,29 @@ input:checked+.slider-premium:before {
 }
 
 .btn-add-goal-inline {
-    background: var(--bg-card);
+    background: rgba(0, 212, 170, 0.1);
     border: 1px solid rgba(0, 212, 170, 0.3);
     color: var(--accent-primary);
-    padding: 4px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-large-inline {
+    padding: 10px 18px;
+    font-size: 14px;
 }
 
 .btn-add-goal-inline:hover {
-    background: rgba(0, 212, 170, 0.1);
-    transform: translateY(-1px);
+    background: rgba(0, 212, 170, 0.15);
+    border-color: rgba(0, 212, 170, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.2);
 }
 
 .wealth-goals-list {
@@ -5502,4 +5508,164 @@ input:checked+.slider-premium:before {
     width: 14px;
     height: 14px;
     opacity: 0.7;
+}
+
+/* Time Invest Styles */
+.time-invest-page {
+    padding-bottom: 24px;
+}
+
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.activity-btn {
+    background: var(--gradient-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    cursor: pointer;
+}
+
+.activity-btn:active {
+    transform: scale(0.92);
+}
+
+.activity-btn.active {
+    border-color: var(--color);
+    box-shadow: 0 0 20px var(--color-alpha);
+}
+
+.activity-icon-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    background: var(--color-alpha);
+    color: var(--color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.activity-icon-container svg {
+    width: 32px;
+    height: 32px;
+}
+
+.activity-btn.active .activity-icon-container {
+    background: var(--color);
+    color: white;
+}
+
+.activity-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.timer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 15, 35, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+}
+
+.timer-display {
+    font-size: 80px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: var(--spacing-xl);
+    letter-spacing: -2px;
+}
+
+.timer-active-label {
+    font-size: 20px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.timer-controls {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.timer-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.timer-btn svg {
+    width: 32px;
+    height: 32px;
+}
+
+.timer-btn.pause {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.timer-btn.stop {
+    background: var(--accent-danger);
+    color: white;
+}
+
+.stats-card {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+}
+
+.chart-placeholder {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: 20px;
+}
+
+.chart-bar {
+    flex: 1;
+    background: var(--accent-primary);
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 4px;
+}
+
+.chart-bar-value {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--text-muted);
 }
