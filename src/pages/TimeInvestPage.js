@@ -202,7 +202,211 @@ export function setupTimeInvestListeners() {
 
     // Manage activities
     document.getElementById('btn-add-activity')?.addEventListener('click', () => {
-        ns.toast('Función de personalización próximamente...', 'info');
+        openTimeInvestConfigModal();
+    });
+}
+
+function openTimeInvestConfigModal() {
+    const state = store.getState().timeInvest;
+    const { activities = [], pomodoroTime = 25 } = state;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'time-invest-config-modal';
+    modal.innerHTML = `
+        <div class="modal animate-slide-up" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Configurar Time Invest</h2>
+                <button class="modal-close" id="close-config-modal">${getIcon('x')}</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="config-group">
+                    <div class="config-title">Configuración Pomodoro</div>
+                    <div class="setting-item">
+                        <label>Duración de sesión (minutos): <span id="pomodoro-val">${pomodoroTime}</span></label>
+                        <input type="range" id="pomodoro-input" min="5" max="60" step="5" value="${pomodoroTime}">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="config-title">Tus Actividades</div>
+                    <div class="activity-edit-list">
+                        ${activities.map(a => `
+                            <div class="activity-edit-item">
+                                <div class="activity-edit-info">
+                                    <div style="color: ${a.color}">${getIcon(a.icon || 'brain', 'mini-icon')}</div>
+                                    <span style="font-weight: 600;">${a.name}</span>
+                                </div>
+                                <div class="activity-edit-actions">
+                                    <button class="btn-mini-action edit-activity" data-id="${a.id}">${getIcon('edit')}</button>
+                                    <button class="btn-mini-action delete delete-activity" data-id="${a.id}">${getIcon('trash')}</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-secondary" id="btn-new-activity" style="width: 100%; margin-top: var(--spacing-md); border-style: dashed;">
+                        ${getIcon('plus')} Añadir Actividad
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="save-config" style="width: 100%;">Listo</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+        window.reRender?.();
+    };
+
+    document.getElementById('close-config-modal')?.addEventListener('click', closeModal);
+    document.getElementById('save-config')?.addEventListener('click', closeModal);
+
+    // Pomodoro slider
+    const pomodoroInput = document.getElementById('pomodoro-input');
+    const pomodoroVal = document.getElementById('pomodoro-val');
+    pomodoroInput?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        pomodoroVal.textContent = val;
+        store.setPomodoroTime(val);
+    });
+
+    // Activity Actions
+    modal.querySelectorAll('.edit-activity').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const activity = activities.find(a => a.id === id);
+            openActivityEditForm(activity);
+            modal.remove();
+        });
+    });
+
+    modal.querySelectorAll('.delete-activity').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            const confirmed = await ns.confirm('¿Eliminar actividad?', 'Se perderán también los registros asociados.');
+            if (confirmed) {
+                store.deleteTimeActivity(id);
+                modal.remove();
+                openTimeInvestConfigModal();
+            }
+        });
+    });
+
+    document.getElementById('btn-new-activity')?.addEventListener('click', () => {
+        openActivityEditForm();
+        modal.remove();
+    });
+}
+
+function openActivityEditForm(activity = null) {
+    const isEdit = !!activity;
+    const icons = ['brain', 'rocket', 'coffee', 'bookOpen', 'zap', 'heart', 'briefcase', 'users', 'dumbbell', 'code', 'music', 'monitor'];
+    const colors = ['#8b5cf6', '#f59e0b', '#ef4444', '#3b82f6', '#10b981', '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#a855f7', '#6366f1', '#d946ef'];
+
+    let selectedIcon = activity?.icon || 'brain';
+    let selectedColor = activity?.color || '#8b5cf6';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+        <div class="modal animate-slide-up" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 class="modal-title">${isEdit ? 'Editar' : 'Nueva'} Actividad</h2>
+                <button class="modal-close" id="close-activity-form">${getIcon('x')}</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="config-group">
+                    <label class="config-title">Nombre</label>
+                    <input type="text" id="activity-name" class="form-input" placeholder="Ej: Meditar, Leer..." value="${activity?.name || ''}">
+                </div>
+
+                <div class="config-group">
+                    <label class="config-title">Icono</label>
+                    <div class="icon-selection-grid">
+                        ${icons.map(icon => `
+                            <div class="icon-option ${icon === selectedIcon ? 'selected' : ''}" data-icon="${icon}">
+                                ${getIcon(icon)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <label class="config-title">Color</label>
+                    <div class="color-selection-grid">
+                        ${colors.map(color => `
+                            <div class="color-option ${color === selectedColor ? 'selected' : ''}" data-color="${color}" style="background: ${color}"></div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="save-activity" style="width: 100%;">Guardar Actividad</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+        openTimeInvestConfigModal();
+    };
+
+    document.getElementById('close-activity-form')?.addEventListener('click', closeModal);
+
+    // Icon Selection
+    modal.querySelectorAll('.icon-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            modal.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedIcon = opt.dataset.icon;
+        });
+    });
+
+    // Color Selection
+    modal.querySelectorAll('.color-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            modal.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            selectedColor = opt.dataset.color;
+        });
+    });
+
+    document.getElementById('save-activity')?.addEventListener('click', () => {
+        const name = document.getElementById('activity-name').value.trim();
+        if (!name) {
+            ns.toast('Por favor, indica un nombre', 'error');
+            return;
+        }
+
+        const data = { name, icon: selectedIcon, color: selectedColor };
+
+        if (isEdit) {
+            store.updateTimeActivity(activity.id, data);
+        } else {
+            store.addTimeActivity(data);
+        }
+
+        const closeModalDirect = () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            window.reRender?.();
+        };
+
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+        openTimeInvestConfigModal();
     });
 }
 
