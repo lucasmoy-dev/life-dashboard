@@ -53,33 +53,48 @@ export function renderSettingsPage() {
             </h2>
             
             <div class="card premium-settings-card">
-                <div class="settings-item-row">
+                <div class="settings-item-row" id="drive-sync-row">
                     <div class="settings-item-info">
                         <div class="settings-item-label">Google Drive</div>
-                        <div class="settings-item-desc">${hasCloudSync ? '<span class="status-badge connected">Conectado</span>' : '<span class="status-badge disconnected">No conectado</span>'} Sincroniza tu bóveda encriptada.</div>
+                        <div class="settings-item-desc">${hasCloudSync ? '<span class="status-badge connected">Conectado</span>' : '<span class="status-badge disconnected">No conectado</span>'}</div>
                     </div>
                     ${!hasCloudSync ? `
                     <button class="btn-settings-action" id="connect-drive-btn">
                         ${getIcon('link')}
-                        <span>Conectar Google Drive</span>
+                        <span>Conectar</span>
                     </button>
                     ` : `
                     <div class="sync-actions-split">
-                        <button class="btn-settings-action" id="upload-drive-btn">
+                        <button class="btn-settings-action" id="upload-drive-btn" title="Subir">
                             ${getIcon('uploadCloud')}
-                            <span>Subir a la Nube</span>
+                            <span>Subir</span>
                         </button>
-                        <button class="btn-settings-action" id="download-drive-btn">
+                        <button class="btn-settings-action" id="download-drive-btn" title="Bajar">
                             ${getIcon('downloadCloud')}
-                            <span>Bajar de la Nube</span>
+                            <span>Bajar</span>
                         </button>
                     </div>
-                    ${hasCloudSync ? `
-                    <p class="settings-item-desc" style="margin-top: var(--spacing-md); text-align: center; opacity: 0.8; width: 100%;">
-                        Úsalo para mover tus datos entre dispositivos manualmente. 
-                        <strong>No se sincroniza solo.</strong>
-                    </p>` : ''}
                     `}
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <div class="settings-item-row" style="cursor: default; padding-top: 5px;">
+                    <div class="settings-item-info" style="width: 100%;">
+                        <div class="settings-item-label" style="font-size: 13px;">Google Client Secret</div>
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <input type="password" id="drive-client-secret" class="form-input" 
+                                placeholder="Tu Client Secret (pestaña Web)" 
+                                value="${localStorage.getItem('life-dashboard/drive_client_secret') || ''}"
+                                style="border-radius: var(--radius-sm); font-size: 12px; height: 36px; flex: 1;">
+                            <button class="btn btn-primary" id="btn-save-drive-secret" style="padding: 0 12px; min-width: auto; height: 36px; font-size: 12px;">
+                                Guardar
+                            </button>
+                        </div>
+                        <p style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+                            Necesario para sincronización persistente sin logins repetidos.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="settings-divider"></div>
@@ -87,7 +102,7 @@ export function renderSettingsPage() {
                 <div class="settings-item-row clickable" id="import-backup-btn">
                     <div class="settings-item-info">
                         <div class="settings-item-label">Importar Backup Manual</div>
-                        <div class="settings-item-desc">Restaurar desde archivo .bin exportado.</div>
+                        <div class="settings-item-desc">Restaurar desde (.bin).</div>
                     </div>
                     <div class="settings-action-icon">${getIcon('upload')}</div>
                 </div>
@@ -98,7 +113,7 @@ export function renderSettingsPage() {
                 <div class="settings-item-row clickable" id="export-data-btn">
                     <div class="settings-item-info">
                         <div class="settings-item-label">Exportar Backup Manual</div>
-                        <div class="settings-item-desc">Descargar archivo encriptado (.bin) para seguridad externa.</div>
+                        <div class="settings-item-desc">Descargar copia encriptada.</div>
                     </div>
                     <div class="settings-action-icon">${getIcon('download')}</div>
                 </div>
@@ -171,7 +186,7 @@ export function renderSettingsPage() {
         </section>
 
         <footer class="settings-footer">
-            <p>Life Dashboard Pro v1.0.79</p>
+            <p>Life Dashboard Pro v1.0.80</p>
             <p>© 2026 Privacy First Zero-Knowledge System</p>
         </footer>
     </div>
@@ -404,6 +419,19 @@ export function setupSettingsListeners() {
         }
     });
 
+    // Drive Client Secret Save
+    document.getElementById('btn-save-drive-secret')?.addEventListener('click', () => {
+        const secret = document.getElementById('drive-client-secret')?.value;
+        if (secret !== undefined) {
+            localStorage.setItem('life-dashboard/drive_client_secret', secret.trim());
+            ns.toast('Client Secret de Drive guardado');
+            // Re-initialize drive if connected
+            if (DriveService.hasToken()) {
+                DriveService.init().catch(console.error);
+            }
+        }
+    });
+
     // Factory Reset
     document.getElementById('btn-factory-reset')?.addEventListener('click', async () => {
         const confirmed = await ns.hardConfirm('Borrar todos los datos', 'Esta acción eliminará permanentemente todos tus activos, ingresos, agenda y configuraciones de este dispositivo.', 'BORRAR');
@@ -438,7 +466,7 @@ export function setupSettingsListeners() {
 
             ns.toast('Aplicación reseteada', 'info');
             setTimeout(() => {
-                window.location.href = window.location.origin + '?reset=' + Date.now();
+                window.location.href = window.location.pathname + '?reset=' + Date.now();
             }, 1000);
         }
     });
