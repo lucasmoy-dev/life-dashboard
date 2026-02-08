@@ -46,44 +46,44 @@ export function renderWealthGoalsView() {
                     <div class="projection-label">Estado Actual</div>
                     <div class="stat-row">
                         <span>Ingresos Pasivos</span>
-                        <span class="positive">${formatCurrency(totalPassiveIncomeMonthly, currencySymbol)}</span>
+                        <span class="stat-value positive">${formatCurrency(totalPassiveIncomeMonthly, currencySymbol)}</span>
                     </div>
                     <div class="stat-row">
                         <span>Gastos Totales</span>
-                        <span class="negative">${formatCurrency(currentExpenses, currencySymbol)}</span>
+                        <span class="stat-value negative">${formatCurrency(currentExpenses, currencySymbol)}</span>
                     </div>
                     <div class="stat-row divider">
                         <span>Neto</span>
-                        <span class="${netPassiveIncome >= 0 ? 'positive' : 'negative'}">${formatCurrency(netPassiveIncome, currencySymbol)}</span>
+                        <span class="stat-value ${netPassiveIncome >= 0 ? 'positive' : 'negative'}">${formatCurrency(netPassiveIncome, currencySymbol)}</span>
                     </div>
                 </div>
 
                 <div class="projection-divider-vertical"></div>
 
                 <div class="projection-col">
-                    <div class="projection-label">En ${projectionYears} años (${inflationRate}% inf.)</div>
+                    <div class="projection-label">En <span id="years-val-title">${projectionYears}</span> años (<span id="inflation-val-title">${inflationRate}</span>% inf.)</div>
                     <div class="stat-row">
                         <span>Ingresos Pasivos Est.</span>
-                        <span class="positive">${formatCurrency(totalFuturePassiveMonthly, currencySymbol)}</span>
+                        <span class="stat-value positive" id="future-passive-val">${formatCurrency(totalFuturePassiveMonthly, currencySymbol)}</span>
                     </div>
                     <div class="stat-row">
                         <span>Gastos Est.</span>
-                        <span class="negative">${formatCurrency(futureExpenses, currencySymbol)}</span>
+                        <span class="stat-value negative" id="future-expenses-val">${formatCurrency(futureExpenses, currencySymbol)}</span>
                     </div>
                     <div class="stat-row divider">
                         <span>Neto Proyectado</span>
-                        <span class="${futureNetPassive >= 0 ? 'positive' : 'negative'}">${formatCurrency(futureNetPassive, currencySymbol)}</span>
+                        <span class="stat-value ${futureNetPassive >= 0 ? 'positive' : 'negative'}" id="future-net-val">${formatCurrency(futureNetPassive, currencySymbol)}</span>
                     </div>
                 </div>
             </div>
             
             <div class="projection-settings-row">
                 <div class="setting-item">
-                    <label>Años proyectados: ${projectionYears}</label>
+                    <label>Años proyectados: <span id="years-val">${projectionYears}</span></label>
                     <input type="range" id="years-slider" min="1" max="50" step="1" value="${projectionYears}">
                 </div>
                 <div class="setting-item">
-                    <label>Inflación anual: ${inflationRate}%</label>
+                    <label>Inflación anual: <span id="inflation-val">${inflationRate}</span>%</label>
                     <input type="range" id="inflation-slider" min="0" max="20" step="0.5" value="${inflationRate}">
                 </div>
             </div>
@@ -121,7 +121,7 @@ function renderGoalCard(goal, state) {
                 <div class="goal-cost">${formatCurrency(goal.cost, goal.currency || state.currency)} cost</div>
             </div>
             <div class="goal-card-yield">
-                <div class="yield-value">+${formatCurrency(convertedMonthly, currencySymbol)}/mes</div>
+                <div class="yield-value stat-value positive">+${formatCurrency(convertedMonthly, currencySymbol)}/mes</div>
                 <div class="yield-pct">${goal.dividendYield}% div.</div>
             </div>
         </div>
@@ -184,21 +184,65 @@ export function setupWealthGoalsListeners() {
         });
     });
 
-    // Inflation slider
     const inflationSlider = document.getElementById('inflation-slider');
+    const yearsSlider = document.getElementById('years-slider');
+
+    // Projections real-time update logic
+    const updateProjections = () => {
+        const years = parseFloat(yearsSlider.value);
+        const inflation = parseFloat(inflationSlider.value);
+
+        // Update labels
+        const yearsValEl = document.getElementById('years-val');
+        const inflationValEl = document.getElementById('inflation-val');
+        const yearsValTitleEl = document.getElementById('years-val-title');
+        const inflationValTitleEl = document.getElementById('inflation-val-title');
+
+        if (yearsValEl) yearsValEl.textContent = years;
+        if (yearsValTitleEl) yearsValTitleEl.textContent = years;
+        if (inflationValEl) inflationValEl.textContent = inflation;
+        if (inflationValTitleEl) inflationValTitleEl.textContent = inflation;
+
+        // Re-calculate projections
+        const state = store.getState();
+        const currentExpenses = store.getAllExpenses();
+        const futureExpenses = currentExpenses * Math.pow(1 + (inflation / 100), years);
+
+        let totalFuturePassiveMonthly = 0;
+        state.wealthGoals.forEach(g => {
+            const futureValue = g.cost * Math.pow(1 + (g.annualGrowth / 100), years);
+            const futureMonthlyYield = (futureValue * (g.dividendYield / 100)) / 12;
+            totalFuturePassiveMonthly += store.convertValue(futureMonthlyYield, g.currency || state.currency);
+        });
+
+        const futureNetPassive = totalFuturePassiveMonthly - futureExpenses;
+        const currencySymbol = state.currencySymbol;
+
+        // Update UI elements
+        const futurePassiveEl = document.getElementById('future-passive-val');
+        const futureExpensesEl = document.getElementById('future-expenses-val');
+        const futureNetEl = document.getElementById('future-net-val');
+
+        if (futurePassiveEl) futurePassiveEl.textContent = formatCurrency(totalFuturePassiveMonthly, currencySymbol);
+        if (futureExpensesEl) futureExpensesEl.textContent = formatCurrency(futureExpenses, currencySymbol);
+        if (futureNetEl) {
+            futureNetEl.textContent = formatCurrency(futureNetPassive, currencySymbol);
+            futureNetEl.className = `stat-value ${futureNetPassive >= 0 ? 'positive' : 'negative'}`;
+        }
+    };
+
     if (inflationSlider) {
+        inflationSlider.addEventListener('input', updateProjections);
         inflationSlider.addEventListener('change', (e) => {
             store.setInflationRate(e.target.value);
-            window.reRender?.();
+            // No re-render needed, already updated by input, but saving to store is necessary
         });
     }
 
-    // Years slider
-    const yearsSlider = document.getElementById('years-slider');
     if (yearsSlider) {
+        yearsSlider.addEventListener('input', updateProjections);
         yearsSlider.addEventListener('change', (e) => {
             store.setProjectionYears(e.target.value);
-            window.reRender?.();
         });
     }
 }
