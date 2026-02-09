@@ -3,7 +3,13 @@ import { store } from '../store.js';
 import { getIcon } from '../utils/icons.js';
 import { ns } from '../utils/notifications.js';
 
-let selectedDate = new Date().toISOString().split('T')[0];
+const getLocalDate = (d = new Date()) => {
+    const offset = d.getTimezoneOffset();
+    const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+};
+
+let selectedDate = getLocalDate();
 
 export function renderHabitsPage() {
     const state = store.getState();
@@ -33,7 +39,7 @@ export function renderHabitsPage() {
         </header>
 
         <!-- Stats Overview -->
-        <div class="card habits-overview-card" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+        <div class="card habits-overview-card">
             <div class="habits-progress-info">
                 <div class="habits-progress-text">
                     <div class="habits-completion-pct">${completionRate}%</div>
@@ -90,11 +96,12 @@ export function renderHabitsPage() {
 function renderWeekStrip() {
     const days = [];
     const today = new Date();
+    const todayStr = getLocalDate();
 
     for (let i = -3; i <= 3; i++) {
         const d = new Date();
         d.setDate(today.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = getLocalDate(d);
         const dayShort = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][d.getDay()];
         const dayNum = d.getDate();
 
@@ -102,7 +109,7 @@ function renderWeekStrip() {
             <div class="week-day-btn ${dateStr === selectedDate ? 'active' : ''}" data-date="${dateStr}">
                 <div class="week-day-name">${dayShort}</div>
                 <div class="week-day-num">${dayNum}</div>
-                ${dateStr === new Date().toISOString().split('T')[0] ? '<div class="today-dot"></div>' : ''}
+                ${dateStr === todayStr ? '<div class="today-dot"></div>' : ''}
             </div>
         `);
     }
