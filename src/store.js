@@ -97,7 +97,13 @@ export const defaultState = {
     },
     scheduledTasks: [],
     skills: [],
-    aesthetics: []
+    aesthetics: [],
+    habits: [
+        { id: '1', name: 'Levantarse', time: '08:00', icon: 'zap', color: '#f59e0b' },
+        { id: '2', name: 'Meditar', time: '08:15', icon: 'brain', color: '#8b5cf6' },
+        { id: '3', name: 'Entrenar', time: '09:00', icon: 'dumbbell', color: '#ef4444' }
+    ],
+    habitLogs: {} // Format: { "YYYY-MM-DD": ["habitId1", "habitId2"] }
 };
 
 class Store {
@@ -1062,6 +1068,38 @@ class Store {
                 pomodoroTime: parseInt(minutes)
             }
         });
+    }
+
+    // Habits Methods
+    addHabit(habit) {
+        const newHabit = { id: crypto.randomUUID(), createdAt: Date.now(), ...habit };
+        this.setState({ habits: [...(this.state.habits || []), newHabit] });
+        return newHabit;
+    }
+
+    updateHabit(id, updates) {
+        this.setState({ habits: this.state.habits.map(h => h.id === id ? { ...h, ...updates } : h) });
+    }
+
+    deleteHabit(id) {
+        this.setState({ habits: this.state.habits.filter(h => h.id !== id) });
+    }
+
+    toggleHabit(habitId, dateStr) {
+        const logs = { ...(this.state.habitLogs || {}) };
+        const dayLogs = logs[dateStr] || [];
+
+        if (dayLogs.includes(habitId)) {
+            logs[dateStr] = dayLogs.filter(id => id !== habitId);
+        } else {
+            logs[dateStr] = [...dayLogs, habitId];
+        }
+
+        this.setState({ habitLogs: logs });
+    }
+
+    reorderHabits(newList) {
+        this.setState({ habits: newList });
     }
 }
 

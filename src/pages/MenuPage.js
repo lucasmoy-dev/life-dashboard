@@ -49,6 +49,17 @@ export function renderMenuPage() {
                 <div class="menu-arrow">${getIcon('chevronRight')}</div>
             </button>
 
+            <button class="menu-card" id="open-habits">
+                <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                    ${getIcon('zap')}
+                </div>
+                <div class="menu-info">
+                    <div class="menu-title">Habits & Routine</div>
+                    <div class="menu-desc">Hábitos diarios y disciplina</div>
+                </div>
+                <div class="menu-arrow">${getIcon('chevronRight')}</div>
+            </button>
+
             <button class="menu-card" id="open-settings">
                 <div class="menu-icon-wrapper" style="background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);">
                     ${getIcon('settings')}
@@ -110,6 +121,10 @@ export function setupMenuPageListeners(navigateFn) {
 
     document.getElementById('open-aesthetics')?.addEventListener('click', () => {
         navigateFn('aesthetics');
+    });
+
+    document.getElementById('open-habits')?.addEventListener('click', () => {
+        navigateFn('habits');
     });
 
     document.getElementById('open-schedule')?.addEventListener('click', () => {

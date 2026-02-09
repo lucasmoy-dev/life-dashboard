@@ -8,7 +8,7 @@ const NAV_ITEMS = [
     { id: 'health', icon: 'heart', label: 'Health' },
     { id: 'finance', icon: 'wallet', label: 'Finance' },
     { id: 'social', icon: 'users', label: 'Connections' },
-    { id: 'time-invest', icon: 'clock', label: 'Time Invest' },
+    { id: 'habits', icon: 'zap', label: 'Habits' },
     { id: 'goals', icon: 'target', label: 'Goals' },
     { id: 'menu', icon: 'menu', label: 'Menu' }
 ];

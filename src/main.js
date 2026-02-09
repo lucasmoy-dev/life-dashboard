@@ -13,7 +13,7 @@ import { renderCalendarPage, setupCalendarPageListeners } from './pages/Calendar
 import { renderExpensesPage, setupExpensesPageListeners } from './pages/ExpensesPage.js';
 import { renderMenuPage, setupMenuPageListeners } from './pages/MenuPage.js';
 import { renderSocialPage, setupSocialPageListeners } from './pages/SocialPage.js';
-import { renderTimeInvestPage, setupTimeInvestListeners } from './pages/TimeInvestPage.js';
+import { renderHabitsPage, setupHabitsListeners, openHabitModalShortcut } from './pages/HabitsPage.js';
 import { renderSchedulePage, setupScheduleListeners } from './pages/SchedulePage.js';
 import { renderSkillsPage, setupSkillsListeners, openSkillModal } from './pages/SkillsPage.js';
 import { renderAestheticsPage, setupAestheticsListeners, openAestheticModal } from './pages/AestheticsPage.js';
@@ -271,10 +271,10 @@ function renderPage() {
             main.innerHTML = renderGoalsPage();
             setupGoalsPageListeners();
             break;
-        case 'time-invest':
+        case 'habits':
             hideFAB();
-            main.innerHTML = renderTimeInvestPage();
-            setupTimeInvestListeners();
+            main.innerHTML = renderHabitsPage();
+            setupHabitsListeners();
             break;
         case 'social':
             hideFAB();
@@ -406,6 +406,8 @@ function addFAB() {
             openSkillModal();
         } else if (activePage === 'aesthetics') {
             openAestheticModal();
+        } else if (activePage === 'habits') {
+            openHabitModalShortcut();
         } else if (activePage === 'finance' || activePage === 'goals' || !activePage) {
             // Finance/Goals context: hide events as they don't fit here
             openAddModal('passiveAsset', ['event']);
